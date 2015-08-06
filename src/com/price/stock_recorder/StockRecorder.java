@@ -8,6 +8,24 @@ public class StockRecorder
 	static StockRecorderMgr stock_recorder_mgr = null;
 	public static void main(String args[])
 	{
+//		java.sql.Date sd;
+//		java.util.Date ud;
+//
+//		ud = new java.util.Date();
+//		sd = new java.sql.Date(ud.getTime());
+//		System.exit(0);
+
+//		try
+//		{
+//			Runtime.getRuntime().exec("python /home/super/Projects/stock_recorder_java/auto_grab_volume.py");
+//		}
+//		catch (Exception e)
+//		{
+//			
+//		}
+//		System.out.println("Done");
+//		System.exit(0);
+
 		stock_recorder_mgr = new StockRecorderMgr();
 		short ret = StockRecorderCmnDef.RET_SUCCESS;
 

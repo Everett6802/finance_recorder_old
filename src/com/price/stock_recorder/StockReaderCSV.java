@@ -6,7 +6,7 @@ import java.util.*;
 
 public class StockReaderCSV extends StockReaderBase
 {
-	static protected String CSV_SPLIT = ",";
+	static protected String CSV_SPLIT = ";";
 
 	private BufferedReader br = null;
 	private StockRecorderCmnDef.StockObserverInf parent_observer = null;

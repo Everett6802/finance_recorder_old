@@ -24,15 +24,11 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 	private StockRecorderCmnDef.StockWriterInf stock_writer = null;
 	private List<String> file_sql_field_mapping = new ArrayList();
 
-//	private List<String> buffer_data_list = new LinkedList();
-//	private List<String> write_data_list = new LinkedList();
-
 	private Thread t = null;
 	private AtomicInteger runtime_ret = new AtomicInteger(StockRecorderCmnDef.RET_SUCCESS);
 
 	public short parse_config()
 	{
-		short ret = StockRecorderCmnDef.RET_SUCCESS;
 		String current_path = StockRecorderCmnDef.get_current_path();
 		String conf_filepath = String.format("%s/%s/%s", current_path, StockRecorderCmnDef.CONF_FOLDERNAME, CONF_FILENAME);
 
@@ -57,6 +53,7 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 			StockRecorderCmnDef.format_error("Fails to open %s file, due to: %s", conf_filepath, e.toString());
 			return StockRecorderCmnDef.RET_FAILURE_IO_OPERATION;
 		}
+		short ret = StockRecorderCmnDef.RET_SUCCESS;
 // Read the conf file
 		try
 		{
@@ -65,6 +62,7 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 			String line = null;
 			String title = null;
 			String value = null;
+			boolean date_field_found = false;
 			while ((line = br.readLine()) != null)
 			{
 				if (!sql_field_position_start)
@@ -80,7 +78,8 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 				if (index == -1)
 				{
 					StockRecorderCmnDef.format_error("Incorrect config parameter: %s", line);
-					return StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+					ret = StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+					break;
 				}
 
 				title = line.substring(0, index);
@@ -94,19 +93,25 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 						if (title.equals(SQL_TITLE_LIST[i]))
 						{
 							found = true;
+							if (!date_field_found)
+							{
+								if (title.equals(SQL_TITLE_LIST[0]))
+									date_field_found = true;
+							}
 							break;
 						}
-						
 					}
 					if (!found)
 					{
 						StockRecorderCmnDef.format_error("Unknown SQL config parameter title: %s", title);
-						return StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+						ret = StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+						break;
 					}
 					file_sql_field_mapping.add(value);
 				}
 				else
 				{
+					OUT:
 					for (int i = 0 ; i < CONF_FILE_TITLE_LIST.length ; i++)
 					{
 						if (title.equals(CONF_FILE_TITLE_LIST[i]))
@@ -127,17 +132,28 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 								break;
 							default:
 								StockRecorderCmnDef.format_error("Unknown config parameter title: %s", title);
-								return StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+								ret = StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+								break OUT;
 							}
 						}
 					}
+					if (StockRecorderCmnDef.CheckFailure(ret))
+						break;
+				}
+			}
+			if (!date_field_found)
+			{
+				if (StockRecorderCmnDef.CheckSuccess(ret))
+				{
+					StockRecorderCmnDef.error("The 'date' field is a MUST");
+					ret = StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 				}
 			}
 		}
 		catch (IOException e)
 		{
 			StockRecorderCmnDef.format_error("Error occur while parsing the config file, due to: %s", e.toString());
-			return StockRecorderCmnDef.RET_FAILURE_IO_OPERATION;
+			ret = StockRecorderCmnDef.RET_FAILURE_IO_OPERATION;
 		}
 		finally
 		{
@@ -209,7 +225,8 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 			StockRecorderCmnDef.debug("Got an Interrupted Exception while waiting for the death of the worker thread...");
 		}
 
-		return StockRecorderCmnDef.RET_SUCCESS;
+		short ret = runtime_ret.shortValue();
+		return ret;
 	}
 
 	public short deinitialize()
@@ -240,39 +257,30 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 		int count = 0;
 		while (true)
 		{
-//			try
-//			{
 // Read the data from the source
-				ret = stock_reader.read(data_list);
-				if (StockRecorderCmnDef.CheckFailure(ret))
-				{
-					runtime_ret.set(ret);
-					break;
-				}
+			ret = stock_reader.read(data_list);
+			if (StockRecorderCmnDef.CheckFailure(ret))
+			{
+				runtime_ret.set(ret);
+				break;
+			}
 
 // There is no more data...
-				if (data_list.isEmpty())
-				{
-					StockRecorderCmnDef.format_info("All the data in %s are read", data_filename);
-					break;
-				}
+			if (data_list.isEmpty())
+			{
+				StockRecorderCmnDef.format_info("All the data in %s are read", data_filename);
+				break;
+			}
 
 // Write the data into the sinker
-				ret = stock_writer.write(data_list);
-				if (StockRecorderCmnDef.CheckFailure(ret))
-				{
-					runtime_ret.set(ret);
-					break;
-				}
-				count += data_list.size();
-				data_list.clear();
-
-//				Thread.sleep(1000);
-//			}
-//			catch (Exception e)
-//			{
-//				StockRecorderCmnDef.format_error("Error occur in worker thread, due to: %s", e.toString());
-//			}
+			ret = stock_writer.write(data_list);
+			if (StockRecorderCmnDef.CheckFailure(ret))
+			{
+				runtime_ret.set(ret);
+				break;
+			}
+			count += data_list.size();
+			data_list.clear();
 		}
 		StockRecorderCmnDef.format_debug("Got %d data", count);
 		StockRecorderCmnDef.debug("The worker thread of recording data to database is going to die !!!");

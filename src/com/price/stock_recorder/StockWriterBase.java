@@ -27,11 +27,9 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 
 	protected String format_cmd_insert_into_table_head_with_name = null;
 	protected String cmd_create_table = null;
-	protected String[] cmd_insert_data_list = new String[StockRecorderCmnDef.EACH_UPDATE_DATA_AMOUNT];
+	protected PreparedStatement[] cmd_insert_data_list = new PreparedStatement[StockRecorderCmnDef.EACH_UPDATE_DATA_AMOUNT];
 
-	private Connection connection = null; //Database objects, 連接object
-	private String cmd_buf = null;
-	private String current_time_string = null;
+	protected Connection connection = null; //Database objects, 連接object
 	private boolean table_created = false;
 	private String server = null;
 	private String username = null;
@@ -76,9 +74,9 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 			{
 				connection = DriverManager.getConnection(String.format("jdbc:mysql://localhost/?user=%s&password=%s", username, password)); 
 				Statement s = connection.createStatement();
-				cmd_buf = String.format(format_cmd_create_database, database);
-				StockRecorderCmnDef.format_debug("Try to create database[%s] by command: %s", database, cmd_buf);
-				s.executeUpdate(cmd_buf);
+				String cmd_create_database = String.format(format_cmd_create_database, database);
+				StockRecorderCmnDef.format_debug("Try to create database[%s] by command: %s", database, cmd_create_database);
+				s.executeUpdate(cmd_create_database);
 			}
 			catch(SQLException ex1) //有可能會產生sql exception
 			{
@@ -91,7 +89,7 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 		return StockRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short open_device()
+	public short open_table()
 	{
 // Check if the connection is established
 		if (connection == null)
@@ -106,18 +104,18 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 			try
 			{
 				Statement s = connection.createStatement();
-				cmd_buf = String.format(cmd_create_table, current_time_string);
-				StockRecorderCmnDef.format_debug("Try to create table[sql%s] by command: %s", current_time_string, cmd_buf);
+//				cmd_buf = String.format(cmd_create_table, current_time_string);
+				StockRecorderCmnDef.format_debug("Try to create table[%s] by command: %s", table, cmd_create_table);
 
-				s.executeUpdate(cmd_buf);
+				s.executeUpdate(cmd_create_table);
 			}
 			catch(SQLException ex) //有可能會產生sql exception
 			{
 				if (ex.getErrorCode() == 1050)
-					StockRecorderCmnDef.format_debug("The sql%s has already existed", current_time_string);
+					StockRecorderCmnDef.format_debug("The table[%s] has already existed", table);
 				else
 				{
-					StockRecorderCmnDef.format_error("Fails to create table[sql%s], due to: %d, %s", current_time_string, ex.getMessage());
+					StockRecorderCmnDef.format_error("Fails to create table[%s], due to: %d, %s", table, ex.getMessage());
 					return StockRecorderCmnDef.RET_FAILURE_MYSQL;
 				}
 			}			
@@ -127,10 +125,10 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 		return StockRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short close_device()
-	{
-		return StockRecorderCmnDef.RET_SUCCESS;
-	}
+//	public short close_device()
+//	{
+//		return StockRecorderCmnDef.RET_SUCCESS;
+//	}
 
 	@Override
 	public short initialize(StockRecorderCmnDef.StockObserverInf observer, String table_name, List<String> file_sql_field_mapping)
@@ -138,15 +136,21 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 		parent_observer = observer;
 		table = table_name;
 		format_cmd_insert_into_table_head_with_name = String.format(format_cmd_insert_into_table_head, table);
-		StockRecorderCmnDef.debug("Initialize the MsgDumperSql object......");
+//		StockRecorderCmnDef.debug("Initialize the MsgDumperSql object......");
 
 		short ret = StockRecorderCmnDef.RET_SUCCESS;
+// Create the connection to the MySQL server
+		ret = try_connect_mysql();
+		if (StockRecorderCmnDef.CheckFailure(ret))
+			return ret;
+
+// Generate the SQL command to create table
 		ret = format_field_cmd();
 		if (StockRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
-// Create the connection to the MySQL server
-		ret = try_connect_mysql();
+// Create table
+		ret = open_table();
 		if (StockRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
@@ -179,19 +183,20 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 		if (StockRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
-//// Write the message into the log file
-//		try
-//		{
-//			for (String cmd_insert_data : cmd_insert_data_list)
-//			{
-//				Statement s = connection.createStatement();
-//				s.executeUpdate(cmd_insert_data);
-//			}
-//		}
-//		catch(SQLException ex) //有可能會產生sql exception
-//		{
-//			StockRecorderCmnDef.format_error("Fails to insert data into table[sql%s], due to: %d, %s", current_time_string, ex.getMessage());
-//		}
+// Write the message into the log file
+		try
+		{
+			for (PreparedStatement cmd_insert_data : cmd_insert_data_list)
+			{
+				StockRecorderCmnDef.format_debug("Insert data by command: %s", cmd_insert_data);
+				cmd_insert_data.executeUpdate();
+			}
+		}
+		catch(SQLException ex) //有可能會產生sql exception
+		{
+			StockRecorderCmnDef.format_error("Fails to insert data into table[%s], due to: %s", table, ex.getMessage());
+			return  StockRecorderCmnDef.RET_FAILURE_MYSQL;
+		}
 
 		return  StockRecorderCmnDef.RET_SUCCESS;
 	}
