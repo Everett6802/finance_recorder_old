@@ -10,7 +10,7 @@ public class StockWriterStock extends StockWriterBase
 	private static final String[] FIELD_LIST = new String[]{"date", "open", "high", "low", "close", "volume"};
 	private static final String[] FIELD_TYPE_LIST = new String[]{"DATE", "FLOAT", "FLOAT", "FLOAT", "FLOAT", "FLOAT"};
 	private static final int FIELD_DATE_INDEX = 0;
-	private static final int FIELD_TYPE_DATE_INDEX = 0;
+	private static final int FIELD_TYPE_DATE_INDEX = FIELD_DATE_INDEX;
 	private static final int field_list_len = FIELD_LIST.length;
 
 	public StockWriterStock() throws RuntimeException
@@ -25,25 +25,32 @@ public class StockWriterStock extends StockWriterBase
 // Check if the first field is date
 		if (!FIELD_LIST[FIELD_DATE_INDEX].equals("date"))
 		{
-			String error_desc = String.format("The first field should be data, not %s", FIELD_LIST[FIELD_DATE_INDEX]);
+			String error_desc = String.format("The %drd field should be data, not %s", FIELD_DATE_INDEX, FIELD_LIST[FIELD_DATE_INDEX]);
 			StockRecorderCmnDef.debug(error_desc);
 			throw new RuntimeException(error_desc);
 		}
 // Check if the first field is date
 		if (!FIELD_TYPE_LIST[FIELD_TYPE_DATE_INDEX].equals("DATE"))
 		{
-			String error_desc = String.format("The first field type should be DATE, not %s", FIELD_TYPE_LIST[FIELD_TYPE_DATE_INDEX]);
+			String error_desc = String.format("The %drd field type should be DATE, not %s", FIELD_TYPE_DATE_INDEX, FIELD_TYPE_LIST[FIELD_TYPE_DATE_INDEX]);
 			StockRecorderCmnDef.debug(error_desc);
 			throw new RuntimeException(error_desc);
 		}
 	}
 
+	protected int get_date_index() {return FIELD_DATE_INDEX;}
+
 	protected short format_field_cmd()
 	{
 		cmd_create_table = String.format(format_cmd_create_table_head, table);
-		cmd_create_table += String.format("%s %s", FIELD_LIST[0], FIELD_TYPE_LIST[0]);
+// Set the date field as the primary key
+		cmd_create_table += String.format("%s %s PRIMARY KEY", FIELD_LIST[FIELD_DATE_INDEX], FIELD_TYPE_LIST[FIELD_TYPE_DATE_INDEX]);
 		for (int i = 1 ; i < field_list_len ; i++)
+		{
+			if (i == FIELD_DATE_INDEX)
+				continue;
 			cmd_create_table += String.format(",%s %s", FIELD_LIST[i], FIELD_TYPE_LIST[i]);
+		}
 		cmd_create_table += format_cmd_create_table_tail;
 		StockRecorderCmnDef.format_debug("Create the command of creating table[%s]: %s", table, cmd_create_table);
 
@@ -61,6 +68,7 @@ public class StockWriterStock extends StockWriterBase
 		int split = -1;
 		String cmd_field = null;
 		String cmd_data = null;
+		String cmd_update_data = null;
 		String cmd_insert_data;
 		int count = 0;
 		java.sql.Date db_date = null;
@@ -68,49 +76,41 @@ public class StockWriterStock extends StockWriterBase
 		{
 			String file_item_arr[] = data.split(StockRecorderCmnDef.DATA_SPLIT);
 
-			Iterator entries = file_sql_field_mapping_table.entrySet().iterator();
+			Iterator entries = sql_file_field_mapping_table.entrySet().iterator();
 // Add the date field
-			cmd_field = null;
-			cmd_data = null;
-			db_date = null;
+			cmd_field = FIELD_LIST[FIELD_DATE_INDEX];
+			cmd_data = "?";
+//			cmd_data = file_item_arr[sql_file_field_mapping_table.get(FIELD_DATE_INDEX)];
+			try
+			{
+				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
+				java.util.Date dateStr = formatter.parse(file_item_arr[sql_file_field_mapping_table.get(FIELD_DATE_INDEX)]);
+				db_date = new java.sql.Date(dateStr.getTime());
+//				cmd_data = String.format("%s", db_date);
+			}
+			catch (ParseException e)
+			{
+				StockRecorderCmnDef.format_debug("Fail to transform the MySQL time format, due to: %s", e.toString());
+				return StockRecorderCmnDef.RET_FAILURE_MYSQL;
+			}
+			cmd_update_data = null;
+//			db_date = null;
 			while (entries.hasNext())
 			{
 				Map.Entry entry = (Map.Entry) entries.next();
 				int key_index = (Integer)entry.getKey();
 				int value_index = (Integer)entry.getValue();
+				if (key_index == FIELD_DATE_INDEX)
+					continue;
 
-				if (cmd_field != null)
-					cmd_field += String.format(",%s", FIELD_LIST[value_index]);
+				cmd_field += String.format(",%s", FIELD_LIST[key_index]);
+				cmd_data += String.format(",%s", file_item_arr[value_index]);
+				if (cmd_update_data == null)
+					cmd_update_data = String.format(" %s=%s", FIELD_LIST[key_index], file_item_arr[value_index]);
 				else
-					cmd_field = FIELD_LIST[value_index];
-
-				if (value_index == FIELD_TYPE_DATE_INDEX)
-				{
-					try
-					{
-						SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
-						java.util.Date dateStr = formatter.parse(file_item_arr[key_index]);
-						db_date = new java.sql.Date(dateStr.getTime());
-						if (cmd_data != null)
-							cmd_data += String.format(",?", db_date);
-						else
-							cmd_data = String.format("?", db_date);
-					}
-					catch (ParseException e)
-					{
-						StockRecorderCmnDef.format_debug("Fail to transform the MySQL time format, due to: %s", e.toString());
-						return StockRecorderCmnDef.RET_FAILURE_MYSQL;
-					}
-				}
-				else
-				{
-					if (cmd_data != null)
-						cmd_data += String.format(",%s", file_item_arr[key_index]);
-					else
-						cmd_data = String.format("%s", file_item_arr[key_index]);
-				}
+					cmd_update_data += String.format(",%s=%s", FIELD_LIST[key_index], file_item_arr[value_index]);
 			}
-			cmd_insert_data = format_cmd_insert_into_table_head_with_name + cmd_field + format_cmd_insert_into_table_mid + cmd_data + format_cmd_insert_into_table_tail;
+			cmd_insert_data = format_cmd_insert_into_table_head_with_name + cmd_field + format_cmd_insert_into_table_mid + cmd_data + format_cmd_insert_into_table_tail + cmd_update_data;
 			try
 			{
 				PreparedStatement pstmt = connection.prepareStatement(cmd_insert_data);

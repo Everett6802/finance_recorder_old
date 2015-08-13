@@ -122,8 +122,7 @@ public class StockRecorderCmnDef
 	}
 	public interface StockWriterInf
 	{
-		public short initialize(StockObserverInf observer, String database_name, List<String> file_sql_field_mapping);
-//		public short setup_field_mapping(List<String> file_sql_field_mapping);
+		public short initialize(StockObserverInf observer, String database_name, List<String> sql_file_field_mapping);
 		public short write(List<String> data_list);
 		public short deinitialize();
 	}

@@ -21,9 +21,9 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 //	private static final String format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
 	protected static final String format_cmd_insert_into_table_head = "INSERT INTO %s (";
 	protected static final String format_cmd_insert_into_table_mid = ")VALUES(";
-	protected static final String format_cmd_insert_into_table_tail = ")";
+	protected static final String format_cmd_insert_into_table_tail = ") ON DUPLICATE KEY UPDATE";
 
-	protected Map<Integer, Integer> file_sql_field_mapping_table = new HashMap<Integer, Integer>();
+	protected Map<Integer, Integer> sql_file_field_mapping_table = new HashMap<Integer, Integer>();
 
 	protected String format_cmd_insert_into_table_head_with_name = null;
 	protected String cmd_create_table = null;
@@ -125,13 +125,8 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 		return StockRecorderCmnDef.RET_SUCCESS;
 	}
 
-//	public short close_device()
-//	{
-//		return StockRecorderCmnDef.RET_SUCCESS;
-//	}
-
 	@Override
-	public short initialize(StockRecorderCmnDef.StockObserverInf observer, String table_name, List<String> file_sql_field_mapping)
+	public short initialize(StockRecorderCmnDef.StockObserverInf observer, String table_name, List<String> sql_file_field_mapping)
 	{
 		parent_observer = observer;
 		table = table_name;
@@ -154,11 +149,11 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 		if (StockRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
-// Generate the mapping table of file and sql field position
+// Generate the mapping table of sql and file field position
 		int split = -1;
-		Integer file_pos;
 		Integer sql_pos;
-		for (String mapping : file_sql_field_mapping)
+		Integer file_pos;
+		for (String mapping : sql_file_field_mapping)
 		{
 			split = mapping.indexOf(':');
 			if (split == -1)
@@ -166,10 +161,17 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 				StockRecorderCmnDef.format_debug("Incorrect format for mapping: %s", mapping);
 				return StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 			}
-			file_pos = Integer.valueOf(mapping.substring(0, split));
-			sql_pos = Integer.valueOf(mapping.substring(split + 1));
-			StockRecorderCmnDef.format_debug("File SQL Mapping Item: (%d: %d)", file_pos, sql_pos);
-			file_sql_field_mapping_table.put(file_pos, sql_pos);
+			sql_pos = Integer.valueOf(mapping.substring(0, split));
+			file_pos = Integer.valueOf(mapping.substring(split + 1));
+			StockRecorderCmnDef.format_debug("SQL File Mapping Item: (%d: %d)", sql_pos, file_pos);
+			sql_file_field_mapping_table.put(sql_pos, file_pos);
+		}
+
+// Check if the date index in the mapping table
+		if (!sql_file_field_mapping_table.containsKey(get_date_index()))
+		{
+			StockRecorderCmnDef.error("The DATE index is NOT found in the mapping table");
+			return StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 		}
 
 		return StockRecorderCmnDef.RET_SUCCESS;
@@ -224,6 +226,7 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 		return StockRecorderCmnDef.RET_SUCCESS;
 	}
 
+	protected abstract int get_date_index();
 	protected abstract short format_field_cmd();
 	protected abstract short format_data_cmd(List<String> data_list);
 }
