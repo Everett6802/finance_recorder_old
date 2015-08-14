@@ -1,9 +1,9 @@
-package com.price.stock_recorder;
+package com.price.finance_recorder;
 
 import java.io.*;
 
 
-public abstract class StockReaderBase implements StockRecorderCmnDef.StockReaderInf
+public abstract class FinanceReaderBase implements FinanceRecorderCmnDef.FinanceReaderInf
 {
 	protected static final String FILE_FOLDER_NAME = "data";
 
@@ -15,7 +15,7 @@ public abstract class StockReaderBase implements StockRecorderCmnDef.StockReader
 			if (field_string == null)
 				field_string = field;
 			else
-				field_string += (StockRecorderCmnDef.DATA_SPLIT + field);
+				field_string += (FinanceRecorderCmnDef.DATA_SPLIT + field);
 		}
 
 		return field_string;

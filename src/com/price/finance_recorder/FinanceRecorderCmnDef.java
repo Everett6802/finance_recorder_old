@@ -1,10 +1,10 @@
-package com.price.stock_recorder;
+package com.price.finance_recorder;
 
 import java.io.*;
 import java.util.List;
 
 
-public class StockRecorderCmnDef
+public class FinanceRecorderCmnDef
 {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Return values
@@ -56,40 +56,40 @@ public class StockRecorderCmnDef
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Functions
-	private static final String get_code_position(){return String.format("%s:%d", StockRecorderCmnBase.__FILE__(), StockRecorderCmnBase.__LINE__());}
+	private static final String get_code_position(){return String.format("%s:%d", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__());}
 
 	public static void debug(String msg) 
 	{
-		msg_dumper.write_debug_msg(String.format("[%s:%d] %s", StockRecorderCmnBase.__FILE__(), StockRecorderCmnBase.__LINE__(), msg));
+		msg_dumper.write_debug_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), msg));
 	}
 	public static void info(String msg) 
 	{
-		msg_dumper.write_info_msg(String.format("[%s:%d] %s", StockRecorderCmnBase.__FILE__(), StockRecorderCmnBase.__LINE__(), msg));
+		msg_dumper.write_info_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), msg));
 	}
 	public static void warn(String msg)
 	{
-		msg_dumper.write_warn_msg(String.format("[%s:%d] %s", StockRecorderCmnBase.__FILE__(), StockRecorderCmnBase.__LINE__(), msg));
+		msg_dumper.write_warn_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), msg));
 	}
 	public static void error(String msg)
 	{
-		msg_dumper.write_error_msg(String.format("[%s:%d] %s", StockRecorderCmnBase.__FILE__(), StockRecorderCmnBase.__LINE__(), msg));
+		msg_dumper.write_error_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), msg));
 	}
 	
 	public static void format_debug(String format, Object... arguments) 
 	{
-		msg_dumper.write_debug_msg(String.format("[%s:%d] %s", StockRecorderCmnBase.__FILE__(), StockRecorderCmnBase.__LINE__(), String.format(format, arguments)));
+		msg_dumper.write_debug_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), String.format(format, arguments)));
 	}
 	public static void format_info(String format, Object... arguments)
 	{
-		msg_dumper.write_info_msg(String.format("[%s:%d] %s", StockRecorderCmnBase.__FILE__(), StockRecorderCmnBase.__LINE__(), String.format(format, arguments)));
+		msg_dumper.write_info_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), String.format(format, arguments)));
 	}
 	public static void format_warn(String format, Object... arguments)
 	{
-		msg_dumper.write_warn_msg(String.format("[%s:%d] %s", StockRecorderCmnBase.__FILE__(), StockRecorderCmnBase.__LINE__(), String.format(format, arguments)));
+		msg_dumper.write_warn_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), String.format(format, arguments)));
 	}
 	public static void format_error(String format, Object... arguments)
 	{
-		msg_dumper.write_error_msg(String.format("[%s:%d] %s", StockRecorderCmnBase.__FILE__(), StockRecorderCmnBase.__LINE__(), String.format(format, arguments)));
+		msg_dumper.write_error_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), String.format(format, arguments)));
 	}
 
 	public static String get_current_path()
@@ -110,19 +110,19 @@ public class StockRecorderCmnDef
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Interface
-	public interface StockObserverInf
+	public interface FinanceObserverInf
 	{
 		public short notify(short type);
 	}
-	public interface StockReaderInf
+	public interface FinanceReaderInf
 	{
-		public short initialize(StockObserverInf observer, String data_filename);
+		public short initialize(FinanceObserverInf observer, String data_filename);
 		public short read(List<String> data_list);
 		public short deinitialize();
 	}
-	public interface StockWriterInf
+	public interface FinanceWriterInf
 	{
-		public short initialize(StockObserverInf observer, String database_name, List<String> sql_file_field_mapping);
+		public short initialize(FinanceObserverInf observer, String database_name, List<String> sql_file_field_mapping);
 		public short write(List<String> data_list);
 		public short deinitialize();
 	}

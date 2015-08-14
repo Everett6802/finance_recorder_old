@@ -1,11 +1,11 @@
-package com.price.stock_recorder;
+package com.price.finance_recorder;
 
 import java.io.*;
 
 
-public class StockRecorder 
+public class FinanceRecorder 
 {
-	static StockRecorderMgr stock_recorder_mgr = null;
+	static FinanceRecorderMgr stock_recorder_mgr = null;
 	public static void main(String args[])
 	{
 //		java.sql.Date sd;
@@ -26,13 +26,13 @@ public class StockRecorder
 //		System.out.println("Done");
 //		System.exit(0);
 
-		stock_recorder_mgr = new StockRecorderMgr();
-		short ret = StockRecorderCmnDef.RET_SUCCESS;
+		stock_recorder_mgr = new FinanceRecorderMgr();
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 
 		System.out.println("Start to record the Stock Information...\n ");
 // Initialize the object
 		ret = stock_recorder_mgr.initialize();
-		if (StockRecorderCmnDef.CheckFailure(ret))
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
 			System.err.println("Fail to initialize...");
 			System.exit(1);
@@ -40,7 +40,7 @@ public class StockRecorder
 
 // Record the stock information
 		ret = stock_recorder_mgr.record();
-		if (StockRecorderCmnDef.CheckFailure(ret))
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
 			System.err.println("Fail to record...");
 			System.exit(1);
@@ -48,7 +48,7 @@ public class StockRecorder
 
 // De-Initialize the object
 		ret = stock_recorder_mgr.deinitialize();
-		if (StockRecorderCmnDef.CheckFailure(ret))
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
 			System.err.println("Fail to de-initialize...");
 			System.exit(1);

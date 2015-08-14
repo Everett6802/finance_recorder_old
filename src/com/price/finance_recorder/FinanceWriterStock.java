@@ -1,11 +1,11 @@
-package com.price.stock_recorder;
+package com.price.finance_recorder;
 
 import java.util.*;
 import java.sql.*;
 import java.text.*;
 
 
-public class StockWriterStock extends StockWriterBase
+public class FinanceWriterStock extends FinanceWriterBase
 {
 	private static final String[] FIELD_LIST = new String[]{"date", "open", "high", "low", "close", "volume"};
 	private static final String[] FIELD_TYPE_LIST = new String[]{"DATE", "FLOAT", "FLOAT", "FLOAT", "FLOAT", "FLOAT"};
@@ -13,27 +13,27 @@ public class StockWriterStock extends StockWriterBase
 	private static final int FIELD_TYPE_DATE_INDEX = FIELD_DATE_INDEX;
 	private static final int field_list_len = FIELD_LIST.length;
 
-	public StockWriterStock() throws RuntimeException
+	public FinanceWriterStock() throws RuntimeException
 	{
 // Check the length of mapping table
 		if (field_list_len != FIELD_TYPE_LIST.length)
 		{
 			String error_desc = String.format("The field length is NOT equal, field: %d, field type: %d", field_list_len, FIELD_TYPE_LIST.length);
-			StockRecorderCmnDef.debug(error_desc);
+			FinanceRecorderCmnDef.debug(error_desc);
 			throw new RuntimeException(error_desc);
 		}
 // Check if the first field is date
 		if (!FIELD_LIST[FIELD_DATE_INDEX].equals("date"))
 		{
 			String error_desc = String.format("The %drd field should be data, not %s", FIELD_DATE_INDEX, FIELD_LIST[FIELD_DATE_INDEX]);
-			StockRecorderCmnDef.debug(error_desc);
+			FinanceRecorderCmnDef.debug(error_desc);
 			throw new RuntimeException(error_desc);
 		}
 // Check if the first field is date
 		if (!FIELD_TYPE_LIST[FIELD_TYPE_DATE_INDEX].equals("DATE"))
 		{
 			String error_desc = String.format("The %drd field type should be DATE, not %s", FIELD_TYPE_DATE_INDEX, FIELD_TYPE_LIST[FIELD_TYPE_DATE_INDEX]);
-			StockRecorderCmnDef.debug(error_desc);
+			FinanceRecorderCmnDef.debug(error_desc);
 			throw new RuntimeException(error_desc);
 		}
 	}
@@ -52,17 +52,17 @@ public class StockWriterStock extends StockWriterBase
 			cmd_create_table += String.format(",%s %s", FIELD_LIST[i], FIELD_TYPE_LIST[i]);
 		}
 		cmd_create_table += format_cmd_create_table_tail;
-		StockRecorderCmnDef.format_debug("Create the command of creating table[%s]: %s", table, cmd_create_table);
+		FinanceRecorderCmnDef.format_debug("Create the command of creating table[%s]: %s", table, cmd_create_table);
 
-		return StockRecorderCmnDef.RET_SUCCESS;
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	protected short format_data_cmd(List<String> data_list)
 	{
-		if (data_list.size() > StockRecorderCmnDef.EACH_UPDATE_DATA_AMOUNT)
+		if (data_list.size() > FinanceRecorderCmnDef.EACH_UPDATE_DATA_AMOUNT)
 		{
-			StockRecorderCmnDef.format_debug("The size of data_list is %d, larger than %d", data_list.size(), StockRecorderCmnDef.EACH_UPDATE_DATA_AMOUNT);
-			return StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+			FinanceRecorderCmnDef.format_debug("The size of data_list is %d, larger than %d", data_list.size(), FinanceRecorderCmnDef.EACH_UPDATE_DATA_AMOUNT);
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 		}
 
 		int split = -1;
@@ -74,7 +74,7 @@ public class StockWriterStock extends StockWriterBase
 		java.sql.Date db_date = null;
 		for (String data : data_list)
 		{
-			String file_item_arr[] = data.split(StockRecorderCmnDef.DATA_SPLIT);
+			String file_item_arr[] = data.split(FinanceRecorderCmnDef.DATA_SPLIT);
 
 			Iterator entries = sql_file_field_mapping_table.entrySet().iterator();
 // Add the date field
@@ -90,8 +90,8 @@ public class StockWriterStock extends StockWriterBase
 			}
 			catch (ParseException e)
 			{
-				StockRecorderCmnDef.format_debug("Fail to transform the MySQL time format, due to: %s", e.toString());
-				return StockRecorderCmnDef.RET_FAILURE_MYSQL;
+				FinanceRecorderCmnDef.format_debug("Fail to transform the MySQL time format, due to: %s", e.toString());
+				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 			}
 			cmd_update_data = null;
 //			db_date = null;
@@ -120,11 +120,11 @@ public class StockWriterStock extends StockWriterBase
 			}
 			catch (SQLException e)
 			{
-				StockRecorderCmnDef.format_debug("Fail to prepare MySQL command, due to: %s", e.toString());
-				return StockRecorderCmnDef.RET_FAILURE_MYSQL;
+				FinanceRecorderCmnDef.format_debug("Fail to prepare MySQL command, due to: %s", e.toString());
+				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 			}
 		}
 
-		return StockRecorderCmnDef.RET_SUCCESS;
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 }

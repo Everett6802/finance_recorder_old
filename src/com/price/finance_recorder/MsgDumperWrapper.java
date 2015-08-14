@@ -1,4 +1,4 @@
-package com.price.stock_recorder;
+package com.price.finance_recorder;
 
 import com.price.msg_dumper.*;
 

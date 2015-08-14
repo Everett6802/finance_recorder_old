@@ -1,4 +1,4 @@
-package com.price.stock_recorder;
+package com.price.finance_recorder;
 
 import java.sql.*;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 
-public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriterInf
+public abstract class FinanceWriterBase implements FinanceRecorderCmnDef.FinanceWriterInf
 {
 	private static final String DEF_SERVER = "localhost";
 	private static final String DEF_USERNAME = "root";
@@ -27,7 +27,7 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 
 	protected String format_cmd_insert_into_table_head_with_name = null;
 	protected String cmd_create_table = null;
-	protected PreparedStatement[] cmd_insert_data_list = new PreparedStatement[StockRecorderCmnDef.EACH_UPDATE_DATA_AMOUNT];
+	protected PreparedStatement[] cmd_insert_data_list = new PreparedStatement[FinanceRecorderCmnDef.EACH_UPDATE_DATA_AMOUNT];
 
 	protected Connection connection = null; //Database objects, 連接object
 	private boolean table_created = false;
@@ -37,9 +37,9 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 	private String database = null;
 	protected String table = null;
 
-	StockRecorderCmnDef.StockObserverInf parent_observer = null;
+	FinanceRecorderCmnDef.FinanceObserverInf parent_observer = null;
 
-	public StockWriterBase()
+	public FinanceWriterBase()
 	{
 		server = DEF_SERVER;
 		username = DEF_USERNAME;
@@ -49,7 +49,7 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 
 	private short try_connect_mysql()
 	{
-		StockRecorderCmnDef.format_debug("Try to connect to the MySQL database server...");
+		FinanceRecorderCmnDef.format_debug("Try to connect to the MySQL database server...");
 		try 
 		{
 // Java要連接資料庫時，需使用到JDBC-Driver，連接MySQL資料庫使用Connector/j，下載後解開壓縮，mysql-connector-java-5.1.15-bin.jar就是MySQL的JDBC-Driver.
@@ -65,28 +65,28 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 		catch(ClassNotFoundException ex)
 		{
 			System.out.println("DriverClassNotFound:" + ex.toString());
-			return StockRecorderCmnDef.RET_FAILURE_MYSQL;
+			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{
-			StockRecorderCmnDef.format_debug("The %s database does NOT exist, create a NEW one", database);
+			FinanceRecorderCmnDef.format_debug("The %s database does NOT exist, create a NEW one", database);
 			try
 			{
 				connection = DriverManager.getConnection(String.format("jdbc:mysql://localhost/?user=%s&password=%s", username, password)); 
 				Statement s = connection.createStatement();
 				String cmd_create_database = String.format(format_cmd_create_database, database);
-				StockRecorderCmnDef.format_debug("Try to create database[%s] by command: %s", database, cmd_create_database);
+				FinanceRecorderCmnDef.format_debug("Try to create database[%s] by command: %s", database, cmd_create_database);
 				s.executeUpdate(cmd_create_database);
 			}
 			catch(SQLException ex1) //有可能會產生sql exception
 			{
 				System.out.println("Exception:" + ex1.toString());
-				return StockRecorderCmnDef.RET_FAILURE_MYSQL;
+				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 			}
-			StockRecorderCmnDef.format_debug("Try to connect to the MySQL database server...... Successfully");
+			FinanceRecorderCmnDef.format_debug("Try to connect to the MySQL database server...... Successfully");
 		}
 
-		return StockRecorderCmnDef.RET_SUCCESS;
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	public short open_table()
@@ -94,8 +94,8 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 // Check if the connection is established
 		if (connection == null)
 		{
-			StockRecorderCmnDef.error("The connection is NOT established");
-			return  StockRecorderCmnDef.RET_FAILURE_MYSQL;
+			FinanceRecorderCmnDef.error("The connection is NOT established");
+			return  FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 		}
 
 		if (!table_created)
@@ -105,48 +105,48 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 			{
 				Statement s = connection.createStatement();
 //				cmd_buf = String.format(cmd_create_table, current_time_string);
-				StockRecorderCmnDef.format_debug("Try to create table[%s] by command: %s", table, cmd_create_table);
+				FinanceRecorderCmnDef.format_debug("Try to create table[%s] by command: %s", table, cmd_create_table);
 
 				s.executeUpdate(cmd_create_table);
 			}
 			catch(SQLException ex) //有可能會產生sql exception
 			{
 				if (ex.getErrorCode() == 1050)
-					StockRecorderCmnDef.format_debug("The table[%s] has already existed", table);
+					FinanceRecorderCmnDef.format_debug("The table[%s] has already existed", table);
 				else
 				{
-					StockRecorderCmnDef.format_error("Fails to create table[%s], due to: %d, %s", table, ex.getMessage());
-					return StockRecorderCmnDef.RET_FAILURE_MYSQL;
+					FinanceRecorderCmnDef.format_error("Fails to create table[%s], due to: %d, %s", table, ex.getMessage());
+					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 				}
 			}			
 			table_created = true;
 		}
 
-		return StockRecorderCmnDef.RET_SUCCESS;
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	@Override
-	public short initialize(StockRecorderCmnDef.StockObserverInf observer, String table_name, List<String> sql_file_field_mapping)
+	public short initialize(FinanceRecorderCmnDef.FinanceObserverInf observer, String table_name, List<String> sql_file_field_mapping)
 	{
 		parent_observer = observer;
 		table = table_name;
 		format_cmd_insert_into_table_head_with_name = String.format(format_cmd_insert_into_table_head, table);
-//		StockRecorderCmnDef.debug("Initialize the MsgDumperSql object......");
+//		FinanceRecorderCmnDef.debug("Initialize the MsgDumperSql object......");
 
-		short ret = StockRecorderCmnDef.RET_SUCCESS;
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Create the connection to the MySQL server
 		ret = try_connect_mysql();
-		if (StockRecorderCmnDef.CheckFailure(ret))
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
 // Generate the SQL command to create table
 		ret = format_field_cmd();
-		if (StockRecorderCmnDef.CheckFailure(ret))
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
 // Create table
 		ret = open_table();
-		if (StockRecorderCmnDef.CheckFailure(ret))
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
 // Generate the mapping table of sql and file field position
@@ -158,23 +158,23 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 			split = mapping.indexOf(':');
 			if (split == -1)
 			{
-				StockRecorderCmnDef.format_debug("Incorrect format for mapping: %s", mapping);
-				return StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+				FinanceRecorderCmnDef.format_debug("Incorrect format for mapping: %s", mapping);
+				return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 			}
 			sql_pos = Integer.valueOf(mapping.substring(0, split));
 			file_pos = Integer.valueOf(mapping.substring(split + 1));
-			StockRecorderCmnDef.format_debug("SQL File Mapping Item: (%d: %d)", sql_pos, file_pos);
+			FinanceRecorderCmnDef.format_debug("SQL File Mapping Item: (%d: %d)", sql_pos, file_pos);
 			sql_file_field_mapping_table.put(sql_pos, file_pos);
 		}
 
 // Check if the date index in the mapping table
 		if (!sql_file_field_mapping_table.containsKey(get_date_index()))
 		{
-			StockRecorderCmnDef.error("The DATE index is NOT found in the mapping table");
-			return StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+			FinanceRecorderCmnDef.error("The DATE index is NOT found in the mapping table");
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 		}
 
-		return StockRecorderCmnDef.RET_SUCCESS;
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	@Override
@@ -182,7 +182,7 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 	{
 // Format the SQL command of inserting data
 		short ret = format_data_cmd(data_list);
-		if (StockRecorderCmnDef.CheckFailure(ret))
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
 // Write the message into the log file
@@ -190,24 +190,24 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 		{
 			for (PreparedStatement cmd_insert_data : cmd_insert_data_list)
 			{
-				StockRecorderCmnDef.format_debug("Insert data by command: %s", cmd_insert_data);
+				FinanceRecorderCmnDef.format_debug("Insert data by command: %s", cmd_insert_data);
 				cmd_insert_data.executeUpdate();
 			}
 		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{
-			StockRecorderCmnDef.format_error("Fails to insert data into table[%s], due to: %s", table, ex.getMessage());
-			return  StockRecorderCmnDef.RET_FAILURE_MYSQL;
+			FinanceRecorderCmnDef.format_error("Fails to insert data into table[%s], due to: %s", table, ex.getMessage());
+			return  FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 		}
 
-		return  StockRecorderCmnDef.RET_SUCCESS;
+		return  FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	@Override
 	public short deinitialize()
 	{
-		StockRecorderCmnDef.format_debug("DeInitialize the MsgDumperSql object......");
-		StockRecorderCmnDef.format_debug("Release the parameters connected to the MySQL database server");
+		FinanceRecorderCmnDef.format_debug("DeInitialize the MsgDumperSql object......");
+		FinanceRecorderCmnDef.format_debug("Release the parameters connected to the MySQL database server");
 		if (connection != null)
 		{
 			try 
@@ -217,13 +217,13 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 			catch (SQLException e) 
 			{
 				// TODO Auto-generated catch block
-				StockRecorderCmnDef.format_error("Fail to close the connection to MySQL, due to %s", e.toString());
-				return StockRecorderCmnDef.RET_FAILURE_MYSQL; 
+				FinanceRecorderCmnDef.format_error("Fail to close the connection to MySQL, due to %s", e.toString());
+				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL; 
 			}
 			connection = null;
 		}
 
-		return StockRecorderCmnDef.RET_SUCCESS;
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	protected abstract int get_date_index();

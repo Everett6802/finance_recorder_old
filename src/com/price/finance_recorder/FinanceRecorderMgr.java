@@ -1,11 +1,11 @@
-package com.price.stock_recorder;
+package com.price.finance_recorder;
 
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 
 
-public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObserverInf
+public class FinanceRecorderMgr implements Runnable, FinanceRecorderCmnDef.StockObserverInf
 {
 	BufferedReader br = null;
 	String config_filepath = null;
@@ -20,24 +20,24 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 	private String data_filename = null;
 	private String database_name = null;
 
-	private StockRecorderCmnDef.StockReaderInf stock_reader = null;
-	private StockRecorderCmnDef.StockWriterInf stock_writer = null;
+	private FinanceRecorderCmnDef.StockReaderInf stock_reader = null;
+	private FinanceRecorderCmnDef.StockWriterInf stock_writer = null;
 	private List<String> file_sql_field_mapping = new ArrayList();
 
 	private Thread t = null;
-	private AtomicInteger runtime_ret = new AtomicInteger(StockRecorderCmnDef.RET_SUCCESS);
+	private AtomicInteger runtime_ret = new AtomicInteger(FinanceRecorderCmnDef.RET_SUCCESS);
 
 	public short parse_config()
 	{
-		String current_path = StockRecorderCmnDef.get_current_path();
-		String conf_filepath = String.format("%s/%s/%s", current_path, StockRecorderCmnDef.CONF_FOLDERNAME, CONF_FILENAME);
+		String current_path = FinanceRecorderCmnDef.get_current_path();
+		String conf_filepath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME, CONF_FILENAME);
 
-		StockRecorderCmnDef.debug(String.format("Check the file[%s] exist", conf_filepath));
+		FinanceRecorderCmnDef.debug(String.format("Check the file[%s] exist", conf_filepath));
 		File f = new File(conf_filepath);
 		if (!f.exists())
 		{
-			StockRecorderCmnDef.format_error("The stock recoder configration file[%s] does NOT exist", conf_filepath);
-			return StockRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+			FinanceRecorderCmnDef.format_error("The stock recoder configration file[%s] does NOT exist", conf_filepath);
+			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
 		}
 
 // Open the conf file for reading
@@ -50,10 +50,10 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 		}
 		catch (IOException e)
 		{
-			StockRecorderCmnDef.format_error("Fails to open %s file, due to: %s", conf_filepath, e.toString());
-			return StockRecorderCmnDef.RET_FAILURE_IO_OPERATION;
+			FinanceRecorderCmnDef.format_error("Fails to open %s file, due to: %s", conf_filepath, e.toString());
+			return FinanceRecorderCmnDef.RET_FAILURE_IO_OPERATION;
 		}
-		short ret = StockRecorderCmnDef.RET_SUCCESS;
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Read the conf file
 		try
 		{
@@ -77,14 +77,14 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 				index = line.indexOf('=');
 				if (index == -1)
 				{
-					StockRecorderCmnDef.format_error("Incorrect config parameter: %s", line);
-					ret = StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+					FinanceRecorderCmnDef.format_error("Incorrect config parameter: %s", line);
+					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 					break;
 				}
 
 				title = line.substring(0, index);
 				value = line.substring(index + 1);
-				StockRecorderCmnDef.format_debug("Title: %s, Value: %s", title, value);
+				FinanceRecorderCmnDef.format_debug("Title: %s, Value: %s", title, value);
 				if (sql_field_position_start)
 				{
 					boolean found = false;
@@ -103,8 +103,8 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 					}
 					if (!found)
 					{
-						StockRecorderCmnDef.format_error("Unknown SQL config parameter title: %s", title);
-						ret = StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+						FinanceRecorderCmnDef.format_error("Unknown SQL config parameter title: %s", title);
+						ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 						break;
 					}
 					file_sql_field_mapping.add(value);
@@ -131,29 +131,29 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 								database_name = value;
 								break;
 							default:
-								StockRecorderCmnDef.format_error("Unknown config parameter title: %s", title);
-								ret = StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+								FinanceRecorderCmnDef.format_error("Unknown config parameter title: %s", title);
+								ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 								break OUT;
 							}
 						}
 					}
-					if (StockRecorderCmnDef.CheckFailure(ret))
+					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						break;
 				}
 			}
 			if (!date_field_found)
 			{
-				if (StockRecorderCmnDef.CheckSuccess(ret))
+				if (FinanceRecorderCmnDef.CheckSuccess(ret))
 				{
-					StockRecorderCmnDef.error("The 'date' field is a MUST");
-					ret = StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+					FinanceRecorderCmnDef.error("The 'date' field is a MUST");
+					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 				}
 			}
 		}
 		catch (IOException e)
 		{
-			StockRecorderCmnDef.format_error("Error occur while parsing the config file, due to: %s", e.toString());
-			ret = StockRecorderCmnDef.RET_FAILURE_IO_OPERATION;
+			FinanceRecorderCmnDef.format_error("Error occur while parsing the config file, due to: %s", e.toString());
+			ret = FinanceRecorderCmnDef.RET_FAILURE_IO_OPERATION;
 		}
 		finally
 		{
@@ -172,57 +172,57 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 	{
 // Parse the config from the file
 		short ret = parse_config();
-		if (StockRecorderCmnDef.CheckFailure(ret))
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
 // Initialize objects according to the conf file
 		try
 		{
-			StockRecorderCmnDef.format_debug("Try to initialize the StockReader%s object", reader_method);
-			stock_reader = (StockRecorderCmnDef.StockReaderInf)Class.forName("com.price.stock_recorder.StockReader" + reader_method).newInstance();
-			StockRecorderCmnDef.format_debug("Try to initialize the StockWriter%s object", writer_method);
-			stock_writer = (StockRecorderCmnDef.StockWriterInf)Class.forName("com.price.stock_recorder.StockWriter" + writer_method).newInstance();
+			FinanceRecorderCmnDef.format_debug("Try to initialize the FinanceReader%s object", reader_method);
+			stock_reader = (FinanceRecorderCmnDef.StockReaderInf)Class.forName("com.price.finance_recorder.FinanceReader" + reader_method).newInstance();
+			FinanceRecorderCmnDef.format_debug("Try to initialize the FinanceWriter%s object", writer_method);
+			stock_writer = (FinanceRecorderCmnDef.StockWriterInf)Class.forName("com.price.finance_recorder.FinanceWriter" + writer_method).newInstance();
 		}
 		catch (ClassNotFoundException e)
 		{
-			StockRecorderCmnDef.format_error("Class not found, due to: %s", e.toString());
-			return StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+			FinanceRecorderCmnDef.format_error("Class not found, due to: %s", e.toString());
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 		} 
 		catch (InstantiationException e) 
 		{
-			StockRecorderCmnDef.format_error("Instantiation fails, due to: %s", e.toString());
-			return StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+			FinanceRecorderCmnDef.format_error("Instantiation fails, due to: %s", e.toString());
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 		}
 		catch (IllegalAccessException e)
 		{
-			StockRecorderCmnDef.format_error("Illegal access, due to: %s", e.toString());
-			return StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+			FinanceRecorderCmnDef.format_error("Illegal access, due to: %s", e.toString());
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 		}
 
 		ret = stock_reader.initialize(this, data_filename);
-		if (StockRecorderCmnDef.CheckFailure(ret))
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 		ret = stock_writer.initialize(this, database_name, file_sql_field_mapping);
-		if (StockRecorderCmnDef.CheckFailure(ret))
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
-		return StockRecorderCmnDef.RET_SUCCESS;
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	public short record()
 	{
-		StockRecorderCmnDef.debug("Start to record data to database...");
+		FinanceRecorderCmnDef.debug("Start to record data to database...");
 		t = new Thread(this);
 		t.start();
 
-		StockRecorderCmnDef.debug("Wait for the worker thread of recording data to database...");
+		FinanceRecorderCmnDef.debug("Wait for the worker thread of recording data to database...");
 		try
 		{
 			t.join();
 		}
 		catch (InterruptedException e)
 		{
-			StockRecorderCmnDef.debug("Got an Interrupted Exception while waiting for the death of the worker thread...");
+			FinanceRecorderCmnDef.debug("Got an Interrupted Exception while waiting for the death of the worker thread...");
 		}
 
 		short ret = runtime_ret.shortValue();
@@ -231,35 +231,35 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 
 	public short deinitialize()
 	{
-		short ret = StockRecorderCmnDef.RET_SUCCESS;
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		if (stock_reader != null)
 		{
 			ret = stock_reader.deinitialize();
-			if (StockRecorderCmnDef.CheckFailure(ret))
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 		}
 		if (stock_writer != null)
 		{
 			ret = stock_writer.deinitialize();
-			if (StockRecorderCmnDef.CheckFailure(ret))
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 		}
 
-		return StockRecorderCmnDef.RET_SUCCESS;
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	@Override
 	public void run()
 	{
-		StockRecorderCmnDef.debug("The worker thread of recording data to database is working......");
+		FinanceRecorderCmnDef.debug("The worker thread of recording data to database is working......");
 		List<String> data_list = new LinkedList<String>();
-		short ret = StockRecorderCmnDef.RET_SUCCESS;
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		int count = 0;
 		while (true)
 		{
 // Read the data from the source
 			ret = stock_reader.read(data_list);
-			if (StockRecorderCmnDef.CheckFailure(ret))
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
 			{
 				runtime_ret.set(ret);
 				break;
@@ -268,13 +268,13 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 // There is no more data...
 			if (data_list.isEmpty())
 			{
-				StockRecorderCmnDef.format_info("All the data in %s are read", data_filename);
+				FinanceRecorderCmnDef.format_info("All the data in %s are read", data_filename);
 				break;
 			}
 
 // Write the data into the sinker
 			ret = stock_writer.write(data_list);
-			if (StockRecorderCmnDef.CheckFailure(ret))
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
 			{
 				runtime_ret.set(ret);
 				break;
@@ -282,20 +282,20 @@ public class StockRecorderMgr implements Runnable, StockRecorderCmnDef.StockObse
 			count += data_list.size();
 			data_list.clear();
 		}
-		StockRecorderCmnDef.format_debug("Got %d data", count);
-		StockRecorderCmnDef.debug("The worker thread of recording data to database is going to die !!!");
+		FinanceRecorderCmnDef.format_debug("Got %d data", count);
+		FinanceRecorderCmnDef.debug("The worker thread of recording data to database is going to die !!!");
 	}
 
 	@Override
 	public short notify(short type)
 	{
-		short ret = StockRecorderCmnDef.RET_SUCCESS;
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		switch (type)
 		{
 //		case StockRecorderCmnDef.NOTIFY_GET_DATA:
 //			break;
 		default:
-			ret = StockRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+			ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 			break;
 		}
 

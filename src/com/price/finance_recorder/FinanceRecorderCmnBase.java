@@ -1,6 +1,6 @@
-package com.price.stock_recorder;
+package com.price.finance_recorder;
 
-public class StockRecorderCmnBase 
+public class FinanceRecorderCmnBase 
 {
 	protected static String __CLASSNAME__() 
 	{

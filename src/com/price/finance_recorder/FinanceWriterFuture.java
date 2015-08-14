@@ -1,29 +1,28 @@
-package com.price.stock_recorder;
+package com.price.finance_recorder;
 
 import java.util.*;
 import java.sql.*;
 import java.text.*;
 
 
-public class StockWriterOption extends StockWriterBase
+public class FinanceWriterFuture extends FinanceWriterBase
 {
-
 	@Override
-	protected int get_date_index()
+	protected int get_date_index() 
 	{
 // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	protected short format_field_cmd()
+	protected short format_field_cmd() 
 	{
 // TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	protected short format_data_cmd(List<String> data_list)
+	protected short format_data_cmd(List<String> data_list) 
 	{
 // TODO Auto-generated method stub
 		return 0;
