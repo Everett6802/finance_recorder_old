@@ -5,7 +5,7 @@ import java.util.*;
 import java.util.concurrent.atomic.*;
 
 
-public class FinanceRecorderMgr implements Runnable, FinanceRecorderCmnDef.StockObserverInf
+public class FinanceRecorderMgr implements Runnable, FinanceRecorderCmnDef.FinanceObserverInf
 {
 	BufferedReader br = null;
 	String config_filepath = null;
@@ -20,8 +20,8 @@ public class FinanceRecorderMgr implements Runnable, FinanceRecorderCmnDef.Stock
 	private String data_filename = null;
 	private String database_name = null;
 
-	private FinanceRecorderCmnDef.StockReaderInf stock_reader = null;
-	private FinanceRecorderCmnDef.StockWriterInf stock_writer = null;
+	private FinanceRecorderCmnDef.FinanceReaderInf finance_reader = null;
+	private FinanceRecorderCmnDef.FinanceWriterInf finance_writer = null;
 	private List<String> file_sql_field_mapping = new ArrayList();
 
 	private Thread t = null;
@@ -179,9 +179,9 @@ public class FinanceRecorderMgr implements Runnable, FinanceRecorderCmnDef.Stock
 		try
 		{
 			FinanceRecorderCmnDef.format_debug("Try to initialize the FinanceReader%s object", reader_method);
-			stock_reader = (FinanceRecorderCmnDef.StockReaderInf)Class.forName("com.price.finance_recorder.FinanceReader" + reader_method).newInstance();
+			finance_reader = (FinanceRecorderCmnDef.FinanceReaderInf)Class.forName("com.price.finance_recorder.FinanceReader" + reader_method).newInstance();
 			FinanceRecorderCmnDef.format_debug("Try to initialize the FinanceWriter%s object", writer_method);
-			stock_writer = (FinanceRecorderCmnDef.StockWriterInf)Class.forName("com.price.finance_recorder.FinanceWriter" + writer_method).newInstance();
+			finance_writer = (FinanceRecorderCmnDef.FinanceWriterInf)Class.forName("com.price.finance_recorder.FinanceWriter" + writer_method).newInstance();
 		}
 		catch (ClassNotFoundException e)
 		{
@@ -199,10 +199,10 @@ public class FinanceRecorderMgr implements Runnable, FinanceRecorderCmnDef.Stock
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 		}
 
-		ret = stock_reader.initialize(this, data_filename);
+		ret = finance_reader.initialize(this, data_filename);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
-		ret = stock_writer.initialize(this, database_name, file_sql_field_mapping);
+		ret = finance_writer.initialize(this, database_name, file_sql_field_mapping);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
@@ -232,15 +232,15 @@ public class FinanceRecorderMgr implements Runnable, FinanceRecorderCmnDef.Stock
 	public short deinitialize()
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		if (stock_reader != null)
+		if (finance_reader != null)
 		{
-			ret = stock_reader.deinitialize();
+			ret = finance_reader.deinitialize();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 		}
-		if (stock_writer != null)
+		if (finance_writer != null)
 		{
-			ret = stock_writer.deinitialize();
+			ret = finance_writer.deinitialize();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 		}
@@ -258,7 +258,7 @@ public class FinanceRecorderMgr implements Runnable, FinanceRecorderCmnDef.Stock
 		while (true)
 		{
 // Read the data from the source
-			ret = stock_reader.read(data_list);
+			ret = finance_reader.read(data_list);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 			{
 				runtime_ret.set(ret);
@@ -273,7 +273,7 @@ public class FinanceRecorderMgr implements Runnable, FinanceRecorderCmnDef.Stock
 			}
 
 // Write the data into the sinker
-			ret = stock_writer.write(data_list);
+			ret = finance_writer.write(data_list);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 			{
 				runtime_ret.set(ret);
