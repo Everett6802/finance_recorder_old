@@ -52,7 +52,7 @@ public abstract class StockWriterBase implements StockRecorderCmnDef.StockWriter
 		StockRecorderCmnDef.format_debug("Try to connect to the MySQL database server...");
 		try 
 		{
-// Java要連接資料庫時，需使用到JDBC-Driver，連接MySQL資料庫使用Connector/j，下載後解開壓縮，mysql-connector-java-5.1.15-bin.jar就是MySQL的JDBC-Driver了.
+// Java要連接資料庫時，需使用到JDBC-Driver，連接MySQL資料庫使用Connector/j，下載後解開壓縮，mysql-connector-java-5.1.15-bin.jar就是MySQL的JDBC-Driver.
 // Go to http://blog.yslifes.com/archives/918 for more detailed info
 // JDBC API is a Java API that can access any kind of tabular data, especially data stored in a Relational Database. 
 // JDBC works with Java on a variety of platforms, such as Windows, Mac OS, and the various versions of UNIX.

@@ -10,7 +10,6 @@ public class StockReaderCSV extends StockReaderBase
 
 	private BufferedReader br = null;
 	private StockRecorderCmnDef.StockObserverInf parent_observer = null;
-//	private List<String> data_list = new LinkedList<String>();
 
 	@Override
 	public short initialize(StockRecorderCmnDef.StockObserverInf observer, String data_filename)

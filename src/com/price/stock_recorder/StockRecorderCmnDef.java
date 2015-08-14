@@ -91,7 +91,7 @@ public class StockRecorderCmnDef
 	{
 		msg_dumper.write_error_msg(String.format("[%s:%d] %s", StockRecorderCmnBase.__FILE__(), StockRecorderCmnBase.__LINE__(), String.format(format, arguments)));
 	}
-	
+
 	public static String get_current_path()
 	{
 		String cur_path = null;
