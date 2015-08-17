@@ -4,12 +4,27 @@ import java.io.*;
 import java.util.*;
 
 
-public class FinanceReaderCSV extends FinanceReaderBase
+public class FinanceCSVReader implements FinanceRecorderCmnDef.FinanceReaderInf
 {
-	static protected String CSV_SPLIT = ";";
+	protected static String CSV_SPLIT = ";";
+	protected static final String FILE_FOLDER_NAME = "data";
 
 	private BufferedReader br = null;
 	private FinanceRecorderCmnDef.FinanceObserverInf parent_observer = null;
+
+	protected String format_data_to_string(String[] field_array)
+	{
+		String field_string = null;
+		for (String field : field_array)
+		{
+			if (field_string == null)
+				field_string = field;
+			else
+				field_string += (FinanceRecorderCmnDef.DATA_SPLIT + field);
+		}
+
+		return field_string;
+	}
 
 	@Override
 	public short initialize(FinanceRecorderCmnDef.FinanceObserverInf observer, String data_filename)
@@ -24,7 +39,7 @@ public class FinanceReaderCSV extends FinanceReaderBase
 		{
 			br = new BufferedReader(new FileReader(csv_filepath));
 		}
-		catch (FileNotFoundException e) 
+		catch (FileNotFoundException e)
 		{
 			FinanceRecorderCmnDef.format_error("The CSV file[%s] is NOT found", csv_filepath);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_PATH;

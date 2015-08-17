@@ -5,28 +5,24 @@ import java.sql.*;
 import java.text.*;
 
 
-public class FinanceWriterOption extends FinanceWriterBase
+public class FinanceOptionWriter extends FinanceWriterBase
 {
-
 	@Override
 	protected int get_date_index()
 	{
-// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	protected short format_field_cmd()
 	{
-// TODO Auto-generated method stub
-		return 0;
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	@Override
 	protected short format_data_cmd(List<String> data_list)
 	{
-// TODO Auto-generated method stub
-		return 0;
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 }

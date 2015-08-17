@@ -5,7 +5,7 @@ import java.sql.*;
 import java.text.*;
 
 
-public class FinanceWriterStock extends FinanceWriterBase
+public class FinanceStockWriter extends FinanceWriterBase
 {
 	private static final String[] FIELD_LIST = new String[]{"date", "open", "high", "low", "close", "volume"};
 	private static final String[] FIELD_TYPE_LIST = new String[]{"DATE", "FLOAT", "FLOAT", "FLOAT", "FLOAT", "FLOAT"};
@@ -13,7 +13,7 @@ public class FinanceWriterStock extends FinanceWriterBase
 	private static final int FIELD_TYPE_DATE_INDEX = FIELD_DATE_INDEX;
 	private static final int field_list_len = FIELD_LIST.length;
 
-	public FinanceWriterStock() throws RuntimeException
+	public FinanceStockWriter() throws RuntimeException
 	{
 // Check the length of mapping table
 		if (field_list_len != FIELD_TYPE_LIST.length)

@@ -12,6 +12,8 @@ public class FinanceRecorderMgr implements Runnable, FinanceRecorderCmnDef.Finan
 
 	private static final String[] CONF_FILE_TITLE_LIST = new String[]{"reader_method", "writer_method", "data_filename", "database_name"};
 	private static final String[] SQL_TITLE_LIST = new String[]{"date", "open", "high", "low", "close", "volume"};
+	private static final String[] READER_METHOD_LIST = new String[]{"CSV"};
+	private static final String[] WRITER_METHOD_LIST = new String[]{"Stock", "Future", "Option"};
 	private static final String CONF_FILENAME = "stock_recorder.conf";
 	private static final String SQL_FIELD_POSITION_DEFINITION = "sql_field_position_definition";
 
@@ -165,6 +167,18 @@ public class FinanceRecorderMgr implements Runnable, FinanceRecorderCmnDef.Finan
 			}
 		}
 
+// Check the config
+		if (Arrays.asList(READER_METHOD_LIST).indexOf(reader_method) == -1)
+		{
+			FinanceRecorderCmnDef.format_error("UnSupported Reader Method: %s", reader_method);
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+		}
+		if (Arrays.asList(WRITER_METHOD_LIST).indexOf(writer_method) == -1)
+		{
+			FinanceRecorderCmnDef.format_error("UnSupported Writer Method: %s", writer_method);
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+		}
+
 		return ret;
 	}
 
@@ -178,10 +192,10 @@ public class FinanceRecorderMgr implements Runnable, FinanceRecorderCmnDef.Finan
 // Initialize objects according to the conf file
 		try
 		{
-			FinanceRecorderCmnDef.format_debug("Try to initialize the FinanceReader%s object", reader_method);
-			finance_reader = (FinanceRecorderCmnDef.FinanceReaderInf)Class.forName("com.price.finance_recorder.FinanceReader" + reader_method).newInstance();
-			FinanceRecorderCmnDef.format_debug("Try to initialize the FinanceWriter%s object", writer_method);
-			finance_writer = (FinanceRecorderCmnDef.FinanceWriterInf)Class.forName("com.price.finance_recorder.FinanceWriter" + writer_method).newInstance();
+			FinanceRecorderCmnDef.format_debug("Try to initialize the Finance%sReader object", reader_method);
+			finance_reader = (FinanceRecorderCmnDef.FinanceReaderInf)Class.forName(String.format("com.price.finance_recorder.Finance%sReader",  reader_method)).newInstance();
+			FinanceRecorderCmnDef.format_debug("Try to initialize the Finance%sWriter object", writer_method);
+			finance_writer = (FinanceRecorderCmnDef.FinanceWriterInf)Class.forName(String.format("com.price.finance_recorder.Finance%sWriter", writer_method)).newInstance();
 		}
 		catch (ClassNotFoundException e)
 		{
