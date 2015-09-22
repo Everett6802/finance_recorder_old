@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.*;
 
 
-public class FinanceCSVReader implements FinanceRecorderCmnDef.FinanceReaderInf
+public class FinanceRecorderReader implements FinanceRecorderCmnDef.FinanceReaderInf
 {
 	protected static String CSV_SPLIT = ";";
 	protected static final String FILE_FOLDER_NAME = "data";
