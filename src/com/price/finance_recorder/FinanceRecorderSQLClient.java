@@ -21,14 +21,17 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 	private FinanceRecorderCmnDef.FinanceObserverInf finance_observer = null;
 
 // Create Database command format
-	private static final String format_cmd_create_database = "CREATE DATABASE %s";
+	private static final String format_cmd_create_database = "CREATE DATABASE %s CHARACTER SET utf8 COLLATE utf8_bin";
 // Create Table command format
-	protected static final String format_cmd_create_table_head = "CREATE TABLE %s (";
+	protected static final String format_cmd_create_table_head_format = "CREATE TABLE IF NOT EXISTS %s (";
 	protected static final String format_cmd_create_table_tail = ")";
 //		private static final String format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
 // Insert Data command format
-	protected static final String format_cmd_insert_data_head = "INSERT INTO %s VALUES(";
+	protected static final String format_cmd_insert_data_head_format = "INSERT INTO %s VALUES(";
 	protected static final String format_cmd_insert_data_tail = ")";
+
+	protected String format_cmd_create_table_head = null;
+	protected String format_cmd_insert_data_head = null;
 
 	protected List<String> table_field_list = new LinkedList<String>();
 	protected List<PreparedStatement> sql_cmd_data_list = new LinkedList<PreparedStatement>();
@@ -56,7 +59,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 //註冊driver
 			Class.forName("com.mysql.jdbc.Driver");
 //jdbc:mysql://localhost/test?useUnicode=true&amp;characterEncoding=Big5: localhost是主機名, test是database名, useUnicode=true&amp;characterEncoding=Big5使用的編碼
-			connection = DriverManager.getConnection(String.format("jdbc:mysql://localhost/%s?useUnicode=true&amp;characterEncoding=Big5", database_name), username, password);
+			connection = DriverManager.getConnection(String.format("jdbc:mysql://localhost/%s?useUnicode=true&amp;characterEncoding=utf-8", database_name), username, password);
 		}
 		catch(ClassNotFoundException ex)
 		{
@@ -125,6 +128,9 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		database_name = database;
 		table_name = table;
 
+		format_cmd_create_table_head = String.format(format_cmd_create_table_head_format, table_name);
+		format_cmd_insert_data_head = String.format(format_cmd_insert_data_head_format, table_name);
+
 //		FinanceRecorderCmnDef.debug("Initialize the MsgDumperSql object......");
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Create the connection to the MySQL server and database
@@ -143,8 +149,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 //		for (int i = 1 ; i < table_field_list_len ; i ++)
 //			cmd_create_table_field += String.format(",%s", table_field_list.get(i));
 // Create table
-		String cmd_create_table_format = format_cmd_create_table_head + cmd_table_field + format_cmd_create_table_tail;
-		String cmd_create_table = String.format(cmd_create_table_format, table_name);
+		String cmd_create_table = format_cmd_create_table_head + cmd_table_field + format_cmd_create_table_tail;
 		FinanceRecorderCmnDef.format_debug("Create table by command: %s", cmd_create_table);
 		ret = open_table(cmd_create_table);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))

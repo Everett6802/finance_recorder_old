@@ -12,10 +12,14 @@ public class FinanceRecorder
 	static FinanceRecorderMgr stock_recorder_mgr = null;
 	public static void main(String args[])
 	{
-		FinanceRecorderWriter finance_recorder_writer = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType.FinaceData_FutureTop10DealersAndLegalPersons);
-		finance_recorder_writer.write_to_sql("2015-07", "2015-09");
+		FinanceRecorderWriter finance_recorder_writer1 = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType.FinaceData_FutureTop10DealersAndLegalPersons);
+		finance_recorder_writer1.write_to_sql("2015-07", "2015-09");
+		FinanceRecorderWriter finance_recorder_writer2 = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType.FinaceData_FutureTop10DealersAndLegalPersons);
+		finance_recorder_writer2.write_to_sql("2015-07", "2015-09");
+//		FinanceRecorderWriter finance_recorder_writer3 = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType.FinaceData_FutureTop10DealersAndLegalPersons);
+//		finance_recorder_writer3.write_to_sql("2015-09", "2015-09");
 		System.exit(0);
-		
+
 		stock_recorder_mgr = new FinanceRecorderMgr();
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 

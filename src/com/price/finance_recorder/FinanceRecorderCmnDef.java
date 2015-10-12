@@ -48,7 +48,7 @@ public class FinanceRecorderCmnDef
 
 //	public static final String CONF_FOLDERNAME = "conf";
 	public static final String DATA_FOLDER_NAME = "/var/tmp/finance";
-	public static final String DATA_SPLIT = ":";
+	public static final String DATA_SPLIT = ",";
 
 	public static enum FinaceDataType{
 		FinaceData_FutureTop10DealersAndLegalPersons,
@@ -67,63 +67,63 @@ public class FinanceRecorderCmnDef
     };
 	private static final String[] future_top10_dealers_and_legal_persons_field_defintion = new String[]
 	{
-		"日期 date",
-		"臺股期貨_到期月份_買方_前五大交易人合計_部位數 int",
-		"臺股期貨_到期月份_買方_前五大交易人合計_百分比 float",
-		"臺股期貨_到期月份_買方_前十大交易人合計_部位數 int",
-		"臺股期貨_到期月份_買方_前十大交易人合計_百分比 float",
-		"臺股期貨_到期月份_賣方_前五大交易人合計_部位數 int",
-		"臺股期貨_到期月份_賣方_前五大交易人合計_百分比 float",
-		"臺股期貨_到期月份_賣方_前十大交易人合計_部位數 int",
-		"臺股期貨_到期月份_賣方_前十大交易人合計_百分比 float",
-		"臺股期貨_到期月份_全市場未沖銷部位數 int",
-		"臺股期貨_所有契約_買方_前五大交易人合計_部位數 int",
-		"臺股期貨_所有契約_買方_前五大交易人合計_百分比 float",
-		"臺股期貨_所有契約_買方_前十大交易人合計_部位數 int",
-		"臺股期貨_所有契約_買方_前十大交易人合計_百分比 float",
-		"臺股期貨_所有契約_賣方_前五大交易人合計_部位數 int",
-		"臺股期貨_所有契約_賣方_前五大交易人合計_百分比 float",
-		"臺股期貨_所有契約_賣方_前十大交易人合計_部位數 int",
-		"臺股期貨_所有契約_賣方_前十大交易人合計_百分比 float",
-		"臺股期貨_所有契約_全市場未沖銷部位數 int"
+		"date DATE NOT NULL PRIMARY KEY", // 日期
+		"value1 INT", // 臺股期貨_到期月份_買方_前五大交易人合計_部位數
+		"value2 FLOAT", // 臺股期貨_到期月份_買方_前五大交易人合計_百分比
+		"value3 INT", // 臺股期貨_到期月份_買方_前十大交易人合計_部位數
+		"value4 FLOAT", // 臺股期貨_到期月份_買方_前十大交易人合計_百分比
+		"value5 INT", // 臺股期貨_到期月份_賣方_前五大交易人合計_部位數
+		"value6 FLOAT", // 臺股期貨_到期月份_賣方_前五大交易人合計_百分比
+		"value7 INT", // 臺股期貨_到期月份_賣方_前十大交易人合計_部位數
+		"value8 FLOAT", // 臺股期貨_到期月份_賣方_前十大交易人合計_百分比
+		"value9 INT", // 臺股期貨_到期月份_全市場未沖銷部位數
+		"value10 INT", // 臺股期貨_所有契約_買方_前五大交易人合計_部位數
+		"value11 FLOAT", // 臺股期貨_所有契約_買方_前五大交易人合計_百分比
+		"value12 INT", // 臺股期貨_所有契約_買方_前十大交易人合計_部位數
+		"value13 FLOAT", // 臺股期貨_所有契約_買方_前十大交易人合計_百分比
+		"value14 INT", // 臺股期貨_所有契約_賣方_前五大交易人合計_部位數
+		"value15 FLOAT", // 臺股期貨_所有契約_賣方_前五大交易人合計_百分比
+		"value16 INT", // 臺股期貨_所有契約_賣方_前十大交易人合計_部位數
+		"value17 FLOAT", // 臺股期貨_所有契約_賣方_前十大交易人合計_百分比
+		"value18 INT", // 臺股期貨_所有契約_全市場未沖銷部位數
 	};
 	private static final String[] future_top3_legal_persons_open_interest_field_defintion = new String[]
 	{
-		"日期 date",
-		"自營商_多方_口數 int",
-		"自營商_多方_契約金額 int",
-		"自營商_空方_口數 int",
-		"自營商_空方_契約金額 int",
-		"自營商_多空淨額_口數 int",
-		"自營商_多空淨額_契約金額 int",
-		"投信_多方_口數 int",
-		"投信_多方_契約金額 int",
-		"投信_空方_口數 int",
-		"投信_空方_契約金額 int",
-		"投信_多空淨額_口數 int",
-		"投信_多空淨額_契約金額 int",
-		"外資_多方_口數 int",
-		"外資_多方_契約金額 int",
-		"外資_空方_口數 int",
-		"外資_空方_契約金額 int",
-		"外資_多空淨額_口數 int",
-		"外資_多空淨額_契約金額 int",
+		"date DATE NOT NULL PRIMARY KEY", // 日期
+		"value1 INT", // 自營商_多方_口數 int",
+		"value2 INT", // 自營商_多方_契約金額 int",
+		"value3 INT", // 自營商_空方_口數 int",
+		"value4 INT", // 自營商_空方_契約金額 int",
+		"value5 INT", // 自營商_多空淨額_口數 int",
+		"value6 INT", // 自營商_多空淨額_契約金額 int",
+		"value7 INT", // "投信_多方_口數 int",
+		"value8 INT", // 投信_多方_契約金額 int",
+		"value9 INT", // 投信_空方_口數 int",
+		"value10 INT", // 投信_空方_契約金額 int",
+		"value11 INT", // 投信_多空淨額_口數 int",
+		"value12 INT", // 投信_多空淨額_契約金額 int",
+		"value13 INT", // 外資_多方_口數 int",
+		"value14 INT", // 外資_多方_契約金額 int",
+		"value15 INT", // 外資_空方_口數 int",
+		"value16 INT", // 外資_空方_契約金額 int",
+		"value17 INT", // 外資_多空淨額_口數 int",
+		"value18 INT", // 外資_多空淨額_契約金額 int",
 	};
 	private static final String[] stock_top3_legal_persons_net_buy_or_sell_field_defintion = new String[]
 	{
-		"日期 date",
-		"自營商(自行買賣)_買進金額 int",
-		"自營商(自行買賣)_賣出金額 int",
-		"自營商(自行買賣)_買賣差額 int",
-		"自營商(避險)_買進金額 int",
-		"自營商(避險)_賣出金額 int",
-		"自營商(避險)_買賣差額 int",
-		"投信_買進金額 int",
-		"投信_賣出金額 int",
-		"投信_買賣差額 int",
-		"外資及陸資_買進金額 int",
-		"外資及陸資_賣出金額 int",
-		"外資及陸資_買賣差額 int"
+		"date DATE NOT NULL PRIMARY KEY", // 日期
+		"value1 INT", // 自營商(自行買賣)_買進金額
+		"value2 INT", // 自營商(自行買賣)_賣出金額
+		"value3 INT", // 自營商(自行買賣)_買賣差額
+		"value4 INT", // 自營商(避險)_買進金額
+		"value5 INT", // 自營商(避險)_賣出金額
+		"value6 INT", // 自營商(避險)_買賣差額
+		"value7 INT", // 投信_買進金額
+		"value8 INT", // 投信_賣出金額
+		"value9 INT", // 投信_買賣差額
+		"value10 INT", // 外資及陸資_買進金額
+		"value11 INT", // 外資及陸資_賣出金額
+		"value12 INT", // 外資及陸資_買賣差額
 	};
 	public static final String[] FINANCE_DATA_SQL_FIELD_LIST = new String[]{
 		transform_array_to_sql_string(future_top10_dealers_and_legal_persons_field_defintion),
@@ -214,10 +214,19 @@ public class FinanceRecorderCmnDef
 		String sql_string = null;
 		for(String string : string_arr)
 		{
-			if (sql_string == null)
-				sql_string = string;
-			else
-				sql_string += String.format(",%s", string);
+//			try
+//			{
+				String encoded_string = string;//new String(string.getBytes("UTF-16"), "Big5");
+				if (sql_string == null)
+					sql_string = encoded_string;
+				else
+					sql_string += String.format(",%s", encoded_string);
+//			}
+//			catch (UnsupportedEncodingException e)
+//			{
+//				format_error("Fail to encode: %s", string);
+//				return null;
+//			}
 		}
 		return sql_string;
 	}

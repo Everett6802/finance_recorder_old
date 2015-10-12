@@ -14,7 +14,7 @@ public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements Fin
 	private int finace_data_type_index;
 	private FinanceRecorderCSVReader csv_reader = null;
 	private FinanceRecorderSQLClient sql_client = null;
-	private List<String> data_list = new LinkedList<String>();
+//	private List<String> data_list = new LinkedList<String>();
 	private HashMap<Integer, LinkedList<Integer>> time_range_mapping = new HashMap<Integer, LinkedList<Integer>>();
 
 	public FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType finace_data_type)
@@ -93,6 +93,7 @@ public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements Fin
 		String csv_filepath = null;
 		for (Map.Entry<Integer, LinkedList<Integer>> entry : time_range_mapping.entrySet())
 		{
+			LinkedList<String> data_list = new LinkedList<String>();
 			int year = entry.getKey();
 			LinkedList<Integer> month_list = (LinkedList<Integer>)entry.getValue();
 			for (int month : month_list)

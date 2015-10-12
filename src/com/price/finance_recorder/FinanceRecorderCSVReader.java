@@ -59,8 +59,6 @@ public class FinanceRecorderCSVReader
 		String line = null;
 		int count = 0;
 		String field_string = null;
-		data_list.clear();
-
 		try
 		{
 			while ((line = br.readLine()) != null) 
