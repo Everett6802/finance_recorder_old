@@ -115,7 +115,10 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 			else
 			{
 				System.out.println("Exception:" + ex.toString());
-				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+				if (ex.getErrorCode() == 1049)
+					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_UNKNOWN_DATABASE;
+				else
+					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 			}
 		}
 
@@ -204,7 +207,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{
-			FinanceRecorderCmnDef.format_error("Fails to delete database[%s], due to: %d, %s", database_name, ex.getMessage());
+			FinanceRecorderCmnDef.format_error("Fails to delete database[%s], due to: %s", database_name, ex.getMessage());
 			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 		}
 // Close the connection to MySQL

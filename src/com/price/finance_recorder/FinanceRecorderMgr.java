@@ -8,6 +8,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.*;
 import java.util.regex.*;
 
+import com.price.finance_recorder.FinanceRecorderCmnDef.FinaceDataType;
+
 
 public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserverInf
 {
@@ -289,6 +291,39 @@ OUT:
         	executor.shutdown();
         else
         	executor.shutdownNow();
+
+		return ret;
+	}
+
+	public short clear(int finance_data_type_index)
+	{
+		FinanceRecorderWriter finance_recorder_writer = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType.valueOf(finance_data_type_index));
+		FinanceRecorderCmnDef.format_debug("Try to delete database [%s]......", finance_recorder_writer.get_description());
+		return finance_recorder_writer.delete_sql();
+	}
+
+	public short clear_multi(LinkedList<Integer> finance_data_type_index_list)
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		for (Integer finance_data_type_index : finance_data_type_index_list)
+		{
+			ret = clear(finance_data_type_index);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				return ret;
+		}
+
+		return ret;
+	}
+
+	public short clear_all()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		for (int finance_data_type_index = 0 ; finance_data_type_index < FinaceDataType.values().length ; finance_data_type_index++)
+		{
+			ret = clear(finance_data_type_index);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				return ret;
+		}
 
 		return ret;
 	}

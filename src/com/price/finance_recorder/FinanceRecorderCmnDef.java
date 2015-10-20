@@ -20,10 +20,16 @@ public class FinanceRecorderCmnDef
 	public static final short RET_FAILURE_HANDLE_THREAD = 8;
 	public static final short RET_FAILURE_INCORRECT_PATH = 9;
 	public static final short RET_FAILURE_IO_OPERATION = 10;
-	public static final short RET_FAILURE_MYSQL = 11;
+
+	public static final short RET_FAILURE_MYSQL_BASE = 100;
+	public static final short RET_FAILURE_MYSQL = RET_FAILURE_MYSQL_BASE + 1;
+	public static final short RET_FAILURE_MYSQL_UNKNOWN_DATABASE = RET_FAILURE_MYSQL_BASE + 2;
+	public static final short RET_FAILURE_MYSQL_DATABASE_ALREADY_EXIST = RET_FAILURE_MYSQL_BASE + 3;
 
 	public static boolean CheckSuccess(short x) {return (x == RET_SUCCESS ? true : false);}
 	public static boolean CheckFailure(short x) {return !CheckSuccess(x);}
+
+	public static boolean CheckMySQLFailureUnknownDatabase(short x) {return (x == RET_FAILURE_MYSQL_UNKNOWN_DATABASE ? true : false);}
 
 	private static final String[] RetDescription = new String[]
 	{
@@ -37,13 +43,24 @@ public class FinanceRecorderCmnDef
 		"Failure Incorrect Config",
 		"Failure Handle Thread",
 		"Failure Incorrect Path",
-		"Failure IO Operation",
-		"Failure MySQL"
+		"Failure IO Operation"
+//		"Failure MySQL"
+	};
+
+	private static final String[] SQLRetDescription = new String[]
+	{
+		"SQL Success",
+		"SQL Failure Common",
+		"SQL Failure Unknown Database",
+		"SQL Failure Database Already Exist"
 	};
 
 	public static String GetErrorDescription(short error_code)
 	{
-		return RetDescription[error_code];
+		if (error_code > RET_FAILURE_MYSQL_BASE)
+			return SQLRetDescription[error_code - RET_FAILURE_MYSQL_BASE];
+		else
+			return RetDescription[error_code];
 	}
 
 //	public static final String CONF_FOLDERNAME = "conf";

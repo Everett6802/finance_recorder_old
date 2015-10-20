@@ -6,7 +6,7 @@ import java.util.*;
 
 public class FinanceRecorder 
 {
-	static FinanceRecorderMgr stock_recorder_mgr = new FinanceRecorderMgr();
+	static FinanceRecorderMgr finance_recorder_mgr = new FinanceRecorderMgr();
 
 	public static void main(String args[])
 	{
@@ -39,7 +39,7 @@ public class FinanceRecorder
 	public static short parse_param(String args[])
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		ret = stock_recorder_mgr.parse_config_file("history.conf");
+		ret = finance_recorder_mgr.parse_config_file("history.conf");
 		return ret;
 	}
 
@@ -47,9 +47,9 @@ public class FinanceRecorder
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		if (use_multithread)
-			ret = stock_recorder_mgr.write_by_multithread();
+			ret = finance_recorder_mgr.write_by_multithread();
 		else
-			ret = stock_recorder_mgr.write();
+			ret = finance_recorder_mgr.write();
 		return ret;
 	}
 }

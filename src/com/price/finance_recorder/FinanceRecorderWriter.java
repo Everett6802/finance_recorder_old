@@ -121,17 +121,25 @@ OUT:
 // Establish the connection to the MySQL 
 		ret = sql_client.try_connect_mysql(
 				FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_data_type_index], 
-				FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, 
+				FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No,
 				FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single
 			);
+		boolean unknown_database = false;
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			return ret;
-		ret  = sql_client.delete_database();
+		{
+			if (!FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
+				return ret;
+			unknown_database = true;
+			FinanceRecorderCmnDef.format_warn("The database[%d] does NOT exist, just skip this error", finace_data_type_index);
+			ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		}
+		if (!unknown_database)
+			ret  = sql_client.delete_database();
 // Destroy the connection to the MySQL
 		sql_client.disconnect_mysql();
 		return ret;
 	}
-	
+
 //	short write_to_sql(String month_begin_str)
 //	{
 //		java.util.Date date_today = new java.util.Date();
