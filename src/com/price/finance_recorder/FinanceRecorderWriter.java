@@ -3,7 +3,7 @@ package com.price.finance_recorder;
 import java.sql.*;
 import java.text.*;
 import java.util.*;
-import java.util.regex.*;
+//import java.util.regex.*;
 
 public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements FinanceRecorderCmnDef.FinanceObserverInf
 {
@@ -14,8 +14,7 @@ public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements Fin
 	private int finace_data_type_index;
 	private FinanceRecorderCSVReader csv_reader = null;
 	private FinanceRecorderSQLClient sql_client = null;
-//	private List<String> data_list = new LinkedList<String>();
-	private HashMap<Integer, LinkedList<Integer>> time_range_mapping = new HashMap<Integer, LinkedList<Integer>>();
+	private HashMap<Integer, LinkedList<Integer>> finance_source_time_range_table = new HashMap<Integer, LinkedList<Integer>>();
 
 	public FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType finace_data_type)
 	{
@@ -24,54 +23,24 @@ public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements Fin
 		sql_client = new FinanceRecorderSQLClient(this);
 	}
 
-	protected short open_csv(String csv_filename)
-	{
-		return csv_reader.initialize(csv_filename);
-	}
-	
-	protected short open_sql(String datebase, String table, String sql_table_field)
-	{
-		return sql_client.initialize(datebase, table, sql_table_field);
-	}
+//	private void set_mapping_today()
+//	{
+//		java.util.Date date_today = new java.util.Date();
+//		LinkedList entry = new LinkedList();
+//		entry.add(date_today.getMonth());
+//		finance_source_time_range_table.put(date_today.getYear(), entry);
+//	}
 
-	protected void close_sql()
+	private short set_mapping_time_range(int year_start, int month_start, int year_end, int month_end)
 	{
-		sql_client.deinitialize();
-	}
-	
-	private void set_mapping_today()
-	{
-		java.util.Date date_today = new java.util.Date();
-		LinkedList entry = new LinkedList();
-		entry.add(date_today.getMonth());
-		time_range_mapping.put(date_today.getYear(), entry);
-	}
-
-	private short set_mapping_time_range(String month_begin_str, String month_end_str)
-	{
-		Pattern month_pattern = Pattern.compile("([\\d]{4})-([\\d]{1,2})");
-		Matcher month_begin_matcher = month_pattern.matcher(month_begin_str);
-		if (!month_begin_matcher.find())
-		{
-			FinanceRecorderCmnDef.format_error("Incorrect time format (Begin): %s", month_begin_str);
-			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
-		}
-		Matcher month_end_matcher = month_pattern.matcher(month_end_str);
-		if (!month_end_matcher.find())
-		{
-			FinanceRecorderCmnDef.format_error("Incorrect time format (End): %s", month_end_str);
-			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
-		}
-		int year_cur = Integer.valueOf(month_begin_matcher.group(1));
-		int month_cur = Integer.valueOf(month_begin_matcher.group(2));
-		int year_end = Integer.valueOf(month_end_matcher.group(1));
-		int month_end = Integer.valueOf(month_end_matcher.group(2));
+		int year_cur = year_start;
+		int month_cur = month_start;
 		do 
 		{
-			if (!time_range_mapping.containsKey(year_cur))
-				time_range_mapping.put(year_cur, new LinkedList<Integer>());
-			LinkedList<Integer> entry = (LinkedList<Integer>)time_range_mapping.get(year_cur);
-			entry.push(month_cur);
+			if (!finance_source_time_range_table.containsKey(year_cur))
+				finance_source_time_range_table.put(year_cur, new LinkedList<Integer>());
+			LinkedList<Integer> entry = (LinkedList<Integer>)finance_source_time_range_table.get(year_cur);
+			entry.addLast(month_cur);
 			if (year_cur == year_end && month_cur == month_end)
 				break;
 			if (month_cur == 12)
@@ -86,12 +55,21 @@ public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements Fin
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	protected short proccess()
+	private short proccess(FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 
 		String csv_filepath = null;
-		for (Map.Entry<Integer, LinkedList<Integer>> entry : time_range_mapping.entrySet())
+// Establish the connection to the MySQL and create the database if not exist 
+		ret = sql_client.try_connect_mysql(
+				FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_data_type_index], 
+				FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes,
+				database_create_thread_type
+			);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+OUT:
+		for (Map.Entry<Integer, LinkedList<Integer>> entry : finance_source_time_range_table.entrySet())
 		{
 			LinkedList<String> data_list = new LinkedList<String>();
 			int year = entry.getKey();
@@ -109,41 +87,64 @@ public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements Fin
 					return ret;
 				csv_reader.deinitialize();
 			}
+// Create the table
+			ret = sql_client.open_table(String.format("year%04d", year), FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_LIST[finace_data_type_index]);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				break OUT;
 // Write the data into MySQL database
-			ret = sql_client.initialize(
-				FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_data_type_index], 
-				String.format("year%04d", year),
-				FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_LIST[finace_data_type_index]
-			);
+			ret = sql_client.insert_data(data_list);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				return ret;
-			ret = sql_client.write(data_list);
-			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				return ret;
-			sql_client.deinitialize();
+				break OUT;
 			data_list.clear();
 		}
+// Destroy the connection to the MySQL
+		sql_client.disconnect_mysql();
 
 // Format the SQL command of inserting data
-		return FinanceRecorderCmnDef.RET_SUCCESS;
-	}
-	
-	public short write_to_sql()
-	{
-// Set the mapping table of reading the specific CSV files and writing correct SQL database 
-		set_mapping_today();
-
-		return proccess();
+		return ret;
 	}
 
-	public short write_to_sql(String month_begin_str, String month_end_str)
+	final String get_description(){return FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index];}
+
+	short write_to_sql(int year_start, int month_start, int year_end, int month_end, FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type)
 	{
 // Set the mapping table of reading the specific CSV files and writing correct SQL database
-		short ret = set_mapping_time_range(month_begin_str, month_end_str);
+		short ret = set_mapping_time_range(year_start, month_start, year_end, month_end);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
-		return proccess();
+		return proccess(database_create_thread_type);
 	}
+
+	short delete_sql()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Establish the connection to the MySQL 
+		ret = sql_client.try_connect_mysql(
+				FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_data_type_index], 
+				FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, 
+				FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single
+			);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+		ret  = sql_client.delete_database();
+// Destroy the connection to the MySQL
+		sql_client.disconnect_mysql();
+		return ret;
+	}
+	
+//	short write_to_sql(String month_begin_str)
+//	{
+//		java.util.Date date_today = new java.util.Date();
+//		String month_end_str = String.format("%04d-%02d", date_today.getYear(), date_today.getMonth());
+//		return write_to_sql(month_begin_str, month_end_str);
+//	}
+//
+//	short write_to_sql()
+//	{
+//		java.util.Date date_today = new java.util.Date();
+//		String month_begin_str = String.format("%04d-%02d", date_today.getYear(), date_today.getMonth());
+//		return write_to_sql(month_begin_str);
+//	}
 
 	@Override
 	public short notify(short type) 

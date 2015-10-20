@@ -49,18 +49,51 @@ public class FinanceRecorderCmnDef
 //	public static final String CONF_FOLDERNAME = "conf";
 	public static final String DATA_FOLDER_NAME = "/var/tmp/finance";
 	public static final String DATA_SPLIT = ",";
+	public static final String CONF_FOLDERNAME = "conf";
+	public static final String CONF_ENTRY_IGNORE_FLAG = "#";
+	public static final int MAX_CONCURRENT_THREAD = 4;
+	public static final int MAX_MONTH_RANGE_IN_THREAD = 3;
 
-	public static enum FinaceDataType{
-		FinaceData_FutureTop10DealersAndLegalPersons,
-		FinaceData_FutureTop3LegalPersonsOpenInterest,
-		FinaceData_FtockTop3LegalPersonsNetBuyOrSell
+	public static enum FinaceDataType
+	{
+		FinaceData_FutureTop10DealersAndLegalPersons(0),
+		FinaceData_FutureTop3LegalPersonsOpenInterest(1),
+		FinaceData_FtockTop3LegalPersonsNetBuyOrSell(2);
+
+		private int value = 0;
+		private FinaceDataType(int value){this.value = value;}
+		public static FinaceDataType valueOf(int value)
+		{
+			switch (value)
+			{
+			case 0: return FinaceData_FutureTop10DealersAndLegalPersons;
+			case 1: return FinaceData_FutureTop3LegalPersonsOpenInterest;
+			case 2: return FinaceData_FtockTop3LegalPersonsNetBuyOrSell;
+			default: return null;
+			}
+		}
+		public int value(){return this.value;}
 	};
-	public static final String[] FINANCE_DATA_NAME_LIST = new String[]{
+
+	public static enum DatabaseNotExistIngoreType
+	{
+		DatabaseNotExistIngore_Yes,
+		DatabaseNotExistIngore_No,
+	};
+	public static enum DatabaseCreateThreadType
+	{
+		DatabaseCreateThread_Single,
+		DatabaseCreateThread_Multiple,
+	};
+	
+	public static final String[] FINANCE_DATA_NAME_LIST = new String[]
+	{
 		"future_top10_dealers_and_legal_persons",
 		"future_top3_legal_persons_open_interest",
 		"stock_top3_legal_persons_net_buy_or_sell"
 	};
-	public static final String[] FINANCE_DATA_DESCRIPTION_LIST = new String[]{
+	public static final String[] FINANCE_DATA_DESCRIPTION_LIST = new String[]
+	{
 		"十大交易人及特定法人期貨資訊",
 		"三大法人期貨留倉淨額",
 		"三大法人現貨買賣超"
@@ -125,7 +158,8 @@ public class FinanceRecorderCmnDef
 		"value11 INT", // 外資及陸資_賣出金額
 		"value12 INT", // 外資及陸資_買賣差額
 	};
-	public static final String[] FINANCE_DATA_SQL_FIELD_LIST = new String[]{
+	public static final String[] FINANCE_DATA_SQL_FIELD_LIST = new String[]
+	{
 		transform_array_to_sql_string(future_top10_dealers_and_legal_persons_field_defintion),
 		transform_array_to_sql_string(future_top3_legal_persons_open_interest_field_defintion),
 		transform_array_to_sql_string(stock_top3_legal_persons_net_buy_or_sell_field_defintion)
@@ -231,6 +265,12 @@ public class FinanceRecorderCmnDef
 		return sql_string;
 	}
 
+	public static final String get_time_month_today()
+	{
+		java.util.Date date_today = new java.util.Date();
+		String time_month_today = String.format("%04d-%02d", date_today.getYear(), date_today.getMonth());
+		return time_month_today;
+	}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Interface
 	public interface FinanceObserverInf

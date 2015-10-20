@@ -12,7 +12,6 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 	private static final String DEF_PASSWORD = "lab4man1";
 
 	private Connection connection = null; //Database objects, 連接object
-	private boolean table_created = false;
 	private String server = null;
 	private String username = null;
 	private String password = null;
@@ -21,7 +20,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 	private FinanceRecorderCmnDef.FinanceObserverInf finance_observer = null;
 
 // Create Database command format
-	private static final String format_cmd_create_database = "CREATE DATABASE %s CHARACTER SET utf8 COLLATE utf8_bin";
+	private static final String format_cmd_create_database = "CREATE DATABASE %s";
 // Create Table command format
 	protected static final String format_cmd_create_table_head_format = "CREATE TABLE IF NOT EXISTS %s (";
 	protected static final String format_cmd_create_table_tail = ")";
@@ -29,16 +28,11 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 // Insert Data command format
 	protected static final String format_cmd_insert_data_head_format = "INSERT INTO %s VALUES(";
 	protected static final String format_cmd_insert_data_tail = ")";
+// Delete Database command format
+	private static final String format_cmd_delete_database = "DROP DATABASE IF EXISTS %s";
 
-	protected String format_cmd_create_table_head = null;
-	protected String format_cmd_insert_data_head = null;
 
-	protected List<String> table_field_list = new LinkedList<String>();
-	protected List<PreparedStatement> sql_cmd_data_list = new LinkedList<PreparedStatement>();
-
-	FinanceRecorderCmnDef.FinanceObserverInf parent_observer = null;
-
-	public FinanceRecorderSQLClient(FinanceRecorderCmnDef.FinanceObserverInf observer)
+	FinanceRecorderSQLClient(FinanceRecorderCmnDef.FinanceObserverInf observer)
 	{
 		server = DEF_SERVER;
 		username = DEF_USERNAME;
@@ -46,8 +40,27 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		finance_observer = observer;
 	}
 
-	private short try_connect_mysql(String cmd_create_database)
+	private static java.sql.Date transform_java_sql_date_format(String date_str) throws ParseException
 	{
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
+		java.util.Date dateStr = formatter.parse(date_str);
+		return  new java.sql.Date(dateStr.getTime());
+	}
+
+	short try_connect_mysql(
+			String database, 
+			FinanceRecorderCmnDef.DatabaseNotExistIngoreType database_not_exist_ignore_type, 
+			FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type
+		)
+	{
+		database_name = database;
+		FinanceRecorderCmnDef.format_debug("Try to connect to the MySQL database server[%s]...... Successfully", database_name);
+
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Create the connection to the MySQL server and database
+		String cmd_create_database = String.format(format_cmd_create_database, database_name);
+		FinanceRecorderCmnDef.format_debug("Create database by command: %s", cmd_create_database);
+
 		FinanceRecorderCmnDef.debug("Try to connect to the MySQL database server...");
 		try 
 		{
@@ -68,99 +81,51 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{
-			FinanceRecorderCmnDef.format_debug("The %s database does NOT exist, create a NEW one", database_name);
-			try
+			if (database_not_exist_ignore_type == FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes)
 			{
-				connection = DriverManager.getConnection(String.format("jdbc:mysql://localhost/?user=%s&password=%s", username, password)); 
-				Statement s = connection.createStatement();
-				FinanceRecorderCmnDef.format_debug("Try to create database by command: %s", cmd_create_database);
-				s.executeUpdate(cmd_create_database);
-			}
-			catch(SQLException ex1) //有可能會產生sql exception
-			{
-				System.out.println("Exception:" + ex1.toString());
-				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
-			}
-			FinanceRecorderCmnDef.format_debug("Try to connect to the MySQL database server...... Successfully");
-		}
-
-		return FinanceRecorderCmnDef.RET_SUCCESS;
-	}
-
-	private short open_table(String cmd_create_table)
-	{
-// Check if the connection is established
-		if (connection == null)
-		{
-			FinanceRecorderCmnDef.error("The connection is NOT established");
-			return  FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
-		}
-
-		if (!table_created)
-		{
-// Create the table in the database...
-			try
-			{
-				Statement s = connection.createStatement();
-//				cmd_buf = String.format(cmd_create_table, current_time_string);
-				FinanceRecorderCmnDef.format_debug("Try to create table[%s] by command: %s", table_name, cmd_create_table);
-
-				s.executeUpdate(cmd_create_table);
-			}
-			catch(SQLException ex) //有可能會產生sql exception
-			{
-				if (ex.getErrorCode() == 1050)
-					FinanceRecorderCmnDef.format_debug("The table has already existed");
-				else
+				FinanceRecorderCmnDef.format_debug("The %s database does NOT exist, create a NEW one", database_name);
+				try
 				{
-					FinanceRecorderCmnDef.format_error("Fails to create table[%s], due to: %d, %s", table_name, ex.getMessage());
+					connection = DriverManager.getConnection(String.format("jdbc:mysql://localhost/?user=%s&password=%s", username, password)); 
+					Statement s = connection.createStatement();
+					FinanceRecorderCmnDef.format_debug("Try to create database by command: %s", cmd_create_database);
+					try
+					{
+						s.executeUpdate(cmd_create_database);
+					}
+					catch(SQLException ex1) //有可能會產生sql exception
+					{
+						if (database_create_thread_type == FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Multiple && ex.getErrorCode() == 1049)
+							FinanceRecorderCmnDef.format_warn("The database[%s] has already existed", database_name);
+						else
+							throw ex1;
+					}
+// Destroy the connection first
+					disconnect_mysql();
+// Reconnect to MySQL
+					database_name = database;
+					connection = DriverManager.getConnection(String.format("jdbc:mysql://localhost/%s?useUnicode=true&amp;characterEncoding=utf-8", database_name), username, password);
+				}
+				catch(SQLException ex1) //有可能會產生sql exception
+				{
+					System.out.println("Exception:" + ex1.toString());
 					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 				}
-			}			
-			table_created = true;
+			}
+			else
+			{
+				System.out.println("Exception:" + ex.toString());
+				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+			}
 		}
 
+		FinanceRecorderCmnDef.format_debug("Try to connect to the MySQL database server[%s]...... Successfully", database_name);
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short initialize(String database, String table, String cmd_table_field)
+	short disconnect_mysql()
 	{
-		database_name = database;
-		table_name = table;
-
-		format_cmd_create_table_head = String.format(format_cmd_create_table_head_format, table_name);
-		format_cmd_insert_data_head = String.format(format_cmd_insert_data_head_format, table_name);
-
-//		FinanceRecorderCmnDef.debug("Initialize the MsgDumperSql object......");
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-// Create the connection to the MySQL server and database
-		String cmd_create_database = String.format(format_cmd_create_database, database_name);
-		FinanceRecorderCmnDef.format_debug("Create database by command: %s", cmd_create_database);
-		ret = try_connect_mysql(cmd_create_database);
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			return ret;
-//		if (table_field_list.isEmpty())
-//		{
-//			FinanceRecorderCmnDef.error("table_field_list should NOT be empty");
-//			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
-//		}
-//		int table_field_list_len = table_field_list.size();
-//		String cmd_create_table_field = table_field_list.get(0);
-//		for (int i = 1 ; i < table_field_list_len ; i ++)
-//			cmd_create_table_field += String.format(",%s", table_field_list.get(i));
-// Create table
-		String cmd_create_table = format_cmd_create_table_head + cmd_table_field + format_cmd_create_table_tail;
-		FinanceRecorderCmnDef.format_debug("Create table by command: %s", cmd_create_table);
-		ret = open_table(cmd_create_table);
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			return ret;
-
-		return FinanceRecorderCmnDef.RET_SUCCESS;
-	}
-
-	public short deinitialize()
-	{
-		FinanceRecorderCmnDef.format_debug("Release the parameters connected to the MySQL database server");
+		FinanceRecorderCmnDef.format_debug("Disconnect from the MySQL database server...");
 		if (connection != null)
 		{
 			try 
@@ -175,23 +140,95 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 			}
 			connection = null;
 		}
+		database_name = null;
 
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public static java.sql.Date transform_java_sql_date_format(String date_str) throws ParseException
+	short open_table(String table, String cmd_table_field)
 	{
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
-		java.util.Date dateStr = formatter.parse(date_str);
-		return  new java.sql.Date(dateStr.getTime());
+// Check if the connection is established
+		if (connection == null)
+		{
+			FinanceRecorderCmnDef.error("The connection is NOT established");
+			return  FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
+
+		table_name = table;
+
+		FinanceRecorderCmnDef.format_debug("Try to open the MySQL table[%s]...... ", table_name);
+		String format_cmd_create_table_head = String.format(format_cmd_create_table_head_format, table_name);
+// Create table
+		String cmd_create_table = format_cmd_create_table_head + cmd_table_field + format_cmd_create_table_tail;
+		FinanceRecorderCmnDef.format_debug("Create table by command: %s", cmd_create_table);
+
+// Create the SQL command list and then execute
+		try
+		{
+			Statement s = connection.createStatement();
+			FinanceRecorderCmnDef.format_debug("Try to create table[%s] by command: %s", table_name, cmd_create_table);
+			s.executeUpdate(cmd_create_table);
+		}
+		catch(SQLException ex) //有可能會產生sql exception
+		{
+			if (ex.getErrorCode() == 1050)
+				FinanceRecorderCmnDef.format_debug("The table[%s] has already existed", table_name);
+			else
+			{
+				FinanceRecorderCmnDef.format_error("Fails to create table[%s], due to: %s", table_name, ex.getMessage());
+				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+			}
+		}
+
+		FinanceRecorderCmnDef.format_debug("Try to open the MySQL table[%s]...... Successfully", table_name);
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	private short transform_sql_command(List<String> data_list)
+	short delete_database()
 	{
+// Check if the connection is established
+		if (connection == null)
+		{
+			FinanceRecorderCmnDef.error("The connection is NOT established");
+			return  FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
+
+// Delete database
+		String cmd_delete_database = String.format(format_cmd_delete_database, database_name);
+// Create the SQL command list and then execute
+		try
+		{
+			Statement s = connection.createStatement();
+			FinanceRecorderCmnDef.format_debug("Delete database[%s] by command: %s", database_name, cmd_delete_database);
+			s.executeUpdate(cmd_delete_database);
+		}
+		catch(SQLException ex) //有可能會產生sql exception
+		{
+			FinanceRecorderCmnDef.format_error("Fails to delete database[%s], due to: %d, %s", database_name, ex.getMessage());
+			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+		}
+// Close the connection to MySQL
+		disconnect_mysql();
+
+		FinanceRecorderCmnDef.format_debug("Delete database[%s]...... Successfully", database_name);
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	short insert_data(List<String> data_list)
+	{
+// Check if the connection is established
+		if (connection == null)
+		{
+			FinanceRecorderCmnDef.error("The connection is NOT established");
+			return  FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
+
+		String format_cmd_insert_data_head = String.format(format_cmd_insert_data_head_format, table_name);
+
+// Create the SQL command list and then execute
 		for (String data : data_list)
 		{
 			String[] element_list = FinanceRecorderCmnDef.field_string_to_array(data);
-//			String cmd_field = field_list[0];
 			String cmd_data = "?";
 // Transform the date field into SQL Date format
 			java.sql.Date sql_date = null;
@@ -214,56 +251,30 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 			}
 // Generate the SQL command
 			String cmd_insert_data = format_cmd_insert_data_head + cmd_data + format_cmd_insert_data_tail;
+			PreparedStatement pstmt = null;
 			try
 			{
-				PreparedStatement pstmt = connection.prepareStatement(cmd_insert_data);
+				pstmt = connection.prepareStatement(cmd_insert_data);
 				pstmt.setDate(1, sql_date);
-//				StockRecorderCmnDef.format_debug("Create the command of inserting data: %s", pstmt);
-				sql_cmd_data_list.add(pstmt);
 			}
 			catch (SQLException e)
 			{
 				FinanceRecorderCmnDef.format_debug("Fail to prepare MySQL command, due to: %s", e.toString());
 				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 			}
-		}
-		return FinanceRecorderCmnDef.RET_SUCCESS;
-	}
-
-	private short execute_sql_command(List<PreparedStatement> sql_cmd_list)
-	{
 // Write the message into the MySQL
-		try
-		{
-			for (PreparedStatement sql_cmd : sql_cmd_list)
+			try
 			{
-				FinanceRecorderCmnDef.format_debug("Insert data by command: %s", sql_cmd);
-				sql_cmd.executeUpdate();
-//				Statement s = connection.createStatement();
-//				s.executeUpdate(cmd_insert_data);
+				FinanceRecorderCmnDef.format_debug("Insert into data by command: %s", pstmt);
+				pstmt.executeUpdate();
+			}
+			catch(SQLException ex) //有可能會產生sql exception
+			{
+				FinanceRecorderCmnDef.format_error("Fail to insert into data by command[%s], due to: %s", pstmt, ex.getMessage());
+				return  FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 			}
 		}
-		catch(SQLException ex) //有可能會產生sql exception
-		{
-			FinanceRecorderCmnDef.format_error("Fails to insert data into table[%s], due to: %s", table_name, ex.getMessage());
-			return  FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
-		}
-		return  FinanceRecorderCmnDef.RET_SUCCESS;
-	}
 
-//	public short write(List<PreparedStatement> cmd_insert_data_list)
-	public short write(List<String> data_list)
-	{
-// Create the SQL command list
-		short ret = transform_sql_command(data_list);
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			return ret;
-// Execute the SQL command list
-		ret = execute_sql_command(sql_cmd_data_list);
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			return ret;
-// Clear the SQL command list
-		sql_cmd_data_list.clear();
 		return  FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 }

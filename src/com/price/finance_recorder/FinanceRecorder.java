@@ -1,53 +1,55 @@
 package com.price.finance_recorder;
 
 import java.io.*;
-//import java.sql.Date;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.util.*;
 
-import java.util.regex.*;
 
 public class FinanceRecorder 
 {
-	static FinanceRecorderMgr stock_recorder_mgr = null;
+	static FinanceRecorderMgr stock_recorder_mgr = new FinanceRecorderMgr();
+
 	public static void main(String args[])
 	{
-		FinanceRecorderWriter finance_recorder_writer1 = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType.FinaceData_FutureTop10DealersAndLegalPersons);
-		finance_recorder_writer1.write_to_sql("2015-07", "2015-09");
-		FinanceRecorderWriter finance_recorder_writer2 = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType.FinaceData_FutureTop10DealersAndLegalPersons);
-		finance_recorder_writer2.write_to_sql("2015-07", "2015-09");
-//		FinanceRecorderWriter finance_recorder_writer3 = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType.FinaceData_FutureTop10DealersAndLegalPersons);
-//		finance_recorder_writer3.write_to_sql("2015-09", "2015-09");
-		System.exit(0);
-
-		stock_recorder_mgr = new FinanceRecorderMgr();
+		boolean use_multithread = false;
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 
-		System.out.println("Start to record the Stock Information...\n ");
-// Initialize the object
-		ret = stock_recorder_mgr.initialize();
+		System.out.println("Parse the parameters......");
+		ret = parse_param(args);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
-			System.err.println("Fail to initialize...");
+			System.err.println("Fail to write financial data into MySQL");
 			System.exit(1);
 		}
 
-// Record the stock information
-		ret = stock_recorder_mgr.record();
+// Write the financial data into MySQL
+		System.out.println("Write financial data into MySQL data......");
+		long time_start_millisecond = System.currentTimeMillis();
+		ret = write_sql(use_multithread);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
-			System.err.println("Fail to record...");
+			System.err.println("Fail to write financial data into MySQL");
 			System.exit(1);
 		}
+		long time_end_millisecond = System.currentTimeMillis();
+		System.out.println("Write financial data into MySQL data...... Done");
+		System.out.printf("######### Time Lapse: %d second(s) #########\n", (int)((time_end_millisecond - time_start_millisecond)));
+		System.exit(0);
+	}
 
-// De-Initialize the object
-		ret = stock_recorder_mgr.deinitialize();
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-		{
-			System.err.println("Fail to de-initialize...");
-			System.exit(1);
-		}
+	public static short parse_param(String args[])
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		ret = stock_recorder_mgr.parse_config_file("history.conf");
+		return ret;
+	}
 
-		System.out.println("Done");
+	public static short write_sql(boolean use_multithread)
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		if (use_multithread)
+			ret = stock_recorder_mgr.write_by_multithread();
+		else
+			ret = stock_recorder_mgr.write();
+		return ret;
 	}
 }
