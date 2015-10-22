@@ -71,21 +71,21 @@ public class FinanceRecorderCmnDef
 	public static final int MAX_CONCURRENT_THREAD = 4;
 	public static final int MAX_MONTH_RANGE_IN_THREAD = 3;
 
-	public static enum FinaceDataType
+	public static enum FinanceDataType
 	{
-		FinaceData_FutureTop10DealersAndLegalPersons(0),
-		FinaceData_FutureTop3LegalPersonsOpenInterest(1),
-		FinaceData_FtockTop3LegalPersonsNetBuyOrSell(2);
+		FinanceData_FutureTop10DealersAndLegalPersons(0),
+		FinanceData_FutureTop3LegalPersonsOpenInterest(1),
+		FinanceData_FtockTop3LegalPersonsNetBuyOrSell(2);
 
 		private int value = 0;
-		private FinaceDataType(int value){this.value = value;}
-		public static FinaceDataType valueOf(int value)
+		private FinanceDataType(int value){this.value = value;}
+		public static FinanceDataType valueOf(int value)
 		{
 			switch (value)
 			{
-			case 0: return FinaceData_FutureTop10DealersAndLegalPersons;
-			case 1: return FinaceData_FutureTop3LegalPersonsOpenInterest;
-			case 2: return FinaceData_FtockTop3LegalPersonsNetBuyOrSell;
+			case 0: return FinanceData_FutureTop10DealersAndLegalPersons;
+			case 1: return FinanceData_FutureTop3LegalPersonsOpenInterest;
+			case 2: return FinanceData_FtockTop3LegalPersonsNetBuyOrSell;
 			default: return null;
 			}
 		}

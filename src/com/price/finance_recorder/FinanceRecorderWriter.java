@@ -16,9 +16,9 @@ public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements Fin
 	private FinanceRecorderSQLClient sql_client = null;
 	private HashMap<Integer, LinkedList<Integer>> finance_source_time_range_table = new HashMap<Integer, LinkedList<Integer>>();
 
-	public FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType finace_data_type)
+	public FinanceRecorderWriter(FinanceRecorderCmnDef.FinanceDataType finance_data_type)
 	{
-		finace_data_type_index = finace_data_type.ordinal();
+		finace_data_type_index = finance_data_type.ordinal();
 		csv_reader = new FinanceRecorderCSVReader(this);
 		sql_client = new FinanceRecorderSQLClient(this);
 	}

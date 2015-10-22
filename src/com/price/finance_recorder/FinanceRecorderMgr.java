@@ -8,8 +8,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.*;
 import java.util.regex.*;
 
-import com.price.finance_recorder.FinanceRecorderCmnDef.FinaceDataType;
-
 
 public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserverInf
 {
@@ -33,7 +31,7 @@ public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserver
 
 	private HashMap<Integer,TimeRangeCfg> finance_source_time_range_table = new HashMap<Integer, TimeRangeCfg>();
 
-	public short parse_config_file(String filename)
+	public short update_by_config_file(String filename)
 	{
 		String current_path = FinanceRecorderCmnDef.get_current_path();
 		String conf_filepath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME, filename);
@@ -80,8 +78,8 @@ OUT:
 				String[] entry_arr = line.split(" ");
 // Get the type of data source
 				data_source = entry_arr[0];
-				int finace_data_type_index = Arrays.asList(FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST).indexOf(data_source);
-				if (finace_data_type_index == -1)
+				int finance_data_type_index = Arrays.asList(FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST).indexOf(data_source);
+				if (finance_data_type_index == -1)
 				{
 					FinanceRecorderCmnDef.format_error("Unknown data source type[%s] in config file", data_source);
 					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
@@ -120,7 +118,7 @@ OUT:
 
 				FinanceRecorderCmnDef.format_debug("New entry in config [%s %s:%s]", data_source, time_month_begin, time_month_end);
 				TimeRangeCfg time_range_cfg = new TimeRangeCfg(time_month_begin, time_month_end);
-				finance_source_time_range_table.put(finace_data_type_index, time_range_cfg);
+				finance_source_time_range_table.put(finance_data_type_index, time_range_cfg);
 			}
 		}
 		catch (IOException e)
@@ -139,6 +137,30 @@ OUT:
 		}
 
 		return ret;
+	}
+
+	public short update_by_parameter(LinkedList<Integer> finance_data_type_index_list, String time_month_begin, String time_month_end)
+	{
+// Check the time of start time
+		if (parse_time_range(time_month_begin) == null)
+		{
+			FinanceRecorderCmnDef.format_error("Incorrect begin time format[%s] in config file", time_month_begin);
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+		}
+// Check the time of start time
+		if (parse_time_range(time_month_end) == null)
+		{
+			FinanceRecorderCmnDef.format_error("Incorrect end time format[%s] in config file", time_month_end);
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+		}
+
+		for (Integer finance_data_type_index : finance_data_type_index_list)
+		{
+			FinanceRecorderCmnDef.format_debug("New entry in config [%s %s:%s]", finance_data_type_index, time_month_begin, time_month_end);
+			TimeRangeCfg time_range_cfg = new TimeRangeCfg(time_month_begin, time_month_end);
+			finance_source_time_range_table.put(finance_data_type_index, time_range_cfg);
+		}
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	@Override
@@ -198,8 +220,8 @@ OUT:
 		short ret;
 		for (Map.Entry<Integer, TimeRangeCfg> entry : finance_source_time_range_table.entrySet())
 		{
-			int finace_data_type_index = entry.getKey();
-			FinanceRecorderWriter finance_recorder_writer = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType.valueOf(finace_data_type_index));
+			int finance_data_type_index = entry.getKey();
+			FinanceRecorderWriter finance_recorder_writer = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinanceDataType.valueOf(finance_data_type_index));
 			TimeRangeCfg time_range_cfg = entry.getValue();
 
 			FinanceRecorderCmnDef.format_debug("Try to write data [%s %s:%s] into MySQL......", finance_recorder_writer.get_description(), time_range_cfg.month_start_str, time_range_cfg.month_end_str);
@@ -225,8 +247,8 @@ OUT:
 		{
 			for (Map.Entry<Integer, TimeRangeCfg> entry : finance_source_time_range_table.entrySet())
 			{
-				int finace_data_type_index = entry.getKey();
-//				FinanceRecorderWriter finance_recorder_writer = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType.valueOf(finace_data_type_index));
+				int finance_data_type_index = entry.getKey();
+//				FinanceRecorderWriter finance_recorder_writer = new FinanceRecorderWriter(FinanceRecorderCmnDef.financeDataType.valueOf(finance_data_type_index));
 				TimeRangeCfg time_range_cfg = entry.getValue();
 // Setup the time range
 				int[] time_list = get_start_and_end_time_range(time_range_cfg.month_start_str, time_range_cfg.month_end_str);
@@ -256,9 +278,9 @@ OUT:
 						month_cur_end = month_end;
 					}
 // Write the data into MySQL
-					FinanceRecorderWriter finance_recorder_writer = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType.valueOf(finace_data_type_index));
+					FinanceRecorderWriter finance_recorder_writer = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinanceDataType.valueOf(finance_data_type_index));
 //					FinanceRecorderCmnDef.format_debug("Try to write data [%s %04d%02d:%04d%02d] into MySQL......", finance_recorder_writer.get_description(), year_start, month_start, year_cur_end, month_cur_end);
-					FinanceRecorderWriterTask task = new FinanceRecorderWriterTask(new FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType.valueOf(finace_data_type_index)), year_start, month_start, year_cur_end, month_cur_end);
+					FinanceRecorderWriterTask task = new FinanceRecorderWriterTask(new FinanceRecorderWriter(FinanceRecorderCmnDef.FinanceDataType.valueOf(finance_data_type_index)), year_start, month_start, year_cur_end, month_cur_end);
 					Future<Integer> res = executor.submit(task);
 //					try{Thread.sleep(500);}
 //					catch (InterruptedException e){}
@@ -297,7 +319,7 @@ OUT:
 
 	public short clear(int finance_data_type_index)
 	{
-		FinanceRecorderWriter finance_recorder_writer = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinaceDataType.valueOf(finance_data_type_index));
+		FinanceRecorderWriter finance_recorder_writer = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinanceDataType.valueOf(finance_data_type_index));
 		FinanceRecorderCmnDef.format_debug("Try to delete database [%s]......", finance_recorder_writer.get_description());
 		return finance_recorder_writer.delete_sql();
 	}
@@ -318,7 +340,7 @@ OUT:
 	public short clear_all()
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		for (int finance_data_type_index = 0 ; finance_data_type_index < FinaceDataType.values().length ; finance_data_type_index++)
+		for (int finance_data_type_index = 0 ; finance_data_type_index < FinanceRecorderCmnDef.FinanceDataType.values().length ; finance_data_type_index++)
 		{
 			ret = clear(finance_data_type_index);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
