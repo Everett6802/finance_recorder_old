@@ -269,8 +269,16 @@ OUT:
 				int year_to_month_end = year_end * 12 + month_end;
 				while(true)
 				{
-					year_cur_end = year_start + (int)((month_start + month_offset) / 12);
-					month_cur_end = (month_start + month_offset) % 12;
+//					year_cur_end = year_start + (int)((month_start + month_offset) / 12);
+//					month_cur_end = (month_start + month_offset) % 12;
+					month_cur_end = month_start + month_offset;
+					year_cur_end = year_start;
+					while (month_cur_end > 12)
+					{
+						year_cur_end++;
+						month_cur_end -= 12;
+					}
+
 					int year_to_month_cur_end = year_cur_end * 12 + month_cur_end;
 					if (year_to_month_cur_end > year_to_month_end)
 					{
@@ -288,8 +296,15 @@ OUT:
 
 					if (year_cur_end == year_end && month_cur_end == month_end)
 						break;
-					year_start = year_start + (int)((month_start + FinanceRecorderCmnDef.MAX_MONTH_RANGE_IN_THREAD) / 12);
-					month_start = (month_start + FinanceRecorderCmnDef.MAX_MONTH_RANGE_IN_THREAD) % 12;
+//					year_start = year_start + (int)((month_start + FinanceRecorderCmnDef.MAX_MONTH_RANGE_IN_THREAD) / 12);
+//					month_start = (month_start + FinanceRecorderCmnDef.MAX_MONTH_RANGE_IN_THREAD) % 12;
+					month_start = month_start + FinanceRecorderCmnDef.MAX_MONTH_RANGE_IN_THREAD;
+//					year_start = year_start;
+					while (month_start > 12)
+					{
+						year_start++;
+						month_start -= 12;
+					}
 				}
 			}
 // Check the result

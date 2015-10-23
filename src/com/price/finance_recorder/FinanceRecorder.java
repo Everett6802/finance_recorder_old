@@ -144,7 +144,14 @@ public class FinanceRecorder
 		long time_end_millisecond = System.currentTimeMillis();
 
 		System.out.println("Write financial data into MySQL data...... Done");
-		System.out.printf("######### Time Lapse: %d second(s) #########\n", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+
+		long time_lapse_millisecond = time_end_millisecond - time_start_millisecond;
+		if (time_lapse_millisecond >= 100 * 1000)
+			System.out.printf("######### Time Lapse: %d second(s) #########\n", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+		else if (time_lapse_millisecond >= 10 * 1000)
+			System.out.printf("######### Time Lapse: %.1f second(s) #########\n", (float)((time_end_millisecond - time_start_millisecond) / 1000.0));
+		else
+			System.out.printf("######### Time Lapse: %.2f second(s) #########\n", (float)((time_end_millisecond - time_start_millisecond) / 1000.0));
 		System.exit(0);
 	}
 
