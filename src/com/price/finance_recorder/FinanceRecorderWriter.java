@@ -10,6 +10,7 @@ public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements Fin
 	private static final String CSV_FILE_FOLDER = "/var/tmp/finance";
 	private static final String DATE_FORMAT_STRING = "yyyy-MM";
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(DATE_FORMAT_STRING);
+	private static final boolean IgnoreErrorIfCSVNotExist = true;
 
 	private int finace_data_type_index;
 	private FinanceRecorderCSVReader csv_reader = null;
@@ -81,7 +82,17 @@ OUT:
 //				FinanceRecorderCmnDef.format_debug("Try to read the CSV: %s", csv_filepath);
 				ret = csv_reader.initialize(csv_filepath);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
+				{
+					if (IgnoreErrorIfCSVNotExist)
+					{
+						if (FinanceRecorderCmnDef.CheckFailureNotFound(ret))
+						{
+							FinanceRecorderCmnDef.format_warn("The CSV[%s] does NOT exist, just skip this error......", csv_filepath);
+							continue;
+						}
+					}
 					return ret;
+				}
 				ret = csv_reader.read(data_list);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					return ret;

@@ -19,10 +19,10 @@ public class FinanceRecorder
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 
 		System.out.println("Parse the parameters......");
-		int index = 1;
+		int index = 0;
 		int index_offset = 0;
 		int args_len = args.length;
-		
+
 		while(index < args_len)
 		{
 			String option = args[index];
@@ -62,8 +62,10 @@ public class FinanceRecorder
 
 				String[] time_month_array = args[index + 1].split(";");
 				int time_month_array_len = time_month_array.length;
+				if (time_month_array_len != 1 && time_month_array_len != 2)
+					show_error_and_exit(String.format("Incorrect time format: %s", args[index + 1]));
 				time_month_begin = time_month_array[0];
-				if (time_month_array_len > 2)
+				if (time_month_array_len == 2)
 					time_month_end = time_month_array[1];
 				index_offset = 2;
 			}
@@ -86,7 +88,7 @@ public class FinanceRecorder
 					remove_database_list.addLast(i);
 				index_offset = 1;
 			}
-			else if (option.equals("--multiple_thread"))
+			else if (option.equals("--multi_thread"))
 			{
 				use_multithread = true;
 				index_offset = 1;
@@ -142,7 +144,7 @@ public class FinanceRecorder
 		long time_end_millisecond = System.currentTimeMillis();
 
 		System.out.println("Write financial data into MySQL data...... Done");
-		System.out.printf("######### Time Lapse: %d second(s) #########\n", (int)((time_end_millisecond - time_start_millisecond)));
+		System.out.printf("######### Time Lapse: %d second(s) #########\n", (int)((time_end_millisecond - time_start_millisecond) / 1000));
 		System.exit(0);
 	}
 

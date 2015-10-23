@@ -9,6 +9,7 @@ public class FinanceRecorderCSVReader
 	private String csv_filepath;
 	private BufferedReader br = null;
 	private FinanceRecorderCmnDef.FinanceObserverInf parent_observer = null;
+//	private boolean IgnoreErrorIfFileNotExist = true;
 
 	public FinanceRecorderCSVReader(FinanceRecorderCmnDef.FinanceObserverInf observer)
 	{
@@ -27,7 +28,7 @@ public class FinanceRecorderCSVReader
 		catch (FileNotFoundException e)
 		{
 			FinanceRecorderCmnDef.format_error("The data file[%s] is NOT found", csv_filepath);
-			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_PATH;
+			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
 		}
 		catch (IOException e)
 		{

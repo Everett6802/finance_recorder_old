@@ -1,6 +1,7 @@
 package com.price.finance_recorder;
 
 import java.io.*;
+import java.util.Calendar;
 import java.util.List;
 
 
@@ -29,6 +30,7 @@ public class FinanceRecorderCmnDef
 	public static boolean CheckSuccess(short x) {return (x == RET_SUCCESS ? true : false);}
 	public static boolean CheckFailure(short x) {return !CheckSuccess(x);}
 
+	public static boolean CheckFailureNotFound(short x) {return (x == RET_FAILURE_NOT_FOUND ? true : false);}
 	public static boolean CheckMySQLFailureUnknownDatabase(short x) {return (x == RET_FAILURE_MYSQL_UNKNOWN_DATABASE ? true : false);}
 
 	private static final String[] RetDescription = new String[]
@@ -284,8 +286,14 @@ public class FinanceRecorderCmnDef
 
 	public static final String get_time_month_today()
 	{
-		java.util.Date date_today = new java.util.Date();
-		String time_month_today = String.format("%04d-%02d", date_today.getYear(), date_today.getMonth());
+//		java.util.Date date_today = new java.util.Date();
+		java.util.Date date = new java.util.Date(); // your date
+	    Calendar cal = Calendar.getInstance();
+	    cal.setTime(date);
+//	    int year = cal.get(Calendar.YEAR);
+//	    int month = cal.get(Calendar.MONTH);
+//	    int day = cal.get(Calendar.DAY_OF_MONTH);
+		String time_month_today = String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH));
 		return time_month_today;
 	}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
