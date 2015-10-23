@@ -6,6 +6,7 @@ import java.util.*;
 
 public class FinanceRecorder 
 {
+	static final String PARAM_SPLIT = ",";
 	static FinanceRecorderMgr finance_recorder_mgr = new FinanceRecorderMgr();
 
 	public static void main(String args[])
@@ -39,7 +40,7 @@ public class FinanceRecorder
 					show_error_and_exit(String.format("The option[%s] is duplicate", option));
 
 				remove_database_list = new LinkedList<Integer>();
-				String[] data_source_array = args[index + 1].split(";");
+				String[] data_source_array = args[index + 1].split(PARAM_SPLIT);
 				for (String data_source : data_source_array)
 					remove_database_list.addLast(Integer.valueOf(data_source));
 				index_offset = 2;
@@ -50,7 +51,7 @@ public class FinanceRecorder
 					show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
 
 				finance_data_type_index_list = new LinkedList<Integer>();
-				String[] data_source_array = args[index + 1].split(";");
+				String[] data_source_array = args[index + 1].split(PARAM_SPLIT);
 				for (String data_source : data_source_array)
 					finance_data_type_index_list.addLast(Integer.valueOf(data_source));
 				index_offset = 2;
@@ -60,7 +61,7 @@ public class FinanceRecorder
 				if (index + 1 >= args_len)
 					show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
 
-				String[] time_month_array = args[index + 1].split(";");
+				String[] time_month_array = args[index + 1].split(PARAM_SPLIT);
 				int time_month_array_len = time_month_array.length;
 				if (time_month_array_len != 1 && time_month_array_len != 2)
 					show_error_and_exit(String.format("Incorrect time format: %s", args[index + 1]));
@@ -166,14 +167,14 @@ public class FinanceRecorder
 		System.out.println("====================== Usage ======================");
 		System.out.println("-h|--help\nDescription: The usage");
 		System.out.println("-r|--remove\nDescription: Remove some MySQL database(s)");
-		System.out.println("  Format: 1;2;3");
+		System.out.println("  Format: 1,2,3");
 		System.out.println("-s|--source\nDescription: Type of CSV date file\nDefault: All types\nCaution: Ignored if -f|--file set");
-		System.out.println("  Format: 1;2;3");
+		System.out.println("  Format: 1,2,3");
 		for (int index = 0 ; index < FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST.length ; index++)
 			System.out.printf("  %d: %s\n", index, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[index]);
 		System.out.println("-t|--time\nTime: The time range of the CSV data file\nDefault: Current month\nCaution1: Ignored if -f|--file set\nCaution2: -s|--source SHOULD be set if set");
 		System.out.println("  Format 1 (start_time): 2015-09");
-		System.out.println("  Format 2 (start_time;end_time): 2015-01;2015-09");
+		System.out.println("  Format 2 (start_time;end_time): 2015-01,2015-09");
 		System.out.println("-f|--file\nDescription: Read Source/Time from config file\n\nCaution: -s|--source and -t|--time are Ignored if set");
 		System.out.println("  Format: history.conf");
 	    System.out.println("--remove_all\nDescription: Remove all the MySQL databases");
