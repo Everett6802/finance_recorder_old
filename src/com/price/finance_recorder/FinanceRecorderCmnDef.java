@@ -75,9 +75,9 @@ public class FinanceRecorderCmnDef
 
 	public static enum FinanceDataType
 	{
-		FinanceData_FutureTop10DealersAndLegalPersons(0),
+		FinanceData_StockTop3LegalPersonsNetBuyOrSell(0),
 		FinanceData_FutureTop3LegalPersonsOpenInterest(1),
-		FinanceData_FtockTop3LegalPersonsNetBuyOrSell(2);
+		FinanceData_FutureTop10DealersAndLegalPersons(2);
 
 		private int value = 0;
 		private FinanceDataType(int value){this.value = value;}
@@ -85,9 +85,9 @@ public class FinanceRecorderCmnDef
 		{
 			switch (value)
 			{
-			case 0: return FinanceData_FutureTop10DealersAndLegalPersons;
+			case 0: return FinanceData_StockTop3LegalPersonsNetBuyOrSell;
 			case 1: return FinanceData_FutureTop3LegalPersonsOpenInterest;
-			case 2: return FinanceData_FtockTop3LegalPersonsNetBuyOrSell;
+			case 2: return FinanceData_FutureTop10DealersAndLegalPersons;
 			default: return null;
 			}
 		}
@@ -107,37 +107,31 @@ public class FinanceRecorderCmnDef
 	
 	public static final String[] FINANCE_DATA_NAME_LIST = new String[]
 	{
-		"future_top10_dealers_and_legal_persons",
+		"stock_top3_legal_persons_net_buy_or_sell",
 		"future_top3_legal_persons_open_interest",
-		"stock_top3_legal_persons_net_buy_or_sell"
+		"future_top10_dealers_and_legal_persons"
 	};
 	public static final String[] FINANCE_DATA_DESCRIPTION_LIST = new String[]
 	{
-		"十大交易人及特定法人期貨資訊",
+		"三大法人現貨買賣超",
 		"三大法人期貨留倉淨額",
-		"三大法人現貨買賣超"
+		"十大交易人及特定法人期貨資訊"
     };
-	private static final String[] future_top10_dealers_and_legal_persons_field_defintion = new String[]
+	private static final String[] stock_top3_legal_persons_net_buy_or_sell_field_defintion = new String[]
 	{
 		"date DATE NOT NULL PRIMARY KEY", // 日期
-		"value1 INT", // 臺股期貨_到期月份_買方_前五大交易人合計_部位數
-		"value2 FLOAT", // 臺股期貨_到期月份_買方_前五大交易人合計_百分比
-		"value3 INT", // 臺股期貨_到期月份_買方_前十大交易人合計_部位數
-		"value4 FLOAT", // 臺股期貨_到期月份_買方_前十大交易人合計_百分比
-		"value5 INT", // 臺股期貨_到期月份_賣方_前五大交易人合計_部位數
-		"value6 FLOAT", // 臺股期貨_到期月份_賣方_前五大交易人合計_百分比
-		"value7 INT", // 臺股期貨_到期月份_賣方_前十大交易人合計_部位數
-		"value8 FLOAT", // 臺股期貨_到期月份_賣方_前十大交易人合計_百分比
-		"value9 INT", // 臺股期貨_到期月份_全市場未沖銷部位數
-		"value10 INT", // 臺股期貨_所有契約_買方_前五大交易人合計_部位數
-		"value11 FLOAT", // 臺股期貨_所有契約_買方_前五大交易人合計_百分比
-		"value12 INT", // 臺股期貨_所有契約_買方_前十大交易人合計_部位數
-		"value13 FLOAT", // 臺股期貨_所有契約_買方_前十大交易人合計_百分比
-		"value14 INT", // 臺股期貨_所有契約_賣方_前五大交易人合計_部位數
-		"value15 FLOAT", // 臺股期貨_所有契約_賣方_前五大交易人合計_百分比
-		"value16 INT", // 臺股期貨_所有契約_賣方_前十大交易人合計_部位數
-		"value17 FLOAT", // 臺股期貨_所有契約_賣方_前十大交易人合計_百分比
-		"value18 INT", // 臺股期貨_所有契約_全市場未沖銷部位數
+		"value1 BIGINT", // 自營商(自行買賣)_買進金額
+		"value2 BIGINT", // 自營商(自行買賣)_賣出金額
+		"value3 BIGINT", // 自營商(自行買賣)_買賣差額
+		"value4 BIGINT", // 自營商(避險)_買進金額
+		"value5 BIGINT", // 自營商(避險)_賣出金額
+		"value6 BIGINT", // 自營商(避險)_買賣差額
+		"value7 BIGINT", // 投信_買進金額
+		"value8 BIGINT", // 投信_賣出金額
+		"value9 BIGINT", // 投信_買賣差額
+		"value10 BIGINT", // 外資及陸資_買進金額
+		"value11 BIGINT", // 外資及陸資_賣出金額
+		"value12 BIGINT", // 外資及陸資_買賣差額
 	};
 	private static final String[] future_top3_legal_persons_open_interest_field_defintion = new String[]
 	{
@@ -161,27 +155,33 @@ public class FinanceRecorderCmnDef
 		"value17 INT", // 外資_多空淨額_口數 int",
 		"value18 INT", // 外資_多空淨額_契約金額 int",
 	};
-	private static final String[] stock_top3_legal_persons_net_buy_or_sell_field_defintion = new String[]
+	private static final String[] future_top10_dealers_and_legal_persons_field_defintion = new String[]
 	{
 		"date DATE NOT NULL PRIMARY KEY", // 日期
-		"value1 INT", // 自營商(自行買賣)_買進金額
-		"value2 INT", // 自營商(自行買賣)_賣出金額
-		"value3 INT", // 自營商(自行買賣)_買賣差額
-		"value4 INT", // 自營商(避險)_買進金額
-		"value5 INT", // 自營商(避險)_賣出金額
-		"value6 INT", // 自營商(避險)_買賣差額
-		"value7 INT", // 投信_買進金額
-		"value8 INT", // 投信_賣出金額
-		"value9 INT", // 投信_買賣差額
-		"value10 INT", // 外資及陸資_買進金額
-		"value11 INT", // 外資及陸資_賣出金額
-		"value12 INT", // 外資及陸資_買賣差額
+		"value1 INT", // 臺股期貨_到期月份_買方_前五大交易人合計_部位數
+		"value2 FLOAT", // 臺股期貨_到期月份_買方_前五大交易人合計_百分比
+		"value3 INT", // 臺股期貨_到期月份_買方_前十大交易人合計_部位數
+		"value4 FLOAT", // 臺股期貨_到期月份_買方_前十大交易人合計_百分比
+		"value5 INT", // 臺股期貨_到期月份_賣方_前五大交易人合計_部位數
+		"value6 FLOAT", // 臺股期貨_到期月份_賣方_前五大交易人合計_百分比
+		"value7 INT", // 臺股期貨_到期月份_賣方_前十大交易人合計_部位數
+		"value8 FLOAT", // 臺股期貨_到期月份_賣方_前十大交易人合計_百分比
+		"value9 INT", // 臺股期貨_到期月份_全市場未沖銷部位數
+		"value10 INT", // 臺股期貨_所有契約_買方_前五大交易人合計_部位數
+		"value11 FLOAT", // 臺股期貨_所有契約_買方_前五大交易人合計_百分比
+		"value12 INT", // 臺股期貨_所有契約_買方_前十大交易人合計_部位數
+		"value13 FLOAT", // 臺股期貨_所有契約_買方_前十大交易人合計_百分比
+		"value14 INT", // 臺股期貨_所有契約_賣方_前五大交易人合計_部位數
+		"value15 FLOAT", // 臺股期貨_所有契約_賣方_前五大交易人合計_百分比
+		"value16 INT", // 臺股期貨_所有契約_賣方_前十大交易人合計_部位數
+		"value17 FLOAT", // 臺股期貨_所有契約_賣方_前十大交易人合計_百分比
+		"value18 INT", // 臺股期貨_所有契約_全市場未沖銷部位數
 	};
 	public static final String[] FINANCE_DATA_SQL_FIELD_LIST = new String[]
 	{
-		transform_array_to_sql_string(future_top10_dealers_and_legal_persons_field_defintion),
+		transform_array_to_sql_string(stock_top3_legal_persons_net_buy_or_sell_field_defintion),
 		transform_array_to_sql_string(future_top3_legal_persons_open_interest_field_defintion),
-		transform_array_to_sql_string(stock_top3_legal_persons_net_buy_or_sell_field_defintion)
+		transform_array_to_sql_string(future_top10_dealers_and_legal_persons_field_defintion)
 	};
 
 	public static final short NOTIFY_GET_DATA = 0;
