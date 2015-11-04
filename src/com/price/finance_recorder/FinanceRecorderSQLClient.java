@@ -16,7 +16,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 	private String username = null;
 	private String password = null;
 	private String database_name = null;
-	private String table_name = null;
+//	private String table_name = null;
 	private FinanceRecorderCmnDef.FinanceObserverInf finance_observer = null;
 
 // Create Database command format
@@ -28,6 +28,9 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 // Insert Data command format
 	protected static final String format_cmd_insert_data_head_format = "INSERT INTO %s VALUES(";
 	protected static final String format_cmd_insert_data_tail = ")";
+// Select Data command format
+	protected static final String format_cmd_select_data_head = "SELECT ";
+	protected static final String format_cmd_select_data_tail_format = " FROM %s";
 // Delete Database command format
 	private static final String format_cmd_delete_database = "DROP DATABASE IF EXISTS %s";
 
@@ -44,7 +47,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 	{
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
 		java.util.Date dateStr = formatter.parse(date_str);
-		return  new java.sql.Date(dateStr.getTime());
+		return new java.sql.Date(dateStr.getTime());
 	}
 
 	short try_connect_mysql(
@@ -148,7 +151,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	short open_table(String table, String cmd_table_field)
+	short open_table(String table_name, String cmd_table_field)
 	{
 // Check if the connection is established
 		if (connection == null)
@@ -157,7 +160,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 			return  FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 
-		table_name = table;
+//		table_name = table;
 
 		FinanceRecorderCmnDef.format_debug("Try to open the MySQL table[%s]...... ", table_name);
 		String format_cmd_create_table_head = String.format(format_cmd_create_table_head_format, table_name);
@@ -217,7 +220,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	short insert_data(List<String> data_list)
+	short insert_data(String table_name, List<String> data_list)
 	{
 // Check if the connection is established
 		if (connection == null)
@@ -276,6 +279,69 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 				FinanceRecorderCmnDef.format_error("Fail to insert into data by command[%s], due to: %s", pstmt, ex.getMessage());
 				return  FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 			}
+		}
+
+		return  FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	short select_data(String table_name, FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg, List<String> data_list){return select_data(table_name, "*", time_range_cfg, data_list);}
+
+	short select_data(String table_name, String cmd_table_field, FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg, List<String> data_list)
+	{
+// Check if the connection is established
+		if (connection == null)
+		{
+			FinanceRecorderCmnDef.error("The connection is NOT established");
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
+
+// Create the SQL command list and then execute
+// Transform the date field into SQL Date format
+		java.sql.Date sql_date_start = null;
+		java.sql.Date sql_date_end = null;
+		try
+		{
+			sql_date_start = transform_java_sql_date_format(time_range_cfg.time_start_str);
+			sql_date_end = transform_java_sql_date_format(time_range_cfg.time_end_str);
+		}
+		catch (ParseException e)
+		{
+			FinanceRecorderCmnDef.format_debug("Fail to transform the MySQL time format, due to: %s", e.toString());
+			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+		}
+// Generate the SQL command
+		String format_cmd_select_data_tail = String.format(format_cmd_select_data_tail_format, table_name);
+		String cmd_select_data = format_cmd_select_data_head + cmd_table_field + format_cmd_select_data_tail + " WHERE date BETWEEN ? AND ?";
+		PreparedStatement pstmt = null;
+		try
+		{
+			pstmt = connection.prepareStatement(cmd_select_data);
+			pstmt.setDate(1, sql_date_start);
+			pstmt.setDate(2, sql_date_end);
+		}
+		catch (SQLException e)
+		{
+			FinanceRecorderCmnDef.format_debug("Fail to prepare MySQL command, due to: %s", e.toString());
+			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+		}
+// Write the message into the MySQL
+		ResultSet rs = null;
+		try
+		{
+			FinanceRecorderCmnDef.format_debug("Select from data by command: %s", pstmt);
+//			pstmt.executeUpdate();
+			rs = pstmt.executeQuery();
+			while(rs.next())
+			{
+				FinanceRecorderCmnDef.format_debug("Query Data: %s", rs.getString(1));
+				data_list.add(rs.toString());
+			}
+			rs.close();
+		}
+		catch(SQLException ex) //有可能會產生sql exception
+		{
+			FinanceRecorderCmnDef.format_error("Fail to select from data by command[%s], due to: %s", pstmt, ex.getMessage());
+			return  FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 		}
 
 		return  FinanceRecorderCmnDef.RET_SUCCESS;

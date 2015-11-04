@@ -3,6 +3,7 @@ package com.price.finance_recorder;
 import java.io.*;
 import java.util.Calendar;
 import java.util.List;
+import java.util.regex.*;
 
 
 public class FinanceRecorderCmnDef
@@ -104,7 +105,46 @@ public class FinanceRecorderCmnDef
 		DatabaseCreateThread_Single,
 		DatabaseCreateThread_Multiple,
 	};
-	
+
+	public static class TimeRangeCfg
+	{
+		public enum TimeType{TIME_NONE, TIME_DATE, TIME_MONTH};
+		public TimeType time_type = null;
+		public String time_start_str; // Format: "2015-09" or "2015-09-04"
+		public String time_end_str; // Format: "2015-09" or "2015-09-04"
+
+		public TimeRangeCfg(String start_str, String end_str)
+		{
+			if (parse_date_range(start_str) != null && parse_date_range(end_str) != null)
+				time_type = TimeType.TIME_DATE;
+			else if (parse_month_range(start_str) != null && parse_month_range(end_str) != null)
+				time_type = TimeType.TIME_MONTH;
+			else
+				time_type = TimeType.TIME_NONE;
+			assert time_type == TimeType.TIME_NONE : String.format("Incorrect time format: %s:%s", start_str, end_str); 
+			time_start_str = start_str;
+			time_end_str = end_str;
+		}
+		public TimeRangeCfg(int year_start, int month_start, int year_end, int month_end)
+		{
+			time_type = TimeType.TIME_MONTH;
+			time_start_str = String.format("%04d-%02d", year_start, month_start);
+			time_end_str = String.format("%04d-%02d", year_end, month_end);
+		}
+		public TimeRangeCfg(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end)
+		{
+			time_type = TimeType.TIME_DATE;
+			time_start_str = String.format("%04d-%02d-%02d", year_start, month_start, day_start);
+			time_end_str = String.format("%04d-%02d-%02d", year_end, month_end, day_end);
+		}
+		@Override
+		public String toString() 
+		{
+			// TODO Auto-generated method stub
+			return String.format("%s:%s", time_start_str, time_end_str);
+		}
+	};
+
 	public static final String[] FINANCE_DATA_NAME_LIST = new String[]
 	{
 		"stock_top3_legal_persons_net_buy_or_sell",
@@ -116,8 +156,8 @@ public class FinanceRecorderCmnDef
 		"三大法人現貨買賣超",
 		"三大法人期貨留倉淨額",
 		"十大交易人及特定法人期貨資訊"
-    };
-	private static final String[] stock_top3_legal_persons_net_buy_or_sell_field_defintion = new String[]
+	};
+	private static final String[] STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION = new String[]
 	{
 		"date DATE NOT NULL PRIMARY KEY", // 日期
 		"value1 BIGINT", // 自營商(自行買賣)_買進金額
@@ -133,7 +173,7 @@ public class FinanceRecorderCmnDef
 		"value11 BIGINT", // 外資及陸資_賣出金額
 		"value12 BIGINT", // 外資及陸資_買賣差額
 	};
-	private static final String[] future_top3_legal_persons_open_interest_field_defintion = new String[]
+	private static final String[] FUTURE_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION = new String[]
 	{
 		"date DATE NOT NULL PRIMARY KEY", // 日期
 		"value1 INT", // 自營商_多方_口數 int",
@@ -155,7 +195,7 @@ public class FinanceRecorderCmnDef
 		"value17 INT", // 外資_多空淨額_口數 int",
 		"value18 INT", // 外資_多空淨額_契約金額 int",
 	};
-	private static final String[] future_top10_dealers_and_legal_persons_field_defintion = new String[]
+	private static final String[] FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION = new String[]
 	{
 		"date DATE NOT NULL PRIMARY KEY", // 日期
 		"value1 INT", // 臺股期貨_到期月份_買方_前五大交易人合計_部位數
@@ -179,9 +219,9 @@ public class FinanceRecorderCmnDef
 	};
 	public static final String[] FINANCE_DATA_SQL_FIELD_LIST = new String[]
 	{
-		transform_array_to_sql_string(stock_top3_legal_persons_net_buy_or_sell_field_defintion),
-		transform_array_to_sql_string(future_top3_legal_persons_open_interest_field_defintion),
-		transform_array_to_sql_string(future_top10_dealers_and_legal_persons_field_defintion)
+		transform_array_to_sql_string(STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION),
+		transform_array_to_sql_string(FUTURE_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION),
+		transform_array_to_sql_string(FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION)
 	};
 
 	public static final short NOTIFY_GET_DATA = 0;
@@ -296,6 +336,47 @@ public class FinanceRecorderCmnDef
 		String time_month_today = String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH));
 		return time_month_today;
 	}
+
+	private static Matcher parse_time_range(String time_str, String search_pattern)
+	{
+// Time Format: yyyy-mm; Ex: 2015-09
+// Time Format: yyyy-MM-dd; Ex: 2015-09-04		
+		Pattern pattern = Pattern.compile(search_pattern);
+		Matcher matcher = pattern.matcher(time_str);
+		if (!matcher.find())
+		{
+//			FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
+			return null;
+		}
+		return matcher;
+	}
+
+	public static Matcher parse_month_range(String time_str){return parse_time_range(time_str, "([\\d]{4})-([\\d]{1,2})");}
+	public static Matcher parse_date_range(String time_str){return parse_time_range(time_str, "([\\d]{4})-([\\d]{1,2})-([\\d]{1,2})");}
+
+	public static int[] get_start_and_end_month_range(FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg)
+	{			
+		Matcher month_start_matcher = parse_month_range(time_range_cfg.time_start_str);
+		if (month_start_matcher == null)
+		{
+			FinanceRecorderCmnDef.format_error("Incorrect time format (start): %s", time_range_cfg.time_start_str);
+			return null;
+		}
+		Matcher month_end_matcher = parse_month_range(time_range_cfg.time_end_str);
+		if (month_end_matcher == null)
+		{
+			FinanceRecorderCmnDef.format_error("Incorrect time format (End): %s", time_range_cfg.time_end_str);
+			return null;
+		}
+	
+		int year_start = Integer.valueOf(month_start_matcher.group(1));
+		int month_start = Integer.valueOf(month_start_matcher.group(2));
+		int year_end = Integer.valueOf(month_end_matcher.group(1));
+		int month_end = Integer.valueOf(month_end_matcher.group(2));
+
+		return new int[]{year_start, month_start, year_end, month_end};
+	}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Interface
 	public interface FinanceObserverInf

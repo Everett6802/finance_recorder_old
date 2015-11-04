@@ -12,6 +12,7 @@ public class FinanceRecorder
 	public static void main(String args[])
 	{
 		boolean use_multithread = false;
+		boolean read_data = false;
 		LinkedList<Integer> remove_database_list = null;
 		LinkedList<Integer> finance_data_type_index_list = null;
 		String time_month_begin = null;
@@ -94,6 +95,11 @@ public class FinanceRecorder
 				use_multithread = true;
 				index_offset = 1;
 			}
+			else if (option.equals("--read_data"))
+			{
+				read_data = true;
+				index_offset = 1;
+			}
 			else
 			{
 				show_error_and_exit(String.format("Unknown argument: %s", option));
@@ -135,24 +141,33 @@ public class FinanceRecorder
 			}
 			ret = setup_param(finance_data_type_index_list,time_month_begin, time_month_end);
 		}
-			
-// Write the financial data into MySQL
-		System.out.println("Write financial data into MySQL data......");
-		long time_start_millisecond = System.currentTimeMillis();
-		ret = write_sql(use_multithread);
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			show_error_and_exit("Fail to write financial data into MySQL");
-		long time_end_millisecond = System.currentTimeMillis();
 
-		System.out.println("Write financial data into MySQL data...... Done");
-
-		long time_lapse_millisecond = time_end_millisecond - time_start_millisecond;
-		if (time_lapse_millisecond >= 100 * 1000)
-			System.out.printf("######### Time Lapse: %d second(s) #########\n", (int)((time_end_millisecond - time_start_millisecond) / 1000));
-		else if (time_lapse_millisecond >= 10 * 1000)
-			System.out.printf("######### Time Lapse: %.1f second(s) #########\n", (float)((time_end_millisecond - time_start_millisecond) / 1000.0));
+		if (read_data)
+		{
+			ret = read_sql();
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				show_error_and_exit("Fail to read financial data from MySQL");
+		}
 		else
-			System.out.printf("######### Time Lapse: %.2f second(s) #########\n", (float)((time_end_millisecond - time_start_millisecond) / 1000.0));
+		{
+// Write the financial data into MySQL
+			System.out.println("Write financial data into MySQL data......");
+			long time_start_millisecond = System.currentTimeMillis();
+			ret = write_sql(use_multithread);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				show_error_and_exit("Fail to write financial data into MySQL");
+			long time_end_millisecond = System.currentTimeMillis();
+
+			System.out.println("Write financial data into MySQL data...... Done");
+
+			long time_lapse_millisecond = time_end_millisecond - time_start_millisecond;
+			if (time_lapse_millisecond >= 100 * 1000)
+				System.out.printf("######### Time Lapse: %d second(s) #########\n", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+			else if (time_lapse_millisecond >= 10 * 1000)
+				System.out.printf("######### Time Lapse: %.1f second(s) #########\n", (float)((time_end_millisecond - time_start_millisecond) / 1000.0));
+			else
+				System.out.printf("######### Time Lapse: %.2f second(s) #########\n", (float)((time_end_millisecond - time_start_millisecond) / 1000.0));
+		}
 		System.exit(0);
 	}
 
@@ -179,6 +194,7 @@ public class FinanceRecorder
 		System.out.println("  Format: history.conf");
 	    System.out.println("--remove_all\nDescription: Remove all the MySQL databases");
 		System.out.println("--multiple_thread\nDescription: Write into MySQL database by using multiple threads");
+		System.out.println("--read_data\nDescription: Read from MySQL database");
 		System.out.println("===================================================");
 	}
 
@@ -209,6 +225,13 @@ public class FinanceRecorder
 			ret = finance_recorder_mgr.write_by_multithread();
 		else
 			ret = finance_recorder_mgr.write();
+		return ret;
+	}
+
+	private static short read_sql()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		ret = finance_recorder_mgr.read();
 		return ret;
 	}
 }
