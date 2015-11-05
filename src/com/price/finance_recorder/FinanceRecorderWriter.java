@@ -37,7 +37,7 @@ public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements Fin
 
 	private short set_mapping_time_range(FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg)
 	{
-    	int[] time_list = FinanceRecorderCmnDef.get_start_and_end_month_range(time_range_cfg);
+    	int[] time_list = FinanceRecorderCmnDef.get_start_and_end_month_value_range(time_range_cfg);
     	assert time_list != null : "time_list should NOT be NULL";
     	int year_start = time_list[0]; 
     	int month_start = time_list[1];
@@ -141,7 +141,7 @@ OUT:
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 
 		String csv_filepath = null;
-		int[] time_list = FinanceRecorderCmnDef.get_start_and_end_month_range(time_range_cfg);
+		int[] time_list = FinanceRecorderCmnDef.get_start_and_end_month_value_range(time_range_cfg);
 		if (time_list == null)
 		{
 			FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_range_cfg.toString());

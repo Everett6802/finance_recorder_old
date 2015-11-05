@@ -137,6 +137,8 @@ public class FinanceRecorderCmnDef
 			time_start_str = String.format("%04d-%02d-%02d", year_start, month_start, day_start);
 			time_end_str = String.format("%04d-%02d-%02d", year_end, month_end, day_end);
 		}
+		public boolean is_date_type(){return time_type == TimeType.TIME_DATE;}
+
 		@Override
 		public String toString() 
 		{
@@ -337,7 +339,7 @@ public class FinanceRecorderCmnDef
 		return time_month_today;
 	}
 
-	private static Matcher parse_time_range(String time_str, String search_pattern)
+	private static Matcher get_time_value_matcher(String time_str, String search_pattern)
 	{
 // Time Format: yyyy-mm; Ex: 2015-09
 // Time Format: yyyy-MM-dd; Ex: 2015-09-04		
@@ -351,30 +353,33 @@ public class FinanceRecorderCmnDef
 		return matcher;
 	}
 
-	public static Matcher parse_month_range(String time_str){return parse_time_range(time_str, "([\\d]{4})-([\\d]{1,2})");}
-	public static Matcher parse_date_range(String time_str){return parse_time_range(time_str, "([\\d]{4})-([\\d]{1,2})-([\\d]{1,2})");}
+	public static Matcher get_month_value_matcher(String time_str){return get_time_value_matcher(time_str, "([\\d]{4})-([\\d]{1,2})");}
+	public static Matcher get_date_value_matcher(String time_str){return get_time_value_matcher(time_str, "([\\d]{4})-([\\d]{1,2})-([\\d]{1,2})");}
 
-	public static int[] get_start_and_end_month_range(FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg)
+	public static int[] get_month_value(String time_str)
+	{
+		Matcher month_matcher = get_month_value_matcher(time_str);
+		if (month_matcher == null)
+		{
+			FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
+			return null;
+		}
+		int year = Integer.valueOf(month_matcher.group(1));
+		int month = Integer.valueOf(month_matcher.group(2));
+
+		return new int[]{year, month};
+	}
+
+	public static int[] get_start_and_end_month_value_range(FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg)
 	{			
-		Matcher month_start_matcher = parse_month_range(time_range_cfg.time_start_str);
-		if (month_start_matcher == null)
-		{
-			FinanceRecorderCmnDef.format_error("Incorrect time format (start): %s", time_range_cfg.time_start_str);
+		int[] month_value_start = get_month_value(time_range_cfg.time_start_str);
+		if (month_value_start == null)
 			return null;
-		}
-		Matcher month_end_matcher = parse_month_range(time_range_cfg.time_end_str);
-		if (month_end_matcher == null)
-		{
-			FinanceRecorderCmnDef.format_error("Incorrect time format (End): %s", time_range_cfg.time_end_str);
+		int[] month_value_end = get_month_value(time_range_cfg.time_end_str);
+		if (month_value_end == null)
 			return null;
-		}
-	
-		int year_start = Integer.valueOf(month_start_matcher.group(1));
-		int month_start = Integer.valueOf(month_start_matcher.group(2));
-		int year_end = Integer.valueOf(month_end_matcher.group(1));
-		int month_end = Integer.valueOf(month_end_matcher.group(2));
 
-		return new int[]{year_start, month_start, year_end, month_end};
+		return new int[]{month_value_start[0], month_value_start[1], month_value_end[0], month_value_end[1]};
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

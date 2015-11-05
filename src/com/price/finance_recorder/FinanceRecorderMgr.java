@@ -75,7 +75,7 @@ OUT:
 						time_month_today = FinanceRecorderCmnDef.get_time_month_today();
 					time_month_begin = time_month_today;
 				}
-				if (FinanceRecorderCmnDef.parse_month_range(time_month_begin) == null)
+				if (FinanceRecorderCmnDef.get_month_value_matcher(time_month_begin) == null)
 				{
 					FinanceRecorderCmnDef.format_error("Incorrect begin time format[%s] in config file", time_month_begin);
 					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
@@ -90,7 +90,7 @@ OUT:
 						time_month_today = FinanceRecorderCmnDef.get_time_month_today();
 					time_month_end = time_month_today;
 				}
-				if (FinanceRecorderCmnDef.parse_month_range(time_month_end) == null)
+				if (FinanceRecorderCmnDef.get_month_value_matcher(time_month_end) == null)
 				{
 					FinanceRecorderCmnDef.format_error("Incorrect end time format[%s] in config file", time_month_end);
 					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
@@ -123,13 +123,13 @@ OUT:
 	public short update_by_parameter(LinkedList<Integer> finance_data_type_index_list, String time_month_begin, String time_month_end)
 	{
 // Check the time of start time
-		if (FinanceRecorderCmnDef.parse_month_range(time_month_begin) == null)
+		if (FinanceRecorderCmnDef.get_date_value_matcher(time_month_begin) == null)
 		{
 			FinanceRecorderCmnDef.format_error("Incorrect begin time format[%s] in config file", time_month_begin);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 		}
 // Check the time of start time
-		if (FinanceRecorderCmnDef.parse_month_range(time_month_end) == null)
+		if (FinanceRecorderCmnDef.get_date_value_matcher(time_month_end) == null)
 		{
 			FinanceRecorderCmnDef.format_error("Incorrect end time format[%s] in config file", time_month_end);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
@@ -196,7 +196,7 @@ OUT:
 //				FinanceRecorderWriter finance_recorder_writer = new FinanceRecorderWriter(FinanceRecorderCmnDef.financeDataType.valueOf(finance_data_type_index));
 				FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = entry.getValue();
 // Setup the time range
-				int[] time_list = FinanceRecorderCmnDef.get_start_and_end_month_range(time_range_cfg);
+				int[] time_list = FinanceRecorderCmnDef.get_start_and_end_month_value_range(time_range_cfg);
 				if (time_list == null)
 				{
 					ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
