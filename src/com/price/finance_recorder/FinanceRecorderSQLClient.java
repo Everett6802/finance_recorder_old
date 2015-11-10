@@ -10,6 +10,26 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 	private static final String DEF_SERVER = "localhost";
 	private static final String DEF_USERNAME = "root";
 	private static final String DEF_PASSWORD = "lab4man1";
+// Create Database command format
+	private static final String FORMAT_CMD_CREATE_DATABASE = "CREATE DATABASE %s";
+// Create Table command format
+	private static final String FORMAT_CMD_CREATE_TABLE_HEAD_FORMAT = "CREATE TABLE IF NOT EXISTS %s (";
+	private static final String FORMAT_CMD_CREATE_TABLE_TAIL = ")";
+//	private static final String format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
+// Insert Data command format
+	private static final String FORMAT_CMD_INSERT_DATA_HEAD_FORMAT = "INSERT INTO %s VALUES(";
+	private static final String FORMAT_CMD_INSERT_DATA_TAIL = ")";
+// Select Data command format
+	private static final String FORMAT_CMD_SELECT_DATA_HEAD = "SELECT ";
+	private static final String FORMAT_CMD_SELECT_DATA_TAIL_FORMAT = " FROM %s";
+	private static final String FORMAT_CMD_SELECT_DATA_RULE_BETWEEN = " WHERE date BETWEEN ? AND ?";
+	private static final String FORMAT_CMD_SELECT_DATA_RULE_GREATER_THAN = " WHERE date > ?";
+	private static final String FORMAT_CMD_SELECT_DATA_RULE_LESS_THAN = " WHERE date < ?";
+	private static final String FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT = " WHERE month(date) BETWEEN '%d' AND '%d'";
+	private static final String FORMAT_CMD_SELECT_MONTH_RULE_GREATER_THAN_FORMAT = " WHERE month(date) > '%d'";
+	private static final String FORMAT_CMD_SELECT_MONTH_RULE_LESS_THAN_FORMAT = " WHERE month(date) < '%d'";
+// Delete Database command format
+	private static final String FORMAT_CMD_DELETE_DATABASE = "DROP DATABASE IF EXISTS %s";
 
 	private Connection connection = null; //Database objects, 連接object
 	private String server = null;
@@ -18,32 +38,11 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 	private String database_name = null;
 //	private String table_name = null;
 	private FinanceRecorderCmnDef.FinanceObserverInf finance_observer = null;
+	private int finace_data_type_index;
 
-// Create Database command format
-	private static final String FORMAT_CMD_CREATE_DATABASE = "CREATE DATABASE %s";
-// Create Table command format
-	protected static final String FORMAT_CMD_CREATE_TABLE_HEAD_FORMAT = "CREATE TABLE IF NOT EXISTS %s (";
-	protected static final String FORMAT_CMD_CREATE_TABLE_TAIL = ")";
-//		private static final String format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
-// Insert Data command format
-	protected static final String FORMAT_CMD_INSERT_DATA_HEAD_FORMAT = "INSERT INTO %s VALUES(";
-	protected static final String FORMAT_CMD_INSERT_DATA_TAIL = ")";
-// Select Data command format
-	protected static final String FORMAT_CMD_SELECT_DATA_HEAD = "SELECT ";
-	protected static final String FORMAT_CMD_SELECT_DATA_TAIL_FORMAT = " FROM %s";
-	protected static final String FORMAT_CMD_SELECT_DATA_RULE_BETWEEN = " WHERE date BETWEEN ? AND ?";
-	protected static final String FORMAT_CMD_SELECT_DATA_RULE_GREATER_THAN = " WHERE date > ?";
-	protected static final String FORMAT_CMD_SELECT_DATA_RULE_LESS_THAN = " WHERE date < ?";
-	protected static final String FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT = " WHERE month(date) BETWEEN '%d' AND '%d'";
-	protected static final String FORMAT_CMD_SELECT_MONTH_RULE_GREATER_THAN_FORMAT = " WHERE month(date) > '%d'";
-	protected static final String FORMAT_CMD_SELECT_MONTH_RULE_LESS_THAN_FORMAT = " WHERE month(date) < '%d'";
-
-// Delete Database command format
-	private static final String FORMAT_CMD_DELETE_DATABASE = "DROP DATABASE IF EXISTS %s";
-
-
-	FinanceRecorderSQLClient(FinanceRecorderCmnDef.FinanceObserverInf observer)
+	FinanceRecorderSQLClient(FinanceRecorderCmnDef.FinanceDataType finance_data_type, FinanceRecorderCmnDef.FinanceObserverInf observer)
 	{
+		finace_data_type_index = finance_data_type.ordinal();
 		server = DEF_SERVER;
 		username = DEF_USERNAME;
 		password = DEF_PASSWORD;
@@ -64,7 +63,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		)
 	{
 		database_name = database;
-		FinanceRecorderCmnDef.format_debug("Try to connect to the MySQL database server[%s]...... Successfully", database_name);
+		FinanceRecorderCmnDef.format_debug("Try to connect to the MySQL database server[%s]......", database_name);
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Create the connection to the MySQL server and database
@@ -291,8 +290,6 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		return  FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	short select_data(String table_name, FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg, List<String> data_list){return select_data(table_name, "*", time_range_cfg, data_list);}
-
 	short select_data(String table_name, String cmd_table_field, FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg, List<String> data_list)
 	{
 // Check if the connection is established
@@ -307,7 +304,19 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		String cmd_select_data = FORMAT_CMD_SELECT_DATA_HEAD + cmd_table_field + format_cmd_select_data_tail;
 		PreparedStatement pstmt = null;
 // Create the SQL command list and then execute
-		if (time_range_cfg.is_date_type())
+		if (time_range_cfg == null)
+		{
+			try
+			{
+				pstmt = connection.prepareStatement(cmd_select_data);
+			}
+			catch (SQLException e)
+			{
+				FinanceRecorderCmnDef.format_error("Fail to prepare MySQL command for querying data, due to: %s", e.toString());
+				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+			}
+		}
+		else if (time_range_cfg.is_date_type())
 		{
 // Transform the date field into SQL Date format
 			java.sql.Date sql_date_start = null;
@@ -394,19 +403,37 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 			}
 		}
-		FinanceRecorderCmnDef.format_debug("Select from data by command[%s]", pstmt);
 
+		String[] finance_data_sql_field_definition = FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finace_data_type_index];
+		String[] finance_data_sql_field_type_definition = FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_TYPE_DEFINITION_LIST[finace_data_type_index];
+		int finance_data_sql_field_definition_len = finance_data_sql_field_definition.length;
 // Read the result from MySQL
 		ResultSet rs = null;
 		try
 		{
 			FinanceRecorderCmnDef.format_debug("Select from data by command: %s", pstmt);
-//			pstmt.executeUpdate();
 			rs = pstmt.executeQuery();
+			String result_str = null;
 			while(rs.next())
 			{
-				FinanceRecorderCmnDef.format_debug("Query Data: %s", rs.getString(1));
-				data_list.add(rs.toString());
+				result_str = rs.getString(finance_data_sql_field_definition[0]);
+				for(int i = 1 ; i < finance_data_sql_field_definition_len ; i++)
+				{
+					String field_type = finance_data_sql_field_type_definition[i];
+					if (field_type.equals("INT"))
+						result_str += String.format(",%d", rs.getInt(finance_data_sql_field_definition[i]));
+					else if (field_type.equals("BIGINT"))
+						result_str += String.format(",%d", rs.getLong(finance_data_sql_field_definition[i]));
+					else if (field_type.equals("FLOAT"))
+						result_str += String.format(",%f", rs.getFloat(finance_data_sql_field_definition[i]));
+					else
+					{
+						FinanceRecorderCmnDef.format_debug("Unknown SQL field type: %s", field_type);
+						return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+					}
+				}
+//				FinanceRecorderCmnDef.format_debug("Query Data: %s", result_str);
+				data_list.add(result_str);
 			}
 		}
 		catch(SQLException ex) //有可能會產生sql exception
@@ -426,4 +453,8 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 
 		return  FinanceRecorderCmnDef.RET_SUCCESS;
 	}
+
+	short select_data(String table_name, FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg, List<String> data_list){return select_data(table_name, "*", time_range_cfg, data_list);}
+	short select_data(String table_name, String cmd_table_field, List<String> data_list){return select_data(table_name, cmd_table_field, null, data_list);}
+	short select_data(String table_name, List<String> data_list){return select_data(table_name, "*", null, data_list);}
 }

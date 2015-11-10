@@ -77,8 +77,9 @@ public class FinanceRecorderCmnDef
 	public static enum FinanceDataType
 	{
 		FinanceData_StockTop3LegalPersonsNetBuyOrSell(0),
-		FinanceData_FutureTop3LegalPersonsOpenInterest(1),
-		FinanceData_FutureTop10DealersAndLegalPersons(2);
+		FinanceData_FutureAndOptionTop3LegalPersonsOpenInterest(1),
+		FinanceData_OptionTop3LegalPersonsCallAndPutOptionOpenInterest(2),
+		FinanceData_FutureTop10DealersAndLegalPersons(3);
 
 		private int value = 0;
 		private FinanceDataType(int value){this.value = value;}
@@ -87,8 +88,9 @@ public class FinanceRecorderCmnDef
 			switch (value)
 			{
 			case 0: return FinanceData_StockTop3LegalPersonsNetBuyOrSell;
-			case 1: return FinanceData_FutureTop3LegalPersonsOpenInterest;
-			case 2: return FinanceData_FutureTop10DealersAndLegalPersons;
+			case 1: return FinanceData_FutureAndOptionTop3LegalPersonsOpenInterest;
+			case 2: return FinanceData_OptionTop3LegalPersonsCallAndPutOptionOpenInterest;
+			case 3: return FinanceData_FutureTop10DealersAndLegalPersons;
 			default: return null;
 			}
 		}
@@ -108,20 +110,43 @@ public class FinanceRecorderCmnDef
 
 	public static class TimeRangeCfg
 	{
-		public enum TimeType{TIME_NONE, TIME_DATE, TIME_MONTH};
+		public enum TimeType{TIME_DATE, TIME_MONTH};
 		public TimeType time_type = null;
-		public String time_start_str; // Format: "2015-09" or "2015-09-04"
-		public String time_end_str; // Format: "2015-09" or "2015-09-04"
+		public String time_start_str = null; // Format: "2015-09" or "2015-09-04"
+		public String time_end_str = null; // Format: "2015-09" or "2015-09-04"
 
 		public TimeRangeCfg(String start_str, String end_str)
 		{
-			if (parse_date_range(start_str) != null && parse_date_range(end_str) != null)
-				time_type = TimeType.TIME_DATE;
-			else if (parse_month_range(start_str) != null && parse_month_range(end_str) != null)
-				time_type = TimeType.TIME_MONTH;
-			else
-				time_type = TimeType.TIME_NONE;
-			assert time_type == TimeType.TIME_NONE : String.format("Incorrect time format: %s:%s", start_str, end_str); 
+			TimeType time_type_start = null;
+			if (start_str != null)
+			{
+				if (get_date_value_matcher(start_str) != null)
+					time_type_start = TimeType.TIME_DATE;
+				else if (get_month_value_matcher(start_str) != null)
+					time_type_start = TimeType.TIME_MONTH;
+				else
+					assert false : String.format("Incorrect start time format: %s", start_str);
+			}
+			TimeType time_type_end = null;
+			if (end_str != null)
+			{
+				if (get_date_value_matcher(end_str) != null)
+					time_type_end = TimeType.TIME_DATE;
+				else if (get_month_value_matcher(end_str) != null)
+					time_type_end = TimeType.TIME_MONTH;
+				else
+					assert false : String.format("Incorrect end time format: %s", end_str);
+			}
+			if (time_type_start != null && time_type_end != null)
+			{
+				assert time_type_start != time_type_end : String.format("Start and end time format is NOT consistent: %s:%s", start_str, end_str);
+				time_type = time_type_start;
+			}
+			else if (time_type_start != null)
+				time_type = time_type_start;
+			else if (time_type_end != null)
+				time_type = time_type_end;
+//			assert time_type == TimeType.TIME_NONE : String.format("Incorrect time format: %s:%s", start_str, end_str); 
 			time_start_str = start_str;
 			time_end_str = end_str;
 		}
@@ -150,82 +175,238 @@ public class FinanceRecorderCmnDef
 	public static final String[] FINANCE_DATA_NAME_LIST = new String[]
 	{
 		"stock_top3_legal_persons_net_buy_or_sell",
-		"future_top3_legal_persons_open_interest",
+		"future_and_option_top3_legal_persons_open_interest",
+		"option_top3_legal_persons_call_and_put_option_open_interest",
 		"future_top10_dealers_and_legal_persons"
 	};
 	public static final String[] FINANCE_DATA_DESCRIPTION_LIST = new String[]
 	{
 		"三大法人現貨買賣超",
-		"三大法人期貨留倉淨額",
+		"三大法人期貨選擇權留倉淨額",
+		"三大法人選擇權買賣權留倉淨額",
 		"十大交易人及特定法人期貨資訊"
 	};
 	private static final String[] STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION = new String[]
 	{
-		"date DATE NOT NULL PRIMARY KEY", // 日期
-		"value1 BIGINT", // 自營商(自行買賣)_買進金額
-		"value2 BIGINT", // 自營商(自行買賣)_賣出金額
-		"value3 BIGINT", // 自營商(自行買賣)_買賣差額
-		"value4 BIGINT", // 自營商(避險)_買進金額
-		"value5 BIGINT", // 自營商(避險)_賣出金額
-		"value6 BIGINT", // 自營商(避險)_買賣差額
-		"value7 BIGINT", // 投信_買進金額
-		"value8 BIGINT", // 投信_賣出金額
-		"value9 BIGINT", // 投信_買賣差額
-		"value10 BIGINT", // 外資及陸資_買進金額
-		"value11 BIGINT", // 外資及陸資_賣出金額
-		"value12 BIGINT", // 外資及陸資_買賣差額
+		"date", // 日期
+		"value1", // 自營商(自行買賣)_買進金額
+		"value2", // 自營商(自行買賣)_賣出金額
+		"value3", // 自營商(自行買賣)_買賣差額
+		"value4", // 自營商(避險)_買進金額
+		"value5", // 自營商(避險)_賣出金額
+		"value6", // 自營商(避險)_買賣差額
+		"value7", // 投信_買進金額
+		"value8", // 投信_賣出金額
+		"value9", // 投信_買賣差額
+		"value10", // 外資及陸資_買進金額
+		"value11", // 外資及陸資_賣出金額
+		"value12", // 外資及陸資_買賣差額
 	};
-	private static final String[] FUTURE_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION = new String[]
+	private static final String[] STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION = new String[]
 	{
-		"date DATE NOT NULL PRIMARY KEY", // 日期
-		"value1 INT", // 自營商_多方_口數 int",
-		"value2 INT", // 自營商_多方_契約金額 int",
-		"value3 INT", // 自營商_空方_口數 int",
-		"value4 INT", // 自營商_空方_契約金額 int",
-		"value5 INT", // 自營商_多空淨額_口數 int",
-		"value6 INT", // 自營商_多空淨額_契約金額 int",
-		"value7 INT", // "投信_多方_口數 int",
-		"value8 INT", // 投信_多方_契約金額 int",
-		"value9 INT", // 投信_空方_口數 int",
-		"value10 INT", // 投信_空方_契約金額 int",
-		"value11 INT", // 投信_多空淨額_口數 int",
-		"value12 INT", // 投信_多空淨額_契約金額 int",
-		"value13 INT", // 外資_多方_口數 int",
-		"value14 INT", // 外資_多方_契約金額 int",
-		"value15 INT", // 外資_空方_口數 int",
-		"value16 INT", // 外資_空方_契約金額 int",
-		"value17 INT", // 外資_多空淨額_口數 int",
-		"value18 INT", // 外資_多空淨額_契約金額 int",
+		"DATE NOT NULL PRIMARY KEY", // 日期
+		"BIGINT", // 自營商(自行買賣)_買進金額
+		"BIGINT", // 自營商(自行買賣)_賣出金額
+		"BIGINT", // 自營商(自行買賣)_買賣差額
+		"BIGINT", // 自營商(避險)_買進金額
+		"BIGINT", // 自營商(避險)_賣出金額
+		"BIGINT", // 自營商(避險)_買賣差額
+		"BIGINT", // 投信_買進金額
+		"BIGINT", // 投信_賣出金額
+		"BIGINT", // 投信_買賣差額
+		"BIGINT", // 外資及陸資_買進金額
+		"BIGINT", // 外資及陸資_賣出金額
+		"BIGINT", // 外資及陸資_買賣差額
+	};
+	private static final String[] FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION = new String[]
+	{
+		"date", // 日期
+		"value1", // 自營商_多方_口數 int",
+		"value2", // 自營商_多方_契約金額 int",
+		"value3", // 自營商_空方_口數 int",
+		"value4", // 自營商_空方_契約金額 int",
+		"value5", // 自營商_多空淨額_口數 int",
+		"value6", // 自營商_多空淨額_契約金額 int",
+		"value7", // 投信_多方_口數 int",
+		"value8", // 投信_多方_契約金額 int",
+		"value9", // 投信_空方_口數 int",
+		"value10", // 投信_空方_契約金額 int",
+		"value11", // 投信_多空淨額_口數 int",
+		"value12", // 投信_多空淨額_契約金額 int",
+		"value13", // 外資_多方_口數 int",
+		"value14", // 外資_多方_契約金額 int",
+		"value15", // 外資_空方_口數 int",
+		"value16", // 外資_空方_契約金額 int",
+		"value17", // 外資_多空淨額_口數 int",
+		"value18", // 外資_多空淨額_契約金額 int",
+	};
+	private static final String[] FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION = new String[]
+	{
+		"DATE NOT NULL PRIMARY KEY", // 日期
+		"INT", // 自營商_多方_口數 int",
+		"INT", // 自營商_多方_契約金額 int",
+		"INT", // 自營商_空方_口數 int",
+		"INT", // 自營商_空方_契約金額 int",
+		"INT", // 自營商_多空淨額_口數 int",
+		"INT", // 自營商_多空淨額_契約金額 int",
+		"INT", // 投信_多方_口數 int",
+		"INT", // 投信_多方_契約金額 int",
+		"INT", // 投信_空方_口數 int",
+		"INT", // 投信_空方_契約金額 int",
+		"INT", // 投信_多空淨額_口數 int",
+		"INT", // 投信_多空淨額_契約金額 int",
+		"INT", // 外資_多方_口數 int",
+		"INT", // 外資_多方_契約金額 int",
+		"INT", // 外資_空方_口數 int",
+		"INT", // 外資_空方_契約金額 int",
+		"INT", // 外資_多空淨額_口數 int",
+		"INT", // 外資_多空淨額_契約金額 int",
+	};
+	private static final String[] OPTION_TOP3_LEGAL_PERSONS_CALL_AND_PUT_OPTION_OPEN_INTEREST_FIELD_DEFINITION = new String[]
+	{
+		"date", // 日期
+		"value1", // 買權_自營商_買方_口數 int",
+		"value2", // 買權_自營商_買方_契約金額 int",
+		"value3", // 買權_自營商_賣方_口數 int",
+		"value4", // 買權_自營商_賣方_契約金額 int",
+		"value5", // 買權_自營商_買賣差額_口數 int",
+		"value6", // 買權_自營商_買賣差額_契約金額 int",
+		"value7", // 買權_投信_買方_口數 int",
+		"value8", // 買權_投信_買方_契約金額 int",
+		"value9", // 買權_投信_賣方_口數 int",
+		"value10", // 買權_投信_賣方_契約金額 int",
+		"value11", // 買權_投信_買賣差額_口數 int",
+		"value12", // 買權_投信_買賣差額_契約金額 int",
+		"value13", // 買權_外資_買方_口數 int",
+		"value14", // 買權_外資_買方_契約金額 int",
+		"value15", // 買權_外資_賣方_口數 int",
+		"value16", // 買權_外資_賣方_契約金額 int",
+		"value17", // 買權_外資_買賣差額_口數 int",
+		"value18", // 買權_外資_買賣差額_契約金額 int",
+		"value19", // 賣權_自營商_買方_口數 int",
+		"value20", // 賣權_自營商_買方_契約金額 int",
+		"value21", // 賣權_自營商_賣方_口數 int",
+		"value22", // 賣權_自營商_賣方_契約金額 int",
+		"value23", // 賣權_自營商_買賣差額_口數 int",
+		"value24", // 賣權_自營商_買賣差額_契約金額 int",
+		"value25", // 賣權_投信_買方_口數 int",
+		"value26", // 賣權_投信_買方_契約金額 int",
+		"value27", // 賣權_投信_賣方_口數 int",
+		"value28", // 賣權_投信_賣方_契約金額 int",
+		"value29", // 賣權_投信_買賣差額_口數 int",
+		"value30", // 賣權_投信_買賣差額_契約金額 int",
+		"value31", // 賣權_外資_買方_口數 int",
+		"value32", // 賣權_外資_買方_契約金額 int",
+		"value33", // 賣權_外資_賣方_口數 int",
+		"value34", // 賣權_外資_賣方_契約金額 int",
+		"value35", // 賣權_外資_買賣差額_口數 int",
+		"value36", // 賣權_外資_買賣差額_契約金額 int",
+	};
+	private static final String[] OPTION_TOP3_LEGAL_PERSONS_CALL_AND_PUT_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION = new String[]
+	{
+		"DATE NOT NULL PRIMARY KEY", // 日期
+		"INT", // 買權_自營商_買方_口數 int",
+		"INT", // 買權_自營商_買方_契約金額 int",
+		"INT", // 買權_自營商_賣方_口數 int",
+		"INT", // 買權_自營商_賣方_契約金額 int",
+		"INT", // 買權_自營商_買賣差額_口數 int",
+		"INT", // 買權_自營商_買賣差額_契約金額 int",
+		"INT", // 買權_投信_買方_口數 int",
+		"INT", // 買權_投信_買方_契約金額 int",
+		"INT", // 買權_投信_賣方_口數 int",
+		"INT", // 買權_投信_賣方_契約金額 int",
+		"INT", // 買權_投信_買賣差額_口數 int",
+		"INT", // 買權_投信_買賣差額_契約金額 int",
+		"INT", // 買權_外資_買方_口數 int",
+		"INT", // 買權_外資_買方_契約金額 int",
+		"INT", // 買權_外資_賣方_口數 int",
+		"INT", // 買權_外資_賣方_契約金額 int",
+		"INT", // 買權_外資_買賣差額_口數 int",
+		"INT", // 買權_外資_買賣差額_契約金額 int",
+		"INT", // 賣權_自營商_買方_口數 int",
+		"INT", // 賣權_自營商_買方_契約金額 int",
+		"INT", // 賣權_自營商_賣方_口數 int",
+		"INT", // 賣權_自營商_賣方_契約金額 int",
+		"INT", // 賣權_自營商_買賣差額_口數 int",
+		"INT", // 賣權_自營商_買賣差額_契約金額 int",
+		"INT", // 賣權_投信_買方_口數 int",
+		"INT", // 賣權_投信_買方_契約金額 int",
+		"INT", // 賣權_投信_賣方_口數 int",
+		"INT", // 賣權_投信_賣方_契約金額 int",
+		"INT", // 賣權_投信_買賣差額_口數 int",
+		"INT", // 賣權_投信_買賣差額_契約金額 int",
+		"INT", // 賣權_外資_買方_口數 int",
+		"INT", // 賣權_外資_買方_契約金額 int",
+		"INT", // 賣權_外資_賣方_口數 int",
+		"INT", // 賣權_外資_賣方_契約金額 int",
+		"INT", // 賣權_外資_買賣差額_口數 int",
+		"INT", // 賣權_外資_買賣差額_契約金額 int",
 	};
 	private static final String[] FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION = new String[]
 	{
-		"date DATE NOT NULL PRIMARY KEY", // 日期
-		"value1 INT", // 臺股期貨_到期月份_買方_前五大交易人合計_部位數
-		"value2 FLOAT", // 臺股期貨_到期月份_買方_前五大交易人合計_百分比
-		"value3 INT", // 臺股期貨_到期月份_買方_前十大交易人合計_部位數
-		"value4 FLOAT", // 臺股期貨_到期月份_買方_前十大交易人合計_百分比
-		"value5 INT", // 臺股期貨_到期月份_賣方_前五大交易人合計_部位數
-		"value6 FLOAT", // 臺股期貨_到期月份_賣方_前五大交易人合計_百分比
-		"value7 INT", // 臺股期貨_到期月份_賣方_前十大交易人合計_部位數
-		"value8 FLOAT", // 臺股期貨_到期月份_賣方_前十大交易人合計_百分比
-		"value9 INT", // 臺股期貨_到期月份_全市場未沖銷部位數
-		"value10 INT", // 臺股期貨_所有契約_買方_前五大交易人合計_部位數
-		"value11 FLOAT", // 臺股期貨_所有契約_買方_前五大交易人合計_百分比
-		"value12 INT", // 臺股期貨_所有契約_買方_前十大交易人合計_部位數
-		"value13 FLOAT", // 臺股期貨_所有契約_買方_前十大交易人合計_百分比
-		"value14 INT", // 臺股期貨_所有契約_賣方_前五大交易人合計_部位數
-		"value15 FLOAT", // 臺股期貨_所有契約_賣方_前五大交易人合計_百分比
-		"value16 INT", // 臺股期貨_所有契約_賣方_前十大交易人合計_部位數
-		"value17 FLOAT", // 臺股期貨_所有契約_賣方_前十大交易人合計_百分比
-		"value18 INT", // 臺股期貨_所有契約_全市場未沖銷部位數
+		"date", // 日期
+		"value1", // 臺股期貨_到期月份_買方_前五大交易人合計_部位數
+		"value2", // 臺股期貨_到期月份_買方_前五大交易人合計_百分比
+		"value3", // 臺股期貨_到期月份_買方_前十大交易人合計_部位數
+		"value4", // 臺股期貨_到期月份_買方_前十大交易人合計_百分比
+		"value5", // 臺股期貨_到期月份_賣方_前五大交易人合計_部位數
+		"value6", // 臺股期貨_到期月份_賣方_前五大交易人合計_百分比
+		"value7", // 臺股期貨_到期月份_賣方_前十大交易人合計_部位數
+		"value8", // 臺股期貨_到期月份_賣方_前十大交易人合計_百分比
+		"value9", // 臺股期貨_到期月份_全市場未沖銷部位數
+		"value10", // 臺股期貨_所有契約_買方_前五大交易人合計_部位數
+		"value11", // 臺股期貨_所有契約_買方_前五大交易人合計_百分比
+		"value12", // 臺股期貨_所有契約_買方_前十大交易人合計_部位數
+		"value13", // 臺股期貨_所有契約_買方_前十大交易人合計_百分比
+		"value14", // 臺股期貨_所有契約_賣方_前五大交易人合計_部位數
+		"value15", // 臺股期貨_所有契約_賣方_前五大交易人合計_百分比
+		"value16", // 臺股期貨_所有契約_賣方_前十大交易人合計_部位數
+		"value17", // 臺股期貨_所有契約_賣方_前十大交易人合計_百分比
+		"value18", // 臺股期貨_所有契約_全市場未沖銷部位數
+	};
+	private static final String[] FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION = new String[]
+	{
+		"DATE NOT NULL PRIMARY KEY", // 日期
+		"INT", // 臺股期貨_到期月份_買方_前五大交易人合計_部位數
+		"FLOAT", // 臺股期貨_到期月份_買方_前五大交易人合計_百分比
+		"INT", // 臺股期貨_到期月份_買方_前十大交易人合計_部位數
+		"FLOAT", // 臺股期貨_到期月份_買方_前十大交易人合計_百分比
+		"INT", // 臺股期貨_到期月份_賣方_前五大交易人合計_部位數
+		"FLOAT", // 臺股期貨_到期月份_賣方_前五大交易人合計_百分比
+		"INT", // 臺股期貨_到期月份_賣方_前十大交易人合計_部位數
+		"FLOAT", // 臺股期貨_到期月份_賣方_前十大交易人合計_百分比
+		"INT", // 臺股期貨_到期月份_全市場未沖銷部位數
+		"INT", // 臺股期貨_所有契約_買方_前五大交易人合計_部位數
+		"FLOAT", // 臺股期貨_所有契約_買方_前五大交易人合計_百分比
+		"INT", // 臺股期貨_所有契約_買方_前十大交易人合計_部位數
+		"FLOAT", // 臺股期貨_所有契約_買方_前十大交易人合計_百分比
+		"INT", // 臺股期貨_所有契約_賣方_前五大交易人合計_部位數
+		"FLOAT", // 臺股期貨_所有契約_賣方_前五大交易人合計_百分比
+		"INT", // 臺股期貨_所有契約_賣方_前十大交易人合計_部位數
+		"FLOAT", // 臺股期貨_所有契約_賣方_前十大交易人合計_百分比
+		"INT", // 臺股期貨_所有契約_全市場未沖銷部位數
 	};
 	public static final String[] FINANCE_DATA_SQL_FIELD_LIST = new String[]
 	{
-		transform_array_to_sql_string(STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION),
-		transform_array_to_sql_string(FUTURE_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION),
-		transform_array_to_sql_string(FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION)
+		transform_array_to_sql_string(merge_string_array_element(STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION, STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION, FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(OPTION_TOP3_LEGAL_PERSONS_CALL_AND_PUT_OPTION_OPEN_INTEREST_FIELD_DEFINITION, OPTION_TOP3_LEGAL_PERSONS_CALL_AND_PUT_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION, FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION))
 	};
-
+	public static final String[][] FINANCE_DATA_SQL_FIELD_DEFINITION_LIST = new String[][]
+	{
+		STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION,
+		FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION,
+		OPTION_TOP3_LEGAL_PERSONS_CALL_AND_PUT_OPTION_OPEN_INTEREST_FIELD_DEFINITION,
+		FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION
+	};
+	public static final String[][] FINANCE_DATA_SQL_FIELD_TYPE_DEFINITION_LIST = new String[][]
+	{
+		STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION,
+		FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
+		OPTION_TOP3_LEGAL_PERSONS_CALL_AND_PUT_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
+		FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION
+	};
 	public static final short NOTIFY_GET_DATA = 0;
 	public static final int EACH_UPDATE_DATA_AMOUNT = 20;
 
@@ -304,24 +485,30 @@ public class FinanceRecorderCmnDef
 		return cur_path;
 	}
 
+	private static String[] merge_string_array_element(String[] string_arr1, String[] string_arr2)
+	{
+		if (string_arr1.length != string_arr2.length)
+		{
+			assert false : String.format("The length of string_arr1 and string_arr2 are NOT equal: %d, %d", string_arr1.length, string_arr2.length);
+			return null;
+		}
+		int string_arr_len = string_arr1.length;
+		String[] string_arr = new String[string_arr_len];
+		for (int index = 0 ; index < string_arr_len ; index++)
+			string_arr[index] = String.format("%s %s", string_arr1[index], string_arr2[index]);
+		return string_arr;
+	}
+
 	public static String transform_array_to_sql_string(String[] string_arr)
 	{
 		String sql_string = null;
 		for(String string : string_arr)
 		{
-//			try
-//			{
-				String encoded_string = string;//new String(string.getBytes("UTF-16"), "Big5");
-				if (sql_string == null)
-					sql_string = encoded_string;
-				else
-					sql_string += String.format(",%s", encoded_string);
-//			}
-//			catch (UnsupportedEncodingException e)
-//			{
-//				format_error("Fail to encode: %s", string);
-//				return null;
-//			}
+			String encoded_string = string;//new String(string.getBytes("UTF-16"), "Big5");
+			if (sql_string == null)
+				sql_string = encoded_string;
+			else
+				sql_string += String.format(",%s", encoded_string);
 		}
 		return sql_string;
 	}
@@ -388,16 +575,4 @@ public class FinanceRecorderCmnDef
 	{
 		public short notify(short type);
 	}
-//	public interface FinanceReaderInf
-//	{
-//		public short initialize(FinanceObserverInf observer, String data_filename);
-//		public short read(List<String> data_list);
-//		public short deinitialize();
-//	}
-//	public interface FinanceWriterInf
-//	{
-//		public short initialize(FinanceObserverInf observer, String database_name, List<String> sql_file_field_mapping);
-//		public short write(List<String> data_list);
-//		public short deinitialize();
-//	}
 }

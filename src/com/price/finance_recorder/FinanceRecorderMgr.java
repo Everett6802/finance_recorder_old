@@ -271,23 +271,26 @@ OUT:
 		return ret;
 	}
 
-	public short read()
+	public short read(	List<List<String>> total_data_list)
 	{
 // Write the data into MySQL one by one
 		short ret;
-		LinkedList<String> data_list = new LinkedList<String>();
 		for (Map.Entry<Integer, FinanceRecorderCmnDef.TimeRangeCfg> entry : finance_source_time_range_table.entrySet())
 		{
+//			LinkedList<String> data_list = new LinkedList<String>();
 			int finance_data_type_index = entry.getKey();
 			FinanceRecorderWriter finance_recorder_writer = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinanceDataType.valueOf(finance_data_type_index));
 			FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = entry.getValue();
 
 			FinanceRecorderCmnDef.format_debug("Try to read data [%s %s] from MySQL......", finance_recorder_writer.get_description(), time_range_cfg.toString());
-
 // Write the data into MySQL
+			total_data_list.add(new LinkedList<String>());
+			LinkedList<String> data_list = (LinkedList<String>)total_data_list.get(total_data_list.size() - 1);
 			ret = finance_recorder_writer.read_from_sql(time_range_cfg, data_list);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				return ret;
+// If the database does NOT exist, just ignore the warning
+				if (!FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
+					return ret;
 		}
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}

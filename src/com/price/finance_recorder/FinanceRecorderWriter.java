@@ -23,7 +23,7 @@ public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements Fin
 	{
 		finace_data_type_index = finance_data_type.ordinal();
 		csv_reader = new FinanceRecorderCSVReader(this);
-		sql_client = new FinanceRecorderSQLClient(this);
+		sql_client = new FinanceRecorderSQLClient(finance_data_type, this);
 //		sql_client_diff = new FinanceRecorderSQLClient(this);
 	}
 
@@ -159,25 +159,33 @@ OUT:
 				FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single
 			);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+//			FinanceRecorderCmnDef.format_warn("The MySQL database[%d, %s] does NOT exist", finace_data_type_index, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_data_type_index]);
 			return ret;
+		}
 
 		String time_start_str = null;
 		String time_end_str = null;
+		int old_sum = 0;
+		int new_sum;
 OUT:
 		for (int year = year_start ; year <= year_end ; year++)
 		{
 			if (year == year_start)
-				time_start_str = String.format("%04d-%02d-1", year, month_start);
+				time_start_str = String.format("%04d-%02d", year, month_start);
 			else
-				time_start_str = String.format("%04d-%02d-1", year, 1);
+				time_start_str = null;
 			if (year == year_end)
-				time_end_str = String.format("%04d-%02d-30", year, month_end);
+				time_end_str = String.format("%04d-%02d", year, month_end);
 			else
-				time_end_str = String.format("%04d-%02d-30", year, 12);
+				time_end_str = null;
 			String table_name = String.format("year%04d", year);
 			ret = sql_client.select_data(table_name, new FinanceRecorderCmnDef.TimeRangeCfg(time_start_str, time_end_str), data_list);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				break OUT;
+			new_sum = data_list.size();
+			FinanceRecorderCmnDef.format_debug("Got %d data in %s.%s[%s:%s]", new_sum - old_sum, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_data_type_index], table_name, time_start_str, time_end_str);
+			old_sum = new_sum;
 		}
 
 // Destroy the connection to the MySQL

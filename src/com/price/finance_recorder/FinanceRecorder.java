@@ -231,7 +231,16 @@ public class FinanceRecorder
 	private static short read_sql()
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		ret = finance_recorder_mgr.read();
+		List<List<String>> total_data_list = new ArrayList<List<String>>();
+		ret = finance_recorder_mgr.read(total_data_list);
+// Show the result statistics
+		int index = 0;
+		for (List<String> data_list : total_data_list)
+		{
+			System.out.printf("%d: %d\n", index, data_list.size());
+			index++;
+		}
+
 		return ret;
 	}
 }
