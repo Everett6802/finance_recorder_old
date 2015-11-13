@@ -6,7 +6,7 @@ import com.price.msg_dumper.*;
 public class MsgDumperWrapper 
 {
 	private static String[] facility_name = {"Log", "Com", "Sql", "Remote", "Syslog"};
-	private static short[] severity_arr = {MsgDumperCmnDef.MSG_DUMPER_SEVIRITY_ERROR, MsgDumperCmnDef.MSG_DUMPER_SEVIRITY_DEBUG};
+	private static short[] severity_arr = {MsgDumperCmnDef.MSG_DUMPER_SEVIRITY_ERROR, MsgDumperCmnDef.MSG_DUMPER_SEVIRITY_WARN};
 	private static short facility = MsgDumperCmnDef.MSG_DUMPER_FACILITY_LOG | MsgDumperCmnDef.MSG_DUMPER_FACILITY_SYSLOG;
 
 	private MsgDumperWrapper(){}

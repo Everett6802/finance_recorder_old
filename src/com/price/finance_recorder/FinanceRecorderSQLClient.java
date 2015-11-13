@@ -22,9 +22,9 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 // Select Data command format
 	private static final String FORMAT_CMD_SELECT_DATA_HEAD = "SELECT ";
 	private static final String FORMAT_CMD_SELECT_DATA_TAIL_FORMAT = " FROM %s";
-	private static final String FORMAT_CMD_SELECT_DATA_RULE_BETWEEN = " WHERE date BETWEEN ? AND ?";
-	private static final String FORMAT_CMD_SELECT_DATA_RULE_GREATER_THAN = " WHERE date > ?";
-	private static final String FORMAT_CMD_SELECT_DATA_RULE_LESS_THAN = " WHERE date < ?";
+	private static final String FORMAT_CMD_SELECT_DATE_RULE_BETWEEN = " WHERE date BETWEEN ? AND ?";
+	private static final String FORMAT_CMD_SELECT_DATE_RULE_GREATER_THAN = " WHERE date > ?";
+	private static final String FORMAT_CMD_SELECT_DATE_RULE_LESS_THAN = " WHERE date < ?";
 	private static final String FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT = " WHERE month(date) BETWEEN '%d' AND '%d'";
 	private static final String FORMAT_CMD_SELECT_MONTH_RULE_GREATER_THAN_FORMAT = " WHERE month(date) > '%d'";
 	private static final String FORMAT_CMD_SELECT_MONTH_RULE_LESS_THAN_FORMAT = " WHERE month(date) < '%d'";
@@ -277,7 +277,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 // Write the message into the MySQL
 			try
 			{
-				FinanceRecorderCmnDef.format_debug("Insert into data by command: %s", pstmt);
+//				FinanceRecorderCmnDef.format_debug("Insert into data by command: %s", pstmt);
 				pstmt.executeUpdate();
 			}
 			catch(SQLException ex) //有可能會產生sql exception
@@ -337,20 +337,20 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 			{
 				if (time_range_cfg.time_start_str != null && time_range_cfg.time_end_str != null)
 				{
-					cmd_select_data += FORMAT_CMD_SELECT_DATA_RULE_BETWEEN;
+					cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_BETWEEN;
 					pstmt = connection.prepareStatement(cmd_select_data);
 					pstmt.setDate(1, sql_date_start);
 					pstmt.setDate(2, sql_date_end);
 				}
 				else if (time_range_cfg.time_start_str != null)
 				{
-					cmd_select_data += FORMAT_CMD_SELECT_DATA_RULE_GREATER_THAN;
+					cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_GREATER_THAN;
 					pstmt = connection.prepareStatement(cmd_select_data);
 					pstmt.setDate(1, sql_date_start);
 				}
 				else if (time_range_cfg.time_start_str != null)
 				{
-					cmd_select_data += FORMAT_CMD_SELECT_DATA_RULE_LESS_THAN;
+					cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_LESS_THAN;
 					pstmt = connection.prepareStatement(cmd_select_data);
 					pstmt.setDate(1, sql_date_end);
 				}

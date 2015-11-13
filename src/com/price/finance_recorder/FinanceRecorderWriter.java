@@ -209,7 +209,7 @@ OUT:
 			if (!FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
 				return ret;
 			unknown_database = true;
-			FinanceRecorderCmnDef.format_warn("The database[%d] does NOT exist, just skip this error", finace_data_type_index);
+			FinanceRecorderCmnDef.format_warn("The database[type index: %d] does NOT exist, just skip this error", finace_data_type_index);
 			ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		}
 		if (!unknown_database)

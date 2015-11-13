@@ -121,7 +121,7 @@ public class FinanceRecorder
 			System.out.println("Delete old MySQL data......");
 			ret = delete_sql(remove_database_list);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				show_error_and_exit("Fail to write financial data into MySQL");
+				show_error_and_exit(String.format("Fail to remove the old MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		}
 
 // Setup the config for writing data into MySQL
@@ -146,7 +146,7 @@ public class FinanceRecorder
 		{
 			ret = read_sql();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				show_error_and_exit("Fail to read financial data from MySQL");
+				show_error_and_exit(String.format("Fail to read financial data from MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		}
 		else
 		{
@@ -155,7 +155,7 @@ public class FinanceRecorder
 			long time_start_millisecond = System.currentTimeMillis();
 			ret = write_sql(use_multithread);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				show_error_and_exit("Fail to write financial data into MySQL");
+				show_error_and_exit(String.format("Fail to write financial data into MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 			long time_end_millisecond = System.currentTimeMillis();
 
 			System.out.println("Write financial data into MySQL data...... Done");
@@ -193,7 +193,7 @@ public class FinanceRecorder
 		System.out.println("-f|--file\nDescription: Read Source/Time from config file\n\nCaution: -s|--source and -t|--time are Ignored if set");
 		System.out.println("  Format: history.conf");
 	    System.out.println("--remove_all\nDescription: Remove all the MySQL databases");
-		System.out.println("--multiple_thread\nDescription: Write into MySQL database by using multiple threads");
+		System.out.println("--multi_thread\nDescription: Write into MySQL database by using multiple threads");
 		System.out.println("--read_data\nDescription: Read from MySQL database");
 		System.out.println("===================================================");
 	}
@@ -204,6 +204,7 @@ public class FinanceRecorder
 		finance_recorder_mgr.update_by_config_file(filename);
 		return ret;
 	}
+
 	private static short setup_param(LinkedList<Integer> finance_data_type_index_list, String time_month_begin, String time_month_end)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;

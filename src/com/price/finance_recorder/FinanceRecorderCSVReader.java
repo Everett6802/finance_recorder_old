@@ -67,7 +67,7 @@ public class FinanceRecorderCSVReader
 //				String[] field_array = line.split(FinanceRecorderCmnDef.DATA_SPLIT);
 //				data_list.add(format_data_to_string(field_array));
 				data_list.add(line);
-				FinanceRecorderCmnDef.format_debug("New Data: %s", ((LinkedList<String>)data_list).peekLast());
+//				FinanceRecorderCmnDef.format_debug("New Data: %s", ((LinkedList<String>)data_list).peekLast());
 				count++;
 			}
 		}
