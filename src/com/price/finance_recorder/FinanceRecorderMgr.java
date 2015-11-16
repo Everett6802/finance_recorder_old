@@ -6,6 +6,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.ExecutionException;;
 
 
 public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserverInf
@@ -232,7 +233,7 @@ OUT:
 //					FinanceRecorderCmnDef.format_debug("Try to write data [%s %04d%02d:%04d%02d] into MySQL......", finance_recorder_writer.get_description(), year_start, month_start, year_cur_end, month_cur_end);
 					FinanceRecorderWriterTask task = new FinanceRecorderWriterTask(new FinanceRecorderWriter(FinanceRecorderCmnDef.FinanceDataType.valueOf(finance_data_type_index)), new FinanceRecorderCmnDef.TimeRangeCfg(year_start, month_start, year_cur_end, month_cur_end));
 					Future<Integer> res = executor.submit(task);
-//					try{Thread.sleep(500);}
+//					try{Thread.sleep(5);}
 //					catch (InterruptedException e){}
 					res_list.add(res);
 
@@ -253,10 +254,15 @@ OUT:
 				{
 					ret = res.get().shortValue();
 				}
-				catch (Exception e)
+				catch (ExecutionException e)
 				{
 					FinanceRecorderCmnDef.format_error("Fail to get return value, due to: %s", e.toString());
 					ret = FinanceRecorderCmnDef.RET_FAILURE_UNKNOWN;
+				}
+				catch (InterruptedException e)
+				{
+					FinanceRecorderCmnDef.format_error("Fail to get return value, due to: %s", e.toString());
+					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 				}
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					break OUT;
