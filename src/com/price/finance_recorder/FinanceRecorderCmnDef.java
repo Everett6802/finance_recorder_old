@@ -26,7 +26,9 @@ public class FinanceRecorderCmnDef
 	public static final short RET_FAILURE_MYSQL_BASE = 100;
 	public static final short RET_FAILURE_MYSQL = RET_FAILURE_MYSQL_BASE + 1;
 	public static final short RET_FAILURE_MYSQL_UNKNOWN_DATABASE = RET_FAILURE_MYSQL_BASE + 2;
-	public static final short RET_FAILURE_MYSQL_DATABASE_ALREADY_EXIST = RET_FAILURE_MYSQL_BASE + 3;
+	public static final short RET_FAILURE_MYSQL_NO_DRIVER = RET_FAILURE_MYSQL_BASE + 3;
+	public static final short RET_FAILURE_MYSQL_EXECUTE_COMMAND = RET_FAILURE_MYSQL_BASE + 4;
+	public static final short RET_FAILURE_MYSQL_DATABASE_ALREADY_EXIST = RET_FAILURE_MYSQL_BASE + 5;
 
 	public static boolean CheckSuccess(short x) {return (x == RET_SUCCESS ? true : false);}
 	public static boolean CheckFailure(short x) {return !CheckSuccess(x);}
@@ -55,6 +57,8 @@ public class FinanceRecorderCmnDef
 		"SQL Success",
 		"SQL Failure Common",
 		"SQL Failure Unknown Database",
+		"SQL Failure No Driver",
+		"SQL Failure Execute Command",
 		"SQL Failure Database Already Exist"
 	};
 
@@ -108,6 +112,11 @@ public class FinanceRecorderCmnDef
 	{
 		DatabaseCreateThread_Single,
 		DatabaseCreateThread_Multiple,
+	};
+	public static enum DatabaseEnableBatchType
+	{
+		DatabaseEnableBatch_Yes,
+		DatabaseEnableBatch_No,
 	};
 
 	public static class TimeRangeCfg

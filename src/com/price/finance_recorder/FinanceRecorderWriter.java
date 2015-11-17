@@ -24,7 +24,6 @@ public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements Fin
 		finace_data_type_index = finance_data_type.ordinal();
 		csv_reader = new FinanceRecorderCSVReader(this);
 		sql_client = new FinanceRecorderSQLClient(finance_data_type, this);
-//		sql_client_diff = new FinanceRecorderSQLClient(this);
 	}
 
 //	private void set_mapping_today()
@@ -65,9 +64,14 @@ public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements Fin
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	private short proccess(FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type)
+	final String get_description(){return FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index];}
+
+	short write_to_sql(FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type, FinanceRecorderCmnDef.DatabaseEnableBatchType database_enable_batch_type)
 	{
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Set the mapping table of reading the specific CSV files and writing correct SQL database
+		short ret = set_mapping_time_range(time_range_cfg);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
 
 		String csv_filepath = null;
 // Establish the connection to the MySQL and create the database if not exist 
@@ -87,52 +91,47 @@ OUT:
 			for (int month : month_list)
 			{
 // Read the data from CSV file
-				csv_filepath =  String.format("%s/%s_%04d%02d.csv", FinanceRecorderCmnDef.DATA_FOLDER_NAME, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_data_type_index], year, month);
+				csv_filepath = String.format("%s/%s_%04d%02d.csv", FinanceRecorderCmnDef.DATA_FOLDER_NAME, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_data_type_index], year, month);
 //				FinanceRecorderCmnDef.format_debug("Try to read the CSV: %s", csv_filepath);
 				ret = csv_reader.initialize(csv_filepath);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 				{
-					if (IgnoreErrorIfCSVNotExist)
+					if (IgnoreErrorIfCSVNotExist && FinanceRecorderCmnDef.CheckFailureNotFound(ret))
 					{
-						if (FinanceRecorderCmnDef.CheckFailureNotFound(ret))
-						{
-							FinanceRecorderCmnDef.format_warn("The CSV[%s] does NOT exist, just skip this error......", csv_filepath);
-							continue;
-						}
+						FinanceRecorderCmnDef.format_warn("The CSV[%s] does NOT exist, just skip this error......", csv_filepath);
+						csv_reader.deinitialize();
+						ret = FinanceRecorderCmnDef.RET_SUCCESS;
+						continue;
 					}
-					return ret;
+					break OUT;
 				}
 				ret = csv_reader.read(data_list);
-				if (FinanceRecorderCmnDef.CheckFailure(ret))
-					return ret;
 				csv_reader.deinitialize();
+				if (FinanceRecorderCmnDef.CheckFailure(ret))
+					break OUT;
 			}
+// Check if the data exist
+			if (!data_list.isEmpty())
+			{
 // Create the table
-			String table_name = String.format("year%04d", year);
-			ret = sql_client.open_table(table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_LIST[finace_data_type_index]);
-			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				break OUT;
+				String table_name = String.format("year%04d", year);
+				ret = sql_client.create_table(table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_LIST[finace_data_type_index]);
+				if (FinanceRecorderCmnDef.CheckFailure(ret))
+					break OUT;
 // Write the data into MySQL database
-			ret = sql_client.insert_data(table_name, data_list);
-			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				break OUT;
-			data_list.clear();
+				if (database_enable_batch_type == FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_Yes)
+					ret = sql_client.insert_data_batch(table_name, data_list);
+				else
+					ret = sql_client.insert_data(table_name, data_list);
+				if (FinanceRecorderCmnDef.CheckFailure(ret))
+					break OUT;
+				data_list.clear();
+			}
 		}
 // Destroy the connection to the MySQL
 		sql_client.disconnect_mysql();
 
 		return ret;
-	}
-
-	final String get_description(){return FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index];}
-
-	short write_to_sql(FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type)
-	{
-// Set the mapping table of reading the specific CSV files and writing correct SQL database
-		short ret = set_mapping_time_range(time_range_cfg);
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			return ret;
-		return proccess(database_create_thread_type);
 	}
 
 	short read_from_sql(FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg, LinkedList<String> data_list)

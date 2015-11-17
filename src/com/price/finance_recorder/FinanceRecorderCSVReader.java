@@ -19,8 +19,7 @@ public class FinanceRecorderCSVReader
 	public short initialize(String data_filepath)
 	{
 		csv_filepath = data_filepath;
-		FinanceRecorderCmnDef.format_debug("Open the CSV file: %s", csv_filepath);
-
+//		FinanceRecorderCmnDef.format_debug("Open the CSV file: %s", csv_filepath);
 		try
 		{
 			br = new BufferedReader(new FileReader(csv_filepath));

@@ -18,7 +18,7 @@ public class FinanceRecorderWriterTask implements Callable<Integer>
 	public Integer call()
 	{
 		FinanceRecorderCmnDef.format_debug("The thread for accessing [%s %s]", finance_recorder_writer.get_description(), time_range_cfg.toString());
-		short ret = finance_recorder_writer.write_to_sql(time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Multiple);
+		short ret = finance_recorder_writer.write_to_sql(time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Multiple, FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_Yes);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			FinanceRecorderCmnDef.format_error("The thread for accessing [%s %s] FAIL, due to: %s", finance_recorder_writer.get_description(), time_range_cfg.toString(), FinanceRecorderCmnDef.GetErrorDescription(ret));
 		return Integer.valueOf(ret);

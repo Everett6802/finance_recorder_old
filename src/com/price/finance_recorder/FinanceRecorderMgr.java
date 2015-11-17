@@ -171,12 +171,8 @@ OUT:
 			FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = entry.getValue();
 
 			FinanceRecorderCmnDef.format_debug("Try to write data [%s %s] into MySQL......", finance_recorder_writer.get_description(), time_range_cfg.toString());
-//// Setup the time range
-//			int[] time_list = get_start_and_end_time_range(time_range_cfg.month_start_str, time_range_cfg.month_end_str);
-//			if (time_list == null)
-//				return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 // Write the data into MySQL
-			ret = finance_recorder_writer.write_to_sql(time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+			ret = finance_recorder_writer.write_to_sql(time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single, FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_No);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 		}
@@ -269,10 +265,10 @@ OUT:
 			}
 		}while(false);
 // Shut down the executor
-        if(FinanceRecorderCmnDef.CheckSuccess(ret))
-        	executor.shutdown();
-        else
-        	executor.shutdownNow();
+		if(FinanceRecorderCmnDef.CheckSuccess(ret))
+			executor.shutdown();
+		else
+			executor.shutdownNow();
 
 		return ret;
 	}
