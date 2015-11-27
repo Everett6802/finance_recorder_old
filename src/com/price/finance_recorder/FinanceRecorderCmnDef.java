@@ -80,11 +80,14 @@ public class FinanceRecorderCmnDef
 
 	public static enum FinanceDataType
 	{
-		FinanceData_StockTop3LegalPersonsNetBuyOrSell(0),
-		FinanceData_FutureAndOptionTop3LegalPersonsOpenInterest(1),
-		FinanceData_FutureOrOptionTop3LegalPersonsOpenInterest(2),
-		FinanceData_OptionTop3LegalPersonsCallAndPutOptionOpenInterest(3),
-		FinanceData_FutureTop10DealersAndLegalPersons(4);
+		FinanceData_StockExchangeAndVolume(0),
+		FinanceData_StockTop3LegalPersonsNetBuyOrSell(1),
+		FinanceData_StockMarginTradingAndShortSelling(2),
+		FinanceData_FutureAndOptionTop3LegalPersonsOpenInterest(3),
+		FinanceData_FutureOrOptionTop3LegalPersonsOpenInterest(4),
+		FinanceData_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest(5),
+		FinanceData_OptionPutCallRatio(6),
+		FinanceData_FutureTop10DealersAndLegalPersons(7);
 
 		private int value = 0;
 		private FinanceDataType(int value){this.value = value;}
@@ -92,11 +95,14 @@ public class FinanceRecorderCmnDef
 		{
 			switch (value)
 			{
-			case 0: return FinanceData_StockTop3LegalPersonsNetBuyOrSell;
-			case 1: return FinanceData_FutureAndOptionTop3LegalPersonsOpenInterest;
-			case 2: return FinanceData_FutureOrOptionTop3LegalPersonsOpenInterest;
-			case 3: return FinanceData_OptionTop3LegalPersonsCallAndPutOptionOpenInterest;
-			case 4: return FinanceData_FutureTop10DealersAndLegalPersons;
+			case 0: return FinanceData_StockExchangeAndVolume;
+			case 1: return FinanceData_StockTop3LegalPersonsNetBuyOrSell;
+			case 2: return FinanceData_StockMarginTradingAndShortSelling;
+			case 3: return FinanceData_FutureAndOptionTop3LegalPersonsOpenInterest;
+			case 4: return FinanceData_FutureOrOptionTop3LegalPersonsOpenInterest;
+			case 5: return FinanceData_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest;
+			case 6: return FinanceData_OptionPutCallRatio;
+			case 7: return FinanceData_FutureTop10DealersAndLegalPersons;
 			default: return null;
 			}
 		}
@@ -185,19 +191,43 @@ public class FinanceRecorderCmnDef
 
 	public static final String[] FINANCE_DATA_NAME_LIST = new String[]
 	{
-	    "stock_top3_legal_persons_net_buy_or_sell",
-	    "future_and_option_top3_legal_persons_open_interest",
-	    "future_or_option_top3_legal_persons_open_interest",
-	    "option_top3_legal_persons_buy_and_sell_option_open_interest",
-	    "future_top10_dealers_and_legal_persons"
+		"stock_exchange_and_volume",
+		"stock_top3_legal_persons_net_buy_or_sell",
+		"stock_margin_trading_and_short_selling",
+		"future_and_option_top3_legal_persons_open_interest",
+		"future_or_option_top3_legal_persons_open_interest",
+		"option_top3_legal_persons_buy_and_sell_option_open_interest",
+		"option_put_call_ratio",
+		"future_top10_dealers_and_legal_persons"
 	};
 	public static final String[] FINANCE_DATA_DESCRIPTION_LIST = new String[]
 	{
+		"臺股指數及成交量",
 		"三大法人現貨買賣超",
+		"現貨融資融券餘額",
 		"三大法人期貨和選擇權留倉淨額",
 		"三大法人期貨或選擇權留倉淨額",
 		"三大法人選擇權買賣權留倉淨額",
+		"三大法人選擇權賣權買權比",
 		"十大交易人及特定法人期貨資訊"
+	};
+	private static final String[] STOCK_EXCHANGE_AND_VALUE_FIELD_DEFINITION = new String[]
+	{
+		"date", // 日期
+		"value1", // 成交股數
+		"value2", // 成交金額
+		"value3", // 成交筆數
+		"value4", // 發行量加權股價指數
+		"value5", // 漲跌點數
+	};
+	private static final String[] STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION = new String[]
+	{
+		"DATE NOT NULL PRIMARY KEY", // 日期
+		"BIGINT", // 成交股數
+		"BIGINT", // 成交金額
+		"INT", // 成交筆數
+		"FLOAT", // 發行量加權股價指數
+		"FLOAT", // 漲跌點數
 	};
 	private static final String[] STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION = new String[]
 	{
@@ -230,6 +260,44 @@ public class FinanceRecorderCmnDef
 		"BIGINT", // 外資及陸資_買進金額
 		"BIGINT", // 外資及陸資_賣出金額
 		"BIGINT", // 外資及陸資_買賣差額
+	};
+	private static final String[] STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DEFINITION = new String[]
+	{
+		"date", // 日期
+		"value1", // 融資(交易單位)_買進
+		"value2", // 融資(交易單位)_賣出
+		"value3", // 融資(交易單位)_現金(券)償還
+		"value4", // 融資(交易單位)_前日餘額
+		"value5", // 融資(交易單位)_今日餘額
+		"value6", // 融券(交易單位)_買進
+		"value7", // 融券(交易單位)_賣出
+		"value8", // 融券(交易單位)_現金(券)償還
+		"value9", // 融券(交易單位)_前日餘額
+		"value10", // 融券(交易單位)_今日餘額
+		"value11", // 融資金額(仟元)_買進
+		"value12", // 融資金額(仟元)_賣出
+		"value13", // 融資金額(仟元)_現金(券)償還
+		"value14", // 融資金額(仟元)_前日餘額
+		"value15", // 融資金額(仟元)_今日餘額
+	};
+	private static final String[] STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION = new String[]
+	{
+		"DATE NOT NULL PRIMARY KEY", // 日期
+		"INT", // 融資(交易單位)_買進
+		"INT", // 融資(交易單位)_賣出
+		"INT", // 融資(交易單位)_現金(券)償還
+		"INT", // 融資(交易單位)_前日餘額
+		"INT", // 融資(交易單位)_今日餘額
+		"INT", // 融券(交易單位)_買進
+		"INT", // 融券(交易單位)_賣出
+		"INT", // 融券(交易單位)_現金(券)償還
+		"INT", // 融券(交易單位)_前日餘額
+		"INT", // 融券(交易單位)_今日餘額
+		"INT", // 融資金額(仟元)_買進
+		"INT", // 融資金額(仟元)_賣出
+		"INT", // 融資金額(仟元)_現金(券)償還
+		"BIGINT", // 融資金額(仟元)_前日餘額
+		"BIGINT", // 融資金額(仟元)_今日餘額
 	};
 	private static final String[] FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION = new String[]
 	{
@@ -435,6 +503,26 @@ public class FinanceRecorderCmnDef
 		"INT", // 賣權_外資_買賣差額_口數 int",
 		"INT", // 賣權_外資_買賣差額_契約金額 int",
 	};
+	private static final String[] OPTION_PUT_CALL_RATIO_FIELD_DEFINITION = new String[]
+	{
+		"date", // 日期
+		"value1", // 賣權成交量
+		"value2", // 買權成交量
+		"value3", // 買賣權成交量比率%
+		"value4", // 賣權未平倉量
+		"value5", // 買權未平倉量
+		"value6", // 買賣權未平倉量比率%
+	};
+	private static final String[] OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION = new String[]
+	{
+		"DATE NOT NULL PRIMARY KEY", // 日期
+		"INT", // 賣權成交量
+		"INT", // 買權成交量
+		"FLOAT", // 買賣權成交量比率%
+		"INT", // 賣權未平倉量
+		"INT", // 買權未平倉量
+		"FLOAT", // 買賣權未平倉量比率%
+	};
 	private static final String[] FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION = new String[]
 	{
 		"date", // 日期
@@ -481,30 +569,39 @@ public class FinanceRecorderCmnDef
 	};
 	public static final String[] FINANCE_DATA_SQL_FIELD_LIST = new String[]
 	{
+		transform_array_to_sql_string(merge_string_array_element(STOCK_EXCHANGE_AND_VALUE_FIELD_DEFINITION, STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION)),
 		transform_array_to_sql_string(merge_string_array_element(STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION, STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DEFINITION, STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION)),
 		transform_array_to_sql_string(merge_string_array_element(FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION, FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION)),
 		transform_array_to_sql_string(merge_string_array_element(FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION, FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION)),
 		transform_array_to_sql_string(merge_string_array_element(OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DEFINITION, OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(OPTION_PUT_CALL_RATIO_FIELD_DEFINITION, OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION)),
 		transform_array_to_sql_string(merge_string_array_element(FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION, FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION))
 	};
 	public static final String[][] FINANCE_DATA_SQL_FIELD_DEFINITION_LIST = new String[][]
 	{
+		STOCK_EXCHANGE_AND_VALUE_FIELD_DEFINITION,
 		STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION,
+		STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DEFINITION,
 		FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION,
 		FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION,
 		OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DEFINITION,
+		OPTION_PUT_CALL_RATIO_FIELD_DEFINITION,
 		FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION
 	};
 	public static final String[][] FINANCE_DATA_SQL_FIELD_TYPE_DEFINITION_LIST = new String[][]
 	{
+		STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION,
 		STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION,
+		STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION,
 		FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
 		FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
 		OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
+		OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION,
 		FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION
 	};
-	public static final short NOTIFY_GET_DATA = 0;
-	public static final int EACH_UPDATE_DATA_AMOUNT = 20;
+//	public static final short NOTIFY_GET_DATA = 0;
+//	public static final int EACH_UPDATE_DATA_AMOUNT = 20;
 
 	private static MsgDumperWrapper msg_dumper = MsgDumperWrapper.get_instance();
 
