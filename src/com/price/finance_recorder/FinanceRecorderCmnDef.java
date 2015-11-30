@@ -22,6 +22,7 @@ public class FinanceRecorderCmnDef
 	public static final short RET_FAILURE_HANDLE_THREAD = 8;
 	public static final short RET_FAILURE_INCORRECT_PATH = 9;
 	public static final short RET_FAILURE_IO_OPERATION = 10;
+	public static final short RET_FAILURE_UNEXPECTED_VALUE = 11;
 
 	public static final short RET_FAILURE_MYSQL_BASE = 100;
 	public static final short RET_FAILURE_MYSQL = RET_FAILURE_MYSQL_BASE + 1;
@@ -48,8 +49,8 @@ public class FinanceRecorderCmnDef
 		"Failure Incorrect Config",
 		"Failure Handle Thread",
 		"Failure Incorrect Path",
-		"Failure IO Operation"
-//		"Failure MySQL"
+		"Failure IO Operation",
+		"Failure Unexpected Value"
 	};
 
 	private static final String[] SQLRetDescription = new String[]

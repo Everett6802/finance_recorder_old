@@ -329,4 +329,21 @@ OUT:
 
 		return ret;
 	}
+
+	public short check()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Get the time range for each database
+		for (int finance_data_type_index = 0 ; finance_data_type_index < FinanceRecorderCmnDef.FinanceDataType.values().length ; finance_data_type_index++)
+		{
+			FinanceRecorderWriter finance_recorder_writer = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinanceDataType.valueOf(finance_data_type_index));
+			FinanceRecorderCmnDef.format_debug("Try to delete database [%s]......", finance_recorder_writer.get_description());
+			ret = finance_recorder_writer.find_table_time_range();
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				return ret;
+			finance_recorder_writer.print_table_time_range();
+		}
+
+		return ret;
+	}
 }

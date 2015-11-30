@@ -4,6 +4,8 @@ import java.sql.*;
 import java.text.*;
 import java.util.*;
 //import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements FinanceRecorderCmnDef.FinanceObserverInf
@@ -18,6 +20,8 @@ public class FinanceRecorderWriter extends FinanceRecorderCmnBase implements Fin
 	private FinanceRecorderSQLClient sql_client = null;
 	private FinanceRecorderSQLClient sql_client_diff = null;
 	private HashMap<Integer, LinkedList<Integer>> finance_source_time_range_table = new HashMap<Integer, LinkedList<Integer>>();
+
+	private FinanceRecorderCmnDef.TimeRangeCfg table_time_range_cfg = null;
 
 	public FinanceRecorderWriter(FinanceRecorderCmnDef.FinanceDataType finance_data_type)
 	{
@@ -218,6 +222,96 @@ OUT:
 		return ret;
 	}
 
+	public short find_table_time_range()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Establish the connection to the MySQL and create the database if not exist 
+		ret = sql_client.try_connect_mysql(
+			FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_data_type_index], 
+			FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No,
+			FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single
+		);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+//			FinanceRecorderCmnDef.format_warn("The MySQL database[%d, %s] does NOT exist", finace_data_type_index, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_data_type_index]);
+			return ret;
+		}
+// Search for the table name list in the database
+		LinkedList<String> table_name_list = new LinkedList<String>();
+		ret = sql_client.get_table_name_list(table_name_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+// Find the year from the table name
+		int start_year = 9999;
+		int end_year = 0;
+		String start_table_name = null;
+		String end_table_name = null;
+		for (String table_name : table_name_list)
+		{
+			Pattern pattern = Pattern.compile("year([\\d]{4})");
+			Matcher matcher = pattern.matcher(table_name);
+			if (!matcher.find())
+			{
+				FinanceRecorderCmnDef.format_error("Incorrect table name format: %s", table_name);
+				return FinanceRecorderCmnDef.RET_FAILURE_UNEXPECTED_VALUE;
+			}
+			int year = Integer.valueOf(matcher.group(1));
+			if (year > end_year)
+			{
+				end_year = year;
+				end_table_name = table_name;
+			}
+			if (year < start_year)
+			{
+				start_year = year;
+				start_table_name = table_name;
+			}
+		}
+		FinanceRecorderCmnDef.format_debug("Search for the time range from year %d-%d in %s", start_year, end_year, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index]);
+		LinkedList<String> start_date_list = new LinkedList<String>();
+// Find the start date
+		ret = sql_client.select_data(start_table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finace_data_type_index][0], start_date_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+			FinanceRecorderCmnDef.format_error("Fail to find the start date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], start_table_name);
+			return ret;
+		}
+		if (start_date_list.isEmpty())
+		{
+			FinanceRecorderCmnDef.format_error("Fail to find any date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], start_table_name);
+			return ret;
+		}
+// Find the end date
+		LinkedList<String> end_date_list = new LinkedList<String>();
+		ret = sql_client.select_data(end_table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finace_data_type_index][0], end_date_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+			FinanceRecorderCmnDef.format_error("Fail to find the start date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], start_table_name);
+			return ret;
+		}
+		if (end_date_list.isEmpty())
+		{
+			FinanceRecorderCmnDef.format_error("Fail to find any date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], end_table_name);
+			return ret;
+		}
+		table_time_range_cfg = new FinanceRecorderCmnDef.TimeRangeCfg(start_date_list.getFirst(), end_date_list.getLast());
+// Destroy the connection to the MySQL
+		sql_client.disconnect_mysql();
+		return ret;
+	}
+
+	short print_table_time_range()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		if (table_time_range_cfg == null)
+		{
+			ret = find_table_time_range();
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				return ret;
+		}
+		System.out.printf("%s: %s\n", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], table_time_range_cfg.toString());
+		return ret;
+	}
 //	short write_to_sql(String month_begin_str)
 //	{
 //		java.util.Date date_today = new java.util.Date();

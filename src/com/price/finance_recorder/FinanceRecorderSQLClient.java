@@ -226,6 +226,35 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
+	short get_table_name_list(List<String> table_name_list)
+	{
+// Check if the connection is established
+		if (connection == null)
+		{
+			FinanceRecorderCmnDef.error("The connection is NOT established");
+			return  FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
+
+// Create the SQL command list and then execute
+		try
+		{
+			DatabaseMetaData md = connection.getMetaData();
+			ResultSet rs = md.getTables(null, null, "%", null);
+			while (rs.next()) 
+			{
+//				System.out.println(rs.getString(3));
+				table_name_list.add(rs.getString(3));
+			}
+		}
+		catch(SQLException ex) //有可能會產生sql exception
+		{
+			FinanceRecorderCmnDef.format_error("Fails to show tables[%s], due to: %s", ex.getMessage());
+			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+		}
+
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
 	short insert_data(String table_name, List<String> data_list)
 	{
 // Check if the connection is established
@@ -396,7 +425,6 @@ OUT:
 		return  FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	
 	short select_data(String table_name, String cmd_table_field, FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg, List<String> data_list)
 	{
 // Check if the connection is established
@@ -510,29 +538,60 @@ OUT:
 				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 			}
 		}
-
+// Get the MySQL database field and its type
 		String[] finance_data_sql_field_definition = FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finace_data_type_index];
 		String[] finance_data_sql_field_type_definition = FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_TYPE_DEFINITION_LIST[finace_data_type_index];
-		int finance_data_sql_field_definition_len = finance_data_sql_field_definition.length;
+
+		ArrayList<Integer> field_index_list = new ArrayList<Integer>();
+		if (cmd_table_field.equals("*"))
+		{
+			int finance_data_sql_field_definition_len = finance_data_sql_field_definition.length;
+			for(int i = 0 ; i < finance_data_sql_field_definition_len ; i++)
+				field_index_list.add(i);
+		}
+		else
+		{
+			String[] table_field_list = cmd_table_field.split(",");
+			int table_field_list_len = table_field_list.length;
+			int index;
+			for(int i = 0 ; i < table_field_list_len ; i++)
+			{
+				index = Arrays.asList(finance_data_sql_field_definition).indexOf(table_field_list[i]);
+				if (index == -1)
+				{
+					FinanceRecorderCmnDef.format_error("Unknown field: %s in %s", table_field_list[i], FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index]);
+					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
+				}
+				field_index_list.add(index);
+			}
+		}
+		if (field_index_list.isEmpty())
+		{
+			FinanceRecorderCmnDef.format_error("No fields are selected in %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index]);
+			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
+		}
+		int field_index_list_len = field_index_list.size();
+
 // Read the result from MySQL
 		ResultSet rs = null;
 		try
 		{
 			FinanceRecorderCmnDef.format_debug("Select from data by command: %s", pstmt);
 			rs = pstmt.executeQuery();
-			String result_str = null;
 			while(rs.next())
 			{
-				result_str = rs.getString(finance_data_sql_field_definition[0]);
-				for(int i = 1 ; i < finance_data_sql_field_definition_len ; i++)
+				String result_str = "";
+				for(int i = 0 ; i < field_index_list_len ; i++)
 				{
-					String field_type = finance_data_sql_field_type_definition[i];
+					String field_type = finance_data_sql_field_type_definition[field_index_list.get(i)];
 					if (field_type.equals("INT"))
-						result_str += String.format(",%d", rs.getInt(finance_data_sql_field_definition[i]));
+						result_str += String.format("%d,", rs.getInt(finance_data_sql_field_definition[field_index_list.get(i)]));
 					else if (field_type.equals("BIGINT"))
-						result_str += String.format(",%d", rs.getLong(finance_data_sql_field_definition[i]));
+						result_str += String.format("%d,", rs.getLong(finance_data_sql_field_definition[field_index_list.get(i)]));
 					else if (field_type.equals("FLOAT"))
-						result_str += String.format(",%f", rs.getFloat(finance_data_sql_field_definition[i]));
+						result_str += String.format("%f,", rs.getFloat(finance_data_sql_field_definition[field_index_list.get(i)]));
+					else if (field_type.contains("DATE"))
+						result_str += String.format("%s,", rs.getString(finance_data_sql_field_definition[field_index_list.get(i)]));
 					else
 					{
 						FinanceRecorderCmnDef.format_debug("Unknown SQL field type: %s", field_type);
@@ -540,7 +599,7 @@ OUT:
 					}
 				}
 //				FinanceRecorderCmnDef.format_debug("Query Data: %s", result_str);
-				data_list.add(result_str);
+				data_list.add(result_str.substring(0, result_str.length() - 1));
 			}
 		}
 		catch(SQLException ex) //有可能會產生sql exception
