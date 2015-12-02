@@ -1,9 +1,11 @@
 package com.price.finance_recorder;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 import java.util.regex.*;
+import java.text.*;
 
 
 public class FinanceRecorderCmnDef
@@ -30,6 +32,7 @@ public class FinanceRecorderCmnDef
 	public static final short RET_FAILURE_MYSQL_NO_DRIVER = RET_FAILURE_MYSQL_BASE + 3;
 	public static final short RET_FAILURE_MYSQL_EXECUTE_COMMAND = RET_FAILURE_MYSQL_BASE + 4;
 	public static final short RET_FAILURE_MYSQL_DATABASE_ALREADY_EXIST = RET_FAILURE_MYSQL_BASE + 5;
+	public static final short RET_FAILURE_MYSQL_DATA_NOT_CONSISTENT = RET_FAILURE_MYSQL_BASE + 6;
 
 	public static boolean CheckSuccess(short x) {return (x == RET_SUCCESS ? true : false);}
 	public static boolean CheckFailure(short x) {return !CheckSuccess(x);}
@@ -60,7 +63,8 @@ public class FinanceRecorderCmnDef
 		"SQL Failure Unknown Database",
 		"SQL Failure No Driver",
 		"SQL Failure Execute Command",
-		"SQL Failure Database Already Exist"
+		"SQL Failure Database Already Exist",
+		"SQL Failure Data Not Consistent"
 	};
 
 	public static String GetErrorDescription(short error_code)
@@ -707,17 +711,37 @@ public class FinanceRecorderCmnDef
 		return sql_string;
 	}
 
-	public static final String get_time_month_today()
+	public static 	java.util.Date get_date(String date_str) throws ParseException
 	{
-//		java.util.Date date_today = new java.util.Date();
-		java.util.Date date = new java.util.Date(); // your date
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
+		java.util.Date date = formatter.parse(date_str);
+		return date;
+	}
+
+	public static final String get_month_str(java.util.Date date)
+	{
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+		String time_month = String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1);
+		return time_month;
+	}
+
+	public static final String get_date_str(java.util.Date date)
+	{
 	    Calendar cal = Calendar.getInstance();
 	    cal.setTime(date);
-//	    int year = cal.get(Calendar.YEAR);
-//	    int month = cal.get(Calendar.MONTH);
-//	    int day = cal.get(Calendar.DAY_OF_MONTH);
-		String time_month_today = String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH));
-		return time_month_today;
+		String time_date = String.format("%04d-%02d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DATE));
+		return time_date;
+	}
+
+	public static final String get_time_month_today()
+	{
+		return get_month_str(new java.util.Date());
+	}
+
+	public static final String get_time_date_today()
+	{
+		return get_date_str(new java.util.Date());
 	}
 
 	private static Matcher get_time_value_matcher(String time_str, String search_pattern)

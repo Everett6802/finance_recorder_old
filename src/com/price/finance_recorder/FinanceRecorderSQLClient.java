@@ -51,8 +51,9 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 
 	private static java.sql.Date transform_java_sql_date_format(String date_str) throws ParseException
 	{
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
-		java.util.Date dateStr = formatter.parse(date_str);
+//		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
+//		java.util.Date dateStr = formatter.parse(date_str);
+		java.util.Date dateStr = FinanceRecorderCmnDef.get_date(date_str);
 		return new java.sql.Date(dateStr.getTime());
 	}
 
@@ -275,8 +276,9 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 			java.sql.Date sql_date = null;
 			try
 			{
-				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
-				java.util.Date dateStr = formatter.parse(element_list[0]);
+//				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
+//				java.util.Date dateStr = formatter.parse(element_list[0]);
+				java.util.Date dateStr = FinanceRecorderCmnDef.get_date(element_list[0]);
 				sql_date = new java.sql.Date(dateStr.getTime());
 			}
 			catch (ParseException e)
@@ -371,8 +373,9 @@ OUT:
 			java.sql.Date sql_date = null;
 			try
 			{
-				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
-				java.util.Date dateStr = formatter.parse(element_list[0]);
+//				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
+//				java.util.Date dateStr = formatter.parse(element_list[0]);
+				java.util.Date dateStr = FinanceRecorderCmnDef.get_date(element_list[0]);
 				sql_date = new java.sql.Date(dateStr.getTime());
 			}
 			catch (ParseException e)
