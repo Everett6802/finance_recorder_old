@@ -389,6 +389,7 @@ OUT:
 		LinkedList<String> data_base_list = null;
 		int data_base_list_size = 0;
 		int data_base_finance_data_type_index = -1;
+//		database_start_date_cfg_list.remove(0);
 		for (DatabaseStartDateCfg database_start_date_cfg : database_start_date_cfg_list)
 		{
 			FinanceRecorderDataHandler finance_recorder_writer = new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceDataType.valueOf(database_start_date_cfg.finance_data_type_index));
@@ -424,6 +425,39 @@ OUT:
 					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_DATA_NOT_CONSISTENT;
 				}
 				List<String> sub_data_base_list = data_base_list.subList(start_index, data_base_list_size);
+// Check if the sizes are identical
+				if (sub_data_base_list.size() != data_compare_list.size())
+				{
+					String err_result = String.format("The size in NOT identical, %s: %d, %s: %d", 
+						FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[database_start_date_cfg.finance_data_type_index], 
+						data_compare_list.size(), 
+						FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[data_base_finance_data_type_index], 
+						sub_data_base_list.size()
+					);
+					FinanceRecorderCmnDef.format_error(err_result);
+					System.err.println(err_result);
+//					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_DATA_NOT_CONSISTENT;
+// Show the error detail
+					ListIterator<String> base_iter = sub_data_base_list.listIterator(); 
+					ListIterator<String> compare_iter = data_compare_list.listIterator();
+					String base_data, compare_data;
+					while (base_iter.hasNext())
+					{
+						base_data = base_iter.next();
+						compare_data = compare_iter.next();
+						while (compare_data.compareTo(base_data) != 0)
+						{
+							String err_result_detail = String.format("Date NOT Found %s: %s",
+									FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[database_start_date_cfg.finance_data_type_index], 
+									base_data
+								);
+							FinanceRecorderCmnDef.format_error(err_result_detail);
+							System.err.println(err_result_detail);
+							base_data = base_iter.next();
+//							return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_DATA_NOT_CONSISTENT;
+						}
+					}
+				}
 
 //				if (!sub_data_base_list.equals(data_compare_list))
 //				{
