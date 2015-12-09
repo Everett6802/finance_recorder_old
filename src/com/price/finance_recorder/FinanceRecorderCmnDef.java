@@ -1,6 +1,7 @@
 package com.price.finance_recorder;
 
 import java.io.*;
+import java.nio.file.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
@@ -82,6 +83,8 @@ public class FinanceRecorderCmnDef
 	public static final String CONF_ENTRY_IGNORE_FLAG = "#";
 	public static final int MAX_CONCURRENT_THREAD = 4;
 	public static final int MAX_MONTH_RANGE_IN_THREAD = 3;
+	public static final String DATABASE_TIME_RANGE_FILENAME = ".database_time_range.conf";
+	public static final String DATABASE_TIME_RANGE_FILE_DST_PROJECT_NAME = "finance_analyzer";
 
 	public static enum FinanceDataType
 	{
@@ -752,7 +755,7 @@ public class FinanceRecorderCmnDef
 		Matcher matcher = pattern.matcher(time_str);
 		if (!matcher.find())
 		{
-//			FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
+			FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
 			return null;
 		}
 		return matcher;
@@ -787,6 +790,24 @@ public class FinanceRecorderCmnDef
 		return new int[]{month_value_start[0], month_value_start[1], month_value_end[0], month_value_end[1]};
 	}
 
+	public static short copy_file(String src_filepath, String dst_filepath)
+	{
+		Path src_filepath_obj = Paths.get(src_filepath);
+		Path dst_filepath_obj = Paths.get(dst_filepath);
+		try
+		{
+			CopyOption[] options = new CopyOption[]{StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES};
+			FinanceRecorderCmnDef.format_error("Copy File; From: %s, To: %s", src_filepath, dst_filepath);
+			Files.copy(src_filepath_obj, dst_filepath_obj, options);
+		}
+		catch (IOException e)
+		{
+			FinanceRecorderCmnDef.format_error("Fail to copy file, due to: %s", e.toString());
+			return FinanceRecorderCmnDef.RET_FAILURE_IO_OPERATION;
+		}
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+	
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Interface
 	public interface FinanceObserverInf
@@ -794,3 +815,4 @@ public class FinanceRecorderCmnDef
 		public short notify(short type);
 	}
 }
+

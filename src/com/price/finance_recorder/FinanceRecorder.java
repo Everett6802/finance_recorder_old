@@ -13,7 +13,7 @@ public class FinanceRecorder
 	{
 		boolean use_multithread = false;
 		boolean read_data = false;
-		boolean check_data = false;
+		boolean check_error = false;
 		LinkedList<Integer> remove_database_list = null;
 		LinkedList<Integer> finance_data_type_index_list = null;
 		String time_month_begin = null;
@@ -101,9 +101,9 @@ public class FinanceRecorder
 				read_data = true;
 				index_offset = 1;
 			}
-			else if (option.equals("--check_data"))
+			else if (option.equals("--check_error"))
 			{
-				check_data = true;
+				check_error = true;
 				index_offset = 1;
 			}
 			else
@@ -181,13 +181,12 @@ public class FinanceRecorder
 					System.out.printf("######### Time Lapse: %.2f second(s) #########\n", (float)((time_end_millisecond - time_start_millisecond) / 1000.0));
 			}
 		}
-		if (check_data)
-		{
+		if (check_error)
 			System.out.println("Let's check error......");
-			ret = check_sql();
-			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				show_error_and_exit(String.format("Fail to check data in MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-		}
+		ret = check_sql(check_error);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			show_error_and_exit(String.format("Fail to check data in MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+
 		System.exit(0);
 	}
 
@@ -215,7 +214,7 @@ public class FinanceRecorder
 	    System.out.println("--remove_old\nDescription: Remove the old MySQL databases");
 		System.out.println("--multi_thread\nDescription: Write into MySQL database by using multiple threads");
 		System.out.println("--read_data\nDescription: Read from MySQL database");
-		System.out.println("--check_data\nDescription: Check if the data in the MySQL database is correct");
+		System.out.println("--check_error\nDescription: Check if the data in the MySQL database is correct");
 		System.out.println("===================================================");
 	}
 
@@ -266,10 +265,10 @@ public class FinanceRecorder
 		return ret;
 	}
 
-	private static short check_sql()
+	private static short check_sql(boolean check_error)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		ret = finance_recorder_mgr.check();
+		ret = finance_recorder_mgr.check(check_error);
 		return ret;
 	}
 }

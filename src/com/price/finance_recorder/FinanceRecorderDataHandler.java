@@ -377,7 +377,7 @@ OUT:
 		return ret;
 	}
 
-	short print_database_time_range()
+	short get_database_time_range_str(StringBuilder time_range_str_builder)
 	{
 		if (database_time_range_cfg == null)
 		{
@@ -386,7 +386,8 @@ OUT:
 		}
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		System.out.printf("%s: %s\n", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], database_time_range_cfg.toString());
+		time_range_str_builder.append(String.format("%s: %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], database_time_range_cfg.toString()));
+//		System.out.printf("%s: %s\n", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], database_time_range_cfg.toString());
 		return ret;
 	}
 

@@ -1,6 +1,7 @@
 .classpath
 .project
 .settings/
+.database_time_range.conf
 bin/
 lib/
 log/
