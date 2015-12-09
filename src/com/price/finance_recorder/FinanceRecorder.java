@@ -153,36 +153,34 @@ public class FinanceRecorder
 
 		if (read_data)
 		{
-// Read the data fro database
+// Read the data from database
+			System.out.println("Read financial data from MySQL......");
 			ret = read_sql();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				show_error_and_exit(String.format("Fail to read financial data from MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		}
 		else
 		{
-			if (finance_data_type_index_list != null)
-			{
 // Write the financial data into MySQL
-				System.out.println("Write financial data into MySQL data......");
-				long time_start_millisecond = System.currentTimeMillis();
-				ret = write_sql(use_multithread);
-				if (FinanceRecorderCmnDef.CheckFailure(ret))
-					show_error_and_exit(String.format("Fail to write financial data into MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-				long time_end_millisecond = System.currentTimeMillis();
+			System.out.println("Write financial data into MySQL......");
+			long time_start_millisecond = System.currentTimeMillis();
+			ret = write_sql(use_multithread);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				show_error_and_exit(String.format("Fail to write financial data into MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+			long time_end_millisecond = System.currentTimeMillis();
+			System.out.println("Write financial data into MySQL...... Done");
 
-				System.out.println("Write financial data into MySQL data...... Done");
-
-				long time_lapse_millisecond = time_end_millisecond - time_start_millisecond;
-				if (time_lapse_millisecond >= 100 * 1000)
-					System.out.printf("######### Time Lapse: %d second(s) #########\n", (int)((time_end_millisecond - time_start_millisecond) / 1000));
-				else if (time_lapse_millisecond >= 10 * 1000)
-					System.out.printf("######### Time Lapse: %.1f second(s) #########\n", (float)((time_end_millisecond - time_start_millisecond) / 1000.0));
-				else
-					System.out.printf("######### Time Lapse: %.2f second(s) #########\n", (float)((time_end_millisecond - time_start_millisecond) / 1000.0));
-			}
+			long time_lapse_millisecond = time_end_millisecond - time_start_millisecond;
+			if (time_lapse_millisecond >= 100 * 1000)
+				System.out.printf("######### Time Lapse: %d second(s) #########\n", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+			else if (time_lapse_millisecond >= 10 * 1000)
+				System.out.printf("######### Time Lapse: %.1f second(s) #########\n", (float)((time_end_millisecond - time_start_millisecond) / 1000.0));
+			else
+				System.out.printf("######### Time Lapse: %.2f second(s) #########\n", (float)((time_end_millisecond - time_start_millisecond) / 1000.0));
 		}
 		if (check_error)
 			System.out.println("Let's check error......");
+// Check the database and find the time range of each database
 		ret = check_sql(check_error);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to check data in MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
@@ -209,11 +207,11 @@ public class FinanceRecorder
 		System.out.println("-t|--time\nTime: The time range of the CSV data file\nDefault: Current month\nCaution1: Ignored if -f|--file set\nCaution2: -s|--source SHOULD be set if set");
 		System.out.println("  Format 1 (start_time): 2015-09");
 		System.out.println("  Format 2 (start_time;end_time): 2015-01,2015-09");
-		System.out.println("-f|--file\nDescription: Read Source/Time from config file\n\nCaution: -s|--source and -t|--time are Ignored if set");
+		System.out.println("-f|--file\nDescription: Read Source/Time from config file\nCaution: -s|--source and -t|--time are Ignored if set");
 		System.out.println("  Format: history.conf");
 	    System.out.println("--remove_old\nDescription: Remove the old MySQL databases");
 		System.out.println("--multi_thread\nDescription: Write into MySQL database by using multiple threads");
-		System.out.println("--read_data\nDescription: Read from MySQL database");
+		System.out.println("--read_data\nDescription: Read from MySQL database\nCaution: Ignore the attribute of writing data into MySQL");
 		System.out.println("--check_error\nDescription: Check if the data in the MySQL database is correct");
 		System.out.println("===================================================");
 	}

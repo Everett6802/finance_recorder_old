@@ -395,11 +395,16 @@ OUT:
 // Copy the database time range config file to the FinanceAnalyzer project
 		String current_path = FinanceRecorderCmnDef.get_current_path();
 		String working_folder = current_path.substring(0, current_path.lastIndexOf("/"));
-		String src_filepath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
-		String dst_filepath = String.format("%s/%s/%s/%s", working_folder, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILE_DST_PROJECT_NAME, FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
-		ret = FinanceRecorderCmnDef.copy_file(src_filepath, dst_filepath);
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			return ret;
+		String dst_folderpath = String.format("%s/%s/%s", working_folder, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILE_DST_PROJECT_NAME, FinanceRecorderCmnDef.CONF_FOLDERNAME);
+		File f = new File(dst_folderpath);
+		if (f.exists())
+		{
+			String src_filepath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+			String dst_filepath = String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+			ret = FinanceRecorderCmnDef.copy_file(src_filepath, dst_filepath);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				return ret;		
+		}
 
 		if (!check_error)
 			return ret;
@@ -411,6 +416,7 @@ OUT:
 		int data_base_list_size = 0;
 		int data_base_finance_data_type_index = -1;
 //		database_start_date_cfg_list.remove(0);
+		String base_database_print_str = null;
 		for (DatabaseStartDateCfg database_start_date_cfg : database_start_date_cfg_list)
 		{
 			FinanceRecorderDataHandler finance_recorder_data_handler = new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceDataType.valueOf(database_start_date_cfg.finance_data_type_index));
@@ -425,7 +431,7 @@ OUT:
 					);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					return ret;
-				System.out.printf("The base database: %s\n", finance_recorder_data_handler.get_description());
+				base_database_print_str = String.format("The base database: %s\n", finance_recorder_data_handler.get_description());
 				data_base_list_size = data_base_list.size();
 				data_base_finance_data_type_index = database_start_date_cfg.finance_data_type_index;
 			}
@@ -450,6 +456,11 @@ OUT:
 // Check if the sizes are identical
 				if (sub_data_base_list.size() != data_compare_list.size())
 				{
+					if (base_database_print_str != null)
+					{
+						System.err.println(base_database_print_str);
+						base_database_print_str = null;
+					}
 					String err_result = String.format("The size in NOT identical, %s: %d, %s: %d", 
 						FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[database_start_date_cfg.finance_data_type_index], 
 						data_compare_list.size(), 
