@@ -8,6 +8,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.*;
 
 
 public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserverInf
@@ -46,7 +47,7 @@ public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserver
 		{
 			String line = null;
 			String data_source;
-			String time_month_begin;
+			String time_month_start;
 			String time_month_end;
 			String time_month_today = null;
 OUT:
@@ -57,7 +58,6 @@ OUT:
 					FinanceRecorderCmnDef.format_debug("Ignore the entry: %s", line);
 					continue;
 				}
-
 				String[] entry_arr = line.split(" ");
 // Get the type of data source
 				data_source = entry_arr[0];
@@ -70,16 +70,16 @@ OUT:
 				}
 // Get the time of start time
 				if (entry_arr.length >= 2)
-					time_month_begin = entry_arr[1];
+					time_month_start = entry_arr[1];
 				else
 				{
 					if (time_month_today == null)
 						time_month_today = FinanceRecorderCmnDef.get_time_month_today();
-					time_month_begin = time_month_today;
+					time_month_start = time_month_today;
 				}
-				if (FinanceRecorderCmnDef.get_month_value_matcher(time_month_begin) == null)
+				if (FinanceRecorderCmnDef.get_month_value_matcher(time_month_start) == null)
 				{
-					FinanceRecorderCmnDef.format_error("Incorrect begin time format[%s] in config file", time_month_begin);
+					FinanceRecorderCmnDef.format_error("Incorrect start time format[%s] in config file", time_month_start);
 					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 					break OUT;
 				}
@@ -99,8 +99,11 @@ OUT:
 					break OUT;
 				}
 
-				FinanceRecorderCmnDef.format_debug("New entry in config [%s %s:%s]", data_source, time_month_begin, time_month_end);
-				FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = new FinanceRecorderCmnDef.TimeRangeCfg(time_month_begin, time_month_end);
+				FinanceRecorderCmnDef.format_debug("New entry in config [%s %s:%s]", data_source, time_month_start, time_month_end);
+//				FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = new FinanceRecorderCmnDef.TimeRangeCfg(time_month_start, time_month_end);
+				FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = get_time_range_cfg_object_after_adjustment(finance_data_type_index, time_month_start, time_month_end);
+				if (time_range_cfg == null)
+					return FinanceRecorderCmnDef.RET_FAILURE_UNEXPECTED_VALUE;
 				finance_source_time_range_table.put(finance_data_type_index, time_range_cfg);
 			}
 		}
@@ -122,12 +125,12 @@ OUT:
 		return ret;
 	}
 
-	public short update_by_parameter(LinkedList<Integer> finance_data_type_index_list, String time_month_begin, String time_month_end)
+	public short update_by_parameter(LinkedList<Integer> finance_data_type_index_list, String time_month_start, String time_month_end)
 	{
 // Check the time of start time
-		if (FinanceRecorderCmnDef.get_date_value_matcher(time_month_begin) == null)
+		if (FinanceRecorderCmnDef.get_date_value_matcher(time_month_start) == null)
 		{
-			FinanceRecorderCmnDef.format_error("Incorrect begin time format[%s] in config file", time_month_begin);
+			FinanceRecorderCmnDef.format_error("Incorrect start time format[%s] in config file", time_month_start);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 		}
 // Check the time of start time
@@ -139,11 +142,93 @@ OUT:
 
 		for (Integer finance_data_type_index : finance_data_type_index_list)
 		{
-			FinanceRecorderCmnDef.format_debug("New entry in config [%s %s:%s]", finance_data_type_index, time_month_begin, time_month_end);
-			FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = new FinanceRecorderCmnDef.TimeRangeCfg(time_month_begin, time_month_end);
+			FinanceRecorderCmnDef.format_debug("New entry in config [%s %s:%s]", finance_data_type_index, time_month_start, time_month_end);
+//			FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = new FinanceRecorderCmnDef.TimeRangeCfg(time_month_start, time_month_end);
+			FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = get_time_range_cfg_object_after_adjustment(finance_data_type_index, time_month_start, time_month_end);
+			if (time_range_cfg == null)
+				return FinanceRecorderCmnDef.RET_FAILURE_UNEXPECTED_VALUE;
 			finance_source_time_range_table.put(finance_data_type_index, time_range_cfg);
 		}
 		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	private short check_time_month_range_from_csv(int finance_data_type_index, StringBuilder csv_time_month_start_str_builder, StringBuilder csv_time_month_end_str_builder)
+	{
+		String command = String.format("ls %s | grep %s", FinanceRecorderCmnDef.DATA_FOLDER_NAME, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_data_type_index]);
+		FinanceRecorderCmnDef.format_debug("Find CSV time range by command: %s", finance_data_type_index, command);
+		StringBuilder result_str_builder = new StringBuilder();
+		short ret = FinanceRecorderCmnDef.execute_command(command, result_str_builder);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+		String result_list_str = result_str_builder.toString();
+		String[] result_list = result_list_str.split("\n");
+		int result_list_len = result_list.length;
+		if (result_list_len == 0)
+		{
+			FinanceRecorderCmnDef.format_error("No %s CSV files are found", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finance_data_type_index]);
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
+//		Pattern csv_filename_pattern = Pattern.compile(String.format("%s([\\d]{6}).csv", FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_data_type_index]));
+		Pattern csv_filename_pattern = Pattern.compile("([\\d]{6})");
+		Matcher csv_filename_start_matcher = csv_filename_pattern.matcher(result_list[0]);
+		if (!csv_filename_start_matcher.find())
+		{
+			FinanceRecorderCmnDef.format_error("Incorrect start time filename format: %s", result_list[0]);
+			return FinanceRecorderCmnDef.RET_FAILURE_UNEXPECTED_VALUE;
+		}
+		Matcher csv_filename_end_matcher = csv_filename_pattern.matcher(result_list[result_list_len - 1]);
+		if (!csv_filename_end_matcher.find())
+		{
+			FinanceRecorderCmnDef.format_error("Incorrect end time filename format: %s", result_list[result_list_len - 1]);
+			return FinanceRecorderCmnDef.RET_FAILURE_UNEXPECTED_VALUE;
+		}
+		String start_time_str = csv_filename_start_matcher.group(1);
+		String end_time_str = csv_filename_end_matcher.group(1);
+		int start_year = Integer.parseInt(start_time_str.substring(0, 4));
+		int start_month = Integer.parseInt(start_time_str.substring(4));
+		int end_year = Integer.parseInt(end_time_str.substring(0, 4));
+		int end_month = Integer.parseInt(end_time_str.substring(4));
+
+		csv_time_month_start_str_builder.append(String.format("%04d-%02d", start_year, start_month));
+		csv_time_month_end_str_builder.append(String.format("%04d-%02d", end_year, end_month));
+		FinanceRecorderCmnDef.format_debug("Time range from CSV: %s %s", csv_time_month_start_str_builder.toString(), csv_time_month_end_str_builder.toString());
+
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	private FinanceRecorderCmnDef.TimeRangeCfg get_time_range_cfg_object_after_adjustment(int finance_data_type_index, String time_month_start, String time_month_end)
+	{
+		StringBuilder csv_time_month_start_str_builder = new StringBuilder();
+		StringBuilder csv_time_month_end_str_builder = new StringBuilder();
+		short ret = check_time_month_range_from_csv(finance_data_type_index, csv_time_month_start_str_builder, csv_time_month_end_str_builder);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return null;
+		String month_start = time_month_start;
+		String month_end = time_month_end;
+		FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = null;
+		try
+		{
+			java.util.Date csv_start_month_date = FinanceRecorderCmnDef.get_month_date(csv_time_month_start_str_builder.toString());
+			java.util.Date csv_end_month_date = FinanceRecorderCmnDef.get_month_date(csv_time_month_end_str_builder.toString());
+			java.util.Date start_month_date = FinanceRecorderCmnDef.get_month_date(time_month_start);
+			java.util.Date end_month_date = FinanceRecorderCmnDef.get_month_date(time_month_end);
+			if (start_month_date.before(csv_start_month_date))
+			{
+				FinanceRecorderCmnDef.format_warn("Out of range in %s! Change start month from %s to %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finance_data_type_index], time_month_start, csv_time_month_start_str_builder.toString());
+				month_start = csv_time_month_start_str_builder.toString();
+			}
+			if (end_month_date.after(csv_end_month_date))
+			{
+				FinanceRecorderCmnDef.format_warn("Out of range in %s! Change end month from %s to %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finance_data_type_index], time_month_end, csv_time_month_end_str_builder.toString());
+				month_end = csv_time_month_end_str_builder.toString();
+			}
+			time_range_cfg = new FinanceRecorderCmnDef.TimeRangeCfg(month_start, month_end);
+		}
+		catch (ParseException e)
+		{
+			FinanceRecorderCmnDef.format_error("Incorrect time format, due to: %s", e.toString());
+		}
+		return time_range_cfg;
 	}
 
 	@Override

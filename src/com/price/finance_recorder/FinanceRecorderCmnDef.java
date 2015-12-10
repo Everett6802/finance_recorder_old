@@ -721,6 +721,13 @@ public class FinanceRecorderCmnDef
 		return date;
 	}
 
+	public static 	java.util.Date get_month_date(String date_str) throws ParseException
+	{
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM"); // your template here
+		java.util.Date date = formatter.parse(date_str);
+		return date;
+	}
+
 	public static final String get_month_str(java.util.Date date)
 	{
 		Calendar cal = Calendar.getInstance();
@@ -731,8 +738,8 @@ public class FinanceRecorderCmnDef
 
 	public static final String get_date_str(java.util.Date date)
 	{
-	    Calendar cal = Calendar.getInstance();
-	    cal.setTime(date);
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
 		String time_date = String.format("%04d-%02d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DATE));
 		return time_date;
 	}
@@ -797,17 +804,47 @@ public class FinanceRecorderCmnDef
 		try
 		{
 			CopyOption[] options = new CopyOption[]{StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES};
-			FinanceRecorderCmnDef.format_error("Copy File; From: %s, To: %s", src_filepath, dst_filepath);
+			format_debug("Copy File; From: %s, To: %s", src_filepath, dst_filepath);
 			Files.copy(src_filepath_obj, dst_filepath_obj, options);
 		}
 		catch (IOException e)
 		{
-			FinanceRecorderCmnDef.format_error("Fail to copy file, due to: %s", e.toString());
+			format_error("Fail to copy file, due to: %s", e.toString());
 			return FinanceRecorderCmnDef.RET_FAILURE_IO_OPERATION;
 		}
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
-	
+
+	public static short execute_command(String command, StringBuilder result_str_builder)
+	{
+		StringBuffer output = new StringBuffer();
+		Process p;
+		try
+		{
+// In order to run the pipe command successfully
+			String[] command_list = new String[] {"bash", "-c", command};
+			p = Runtime.getRuntime().exec(command_list);
+			p.waitFor();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			String line = "";
+			while ((line = reader.readLine())!= null)
+				output.append(line + "\n");
+		}
+		catch (InterruptedException e)
+		{
+			format_error("Interrupted exception occurs while running command: %s", command);
+			return RET_FAILURE_IO_OPERATION;
+		}
+		catch (IOException e)
+		{
+			format_error("Exception occurs while running command: %s, due to: %s", command, e.toString());
+			return RET_FAILURE_IO_OPERATION;
+		}
+
+		result_str_builder.append(output.toString());
+		return RET_SUCCESS;
+	}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Interface
 	public interface FinanceObserverInf

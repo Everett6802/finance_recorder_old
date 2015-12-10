@@ -32,12 +32,12 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 
 	private short set_mapping_time_range(FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg)
 	{
-    	int[] time_list = FinanceRecorderCmnDef.get_start_and_end_month_value_range(time_range_cfg);
-    	assert time_list != null : "time_list should NOT be NULL";
-    	int year_start = time_list[0]; 
-    	int month_start = time_list[1];
-    	int year_end = time_list[2];
-    	int month_end = time_list[3];
+		int[] time_list = FinanceRecorderCmnDef.get_start_and_end_month_value_range(time_range_cfg);
+		assert time_list != null : "time_list should NOT be NULL";
+		int year_start = time_list[0]; 
+		int month_start = time_list[1];
+		int year_end = time_list[2];
+		int month_end = time_list[3];
 		int year_cur = year_start;
 		int month_cur = month_start;
 		do 
