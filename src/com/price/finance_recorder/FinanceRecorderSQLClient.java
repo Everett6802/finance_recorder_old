@@ -25,9 +25,14 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 	private static final String FORMAT_CMD_SELECT_DATE_RULE_BETWEEN = " WHERE date BETWEEN ? AND ?";
 	private static final String FORMAT_CMD_SELECT_DATE_RULE_GREATER_THAN = " WHERE date > ?";
 	private static final String FORMAT_CMD_SELECT_DATE_RULE_LESS_THAN = " WHERE date < ?";
+	private static final String FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN = " WHERE date >= ?";
+	private static final String FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN = " WHERE date <= ?";
 	private static final String FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT = " WHERE month(date) BETWEEN '%d' AND '%d'";
 	private static final String FORMAT_CMD_SELECT_MONTH_RULE_GREATER_THAN_FORMAT = " WHERE month(date) > '%d'";
 	private static final String FORMAT_CMD_SELECT_MONTH_RULE_LESS_THAN_FORMAT = " WHERE month(date) < '%d'";
+	private static final String FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT = " WHERE month(date) >= '%d'";
+	private static final String FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT = " WHERE month(date) <= '%d'";
+
 // Delete Database command format
 	private static final String FORMAT_CMD_DELETE_DATABASE = "DROP DATABASE IF EXISTS %s";
 
@@ -482,13 +487,13 @@ OUT:
 				}
 				else if (time_range_cfg.time_start_str != null)
 				{
-					cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_GREATER_THAN;
+					cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN;
 					pstmt = connection.prepareStatement(cmd_select_data);
 					pstmt.setDate(1, sql_date_start);
 				}
 				else if (time_range_cfg.time_start_str != null)
 				{
-					cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_LESS_THAN;
+					cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN;
 					pstmt = connection.prepareStatement(cmd_select_data);
 					pstmt.setDate(1, sql_date_end);
 				}
@@ -521,7 +526,7 @@ OUT:
 				if (time_start_list == null)
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				int month_start = time_start_list[1];
-				cmd_select_data += String.format(FORMAT_CMD_SELECT_MONTH_RULE_GREATER_THAN_FORMAT, month_start);
+				cmd_select_data += String.format(FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT, month_start);
 			}
 			if (time_range_cfg.time_end_str != null)
 			{
@@ -529,7 +534,7 @@ OUT:
 				if (time_end_list == null)
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				int month_end = time_end_list[1];
-				cmd_select_data += String.format(FORMAT_CMD_SELECT_MONTH_RULE_LESS_THAN_FORMAT, month_end);
+				cmd_select_data += String.format(FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT, month_end);
 			}
 			try
 			{

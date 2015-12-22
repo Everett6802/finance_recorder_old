@@ -475,7 +475,7 @@ OUT:
 		ret = direct_string_to_file(total_time_range_str);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
-//		direct_string_to_stdout(total_time_range_str);
+		direct_string_to_stdout(total_time_range_str);
 
 // Copy the database time range config file to the FinanceAnalyzer project
 		String current_path = FinanceRecorderCmnDef.get_current_path();
@@ -496,7 +496,7 @@ OUT:
 // Start to check error in the database
 // Sort the data by date
 		Collections.sort(database_start_date_cfg_list);
-// Compare the date list in each datebase
+// Compare the date list in each database
 		LinkedList<String> data_base_list = null;
 		int data_base_list_size = 0;
 		int data_base_finance_data_type_index = -1;
@@ -530,6 +530,7 @@ OUT:
 					);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					return ret;
+
 				String start_compare_date = data_compare_list.get(0);
 				int start_index = data_base_list.indexOf(start_compare_date);
 				if (start_index == -1)

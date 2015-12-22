@@ -762,7 +762,7 @@ public class FinanceRecorderCmnDef
 		Matcher matcher = pattern.matcher(time_str);
 		if (!matcher.find())
 		{
-			FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
+//			FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
 			return null;
 		}
 		return matcher;
