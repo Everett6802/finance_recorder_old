@@ -3,17 +3,17 @@ package com.price.finance_recorder;
 import com.price.msg_dumper.*;
 
 
-public class MsgDumperWrapper 
+public class FinanceRecorderLogger 
 {
 	private static String[] facility_name = {"Log", "Com", "Sql", "Remote", "Syslog"};
 	private static short[] severity_arr = {MsgDumperCmnDef.MSG_DUMPER_SEVIRITY_ERROR, MsgDumperCmnDef.MSG_DUMPER_SEVIRITY_WARN};
 	private static short facility = MsgDumperCmnDef.MSG_DUMPER_FACILITY_LOG | MsgDumperCmnDef.MSG_DUMPER_FACILITY_SYSLOG;
 
-	private MsgDumperWrapper(){}
+	private FinanceRecorderLogger(){}
 	public Object clone() throws CloneNotSupportedException {throw new CloneNotSupportedException();}
 
-	private static MsgDumperWrapper msg_dumper_wrapper = null;
-	public static MsgDumperWrapper get_instance()
+	private static FinanceRecorderLogger msg_dumper_wrapper = null;
+	public static FinanceRecorderLogger get_instance()
 	{
 		if (msg_dumper_wrapper == null)
 			allocate();
@@ -25,7 +25,7 @@ public class MsgDumperWrapper
 	{
 		if (msg_dumper_wrapper == null)
 		{
-			msg_dumper_wrapper = new MsgDumperWrapper();
+			msg_dumper_wrapper = new FinanceRecorderLogger();
 			msg_dumper_wrapper.initialize();
 		} 
 	}
