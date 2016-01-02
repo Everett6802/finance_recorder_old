@@ -611,8 +611,29 @@ public class FinanceRecorderCmnDef
 //	public static final short NOTIFY_GET_DATA = 0;
 //	public static final int EACH_UPDATE_DATA_AMOUNT = 20;
 
+// Setter and Getter
+// Allow to assign the variable only once
+	private static boolean set_show_console = false;
+	private static boolean show_console = false;
+	public static void enable_show_console(boolean show)
+	{
+		if (!set_show_console)
+		{
+			show_console = show;
+			set_show_console = true;
+		}
+		else
+			warn("The show_console variable has already been Set");
+	}
+	public static boolean is_show_console(){return show_console;}
+
 	private static FinanceRecorderLogger finance_recorder_logger = FinanceRecorderLogger.get_instance();
 
+	public static void wait_for_death()
+	{
+		finance_recorder_logger.deinitialize();
+	}
+	
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Functions
 	private static final String get_code_position(){return String.format("%s:%d", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__());}
@@ -845,6 +866,11 @@ public class FinanceRecorderCmnDef
 		return RET_SUCCESS;
 	}
 
+	public static short send_email(String title, String address, String content)
+	{
+		return RET_SUCCESS;
+	}
+	
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Interface
 	public interface FinanceObserverInf

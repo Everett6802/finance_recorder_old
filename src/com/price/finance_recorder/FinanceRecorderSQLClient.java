@@ -91,7 +91,10 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		}
 		catch(ClassNotFoundException ex)
 		{
-			System.out.println("DriverClassNotFound:" + ex.toString());
+			String errmsg = "DriverClassNotFound:" + ex.toString();
+			FinanceRecorderCmnDef.error(errmsg);
+			if(FinanceRecorderCmnDef.is_show_console())
+				System.err.println(errmsg);
 			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_NO_DRIVER;
 		}
 		catch(SQLException ex) //有可能會產生sql exception
@@ -123,13 +126,19 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 				}
 				catch(SQLException ex1) //有可能會產生sql exception
 				{
-					System.out.println("Exception:" + ex1.toString());
+					String errmsg = "Exception:" + ex1.toString();
+					FinanceRecorderCmnDef.error(errmsg);
+					if(FinanceRecorderCmnDef.is_show_console())
+						System.err.println(errmsg);
 					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 				}
 			}
 			else
 			{
-				System.out.println("Exception:" + ex.toString());
+				String errmsg = "Exception:" + ex.toString();
+				FinanceRecorderCmnDef.error(errmsg);
+				if(FinanceRecorderCmnDef.is_show_console())
+					System.err.println(errmsg);
 				if (ex.getErrorCode() == 1049)
 					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_UNKNOWN_DATABASE;
 				else

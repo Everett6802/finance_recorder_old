@@ -544,7 +544,9 @@ OUT:
 				{
 					if (base_database_print_str != null)
 					{
-						System.err.println(base_database_print_str);
+						FinanceRecorderCmnDef.error(base_database_print_str);
+						if(FinanceRecorderCmnDef.is_show_console())
+							System.err.println(base_database_print_str);
 						base_database_print_str = null;
 					}
 					String err_result = String.format("The size in NOT identical, %s: %d, %s: %d", 
@@ -554,7 +556,8 @@ OUT:
 						sub_data_base_list.size()
 					);
 					FinanceRecorderCmnDef.format_error(err_result);
-					System.err.println(err_result);
+					if(FinanceRecorderCmnDef.is_show_console())
+						System.err.println(err_result);
 //					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_DATA_NOT_CONSISTENT;
 // Show the error detail
 					ListIterator<String> base_iter = sub_data_base_list.listIterator(); 
@@ -571,7 +574,8 @@ OUT:
 									base_data
 								);
 							FinanceRecorderCmnDef.format_error(err_result_detail);
-							System.err.println(err_result_detail);
+							if(FinanceRecorderCmnDef.is_show_console())
+								System.err.println(err_result_detail);
 							base_data = base_iter.next();
 //							return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_DATA_NOT_CONSISTENT;
 						}

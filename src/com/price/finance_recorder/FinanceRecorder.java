@@ -9,6 +9,29 @@ public class FinanceRecorder
 	static final String PARAM_SPLIT = ",";
 	static FinanceRecorderMgr finance_recorder_mgr = new FinanceRecorderMgr();
 
+	public static String __FILE__() 
+	{
+		StackTraceElement ste = Thread.currentThread().getStackTrace()[1];
+		return ste.getFileName();
+	}
+	
+	public static String get_current_path()
+	{
+		String cur_path = null;
+		try
+		{
+			File cur_dir = new File (".");
+			cur_path = cur_dir.getCanonicalPath();
+		}
+		catch(Exception e)
+		{
+			String msg = String.format("Fail to get the current path: %s", e.toString());
+			return null;
+		}
+		return cur_path;
+	}
+
+	
 	public static void main(String args[])
 	{
 		boolean use_multithread = false;
@@ -21,7 +44,7 @@ public class FinanceRecorder
 		String conf_filename = null;
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 
-		System.out.println("Parse the parameters......");
+//		System.out.println("Parse the parameters......");
 		int index = 0;
 		int index_offset = 0;
 		int args_len = args.length;
@@ -106,6 +129,11 @@ public class FinanceRecorder
 				check_error = true;
 				index_offset = 1;
 			}
+			else if (option.equals("--show_console"))
+			{
+				FinanceRecorderCmnDef.enable_show_console(true);
+				index_offset = 1;
+			}
 			else
 			{
 				show_error_and_exit(String.format("Unknown argument: %s", option));
@@ -124,78 +152,107 @@ public class FinanceRecorder
 // Remove the old database
 		if (remove_database_list != null)
 		{
-			System.out.println("Delete old MySQL data......");
+			if(FinanceRecorderCmnDef.is_show_console())
+				System.out.println("Delete old MySQL data......");
 			ret = delete_sql(remove_database_list);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				show_error_and_exit(String.format("Fail to remove the old MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		}
 
-// Setup the config for writing data into MySQL
-		if (conf_filename != null)
-		{
-			if (finance_data_type_index_list != null || time_month_begin != null || time_month_end != null)
-				System.out.println("Ingnore the Source/Time parameters");
-			System.out.printf("Setup config from file[%s]\n", conf_filename);
-			ret = setup_param(conf_filename);
-		}
-		else
-		{
-			if (finance_data_type_index_list == null)
-			{
-				System.out.println("Nothing to be written into MySQL");
-//				System.exit(0);
-			}
-			else
-				ret = setup_param(finance_data_type_index_list,time_month_begin, time_month_end);
-		}
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			show_error_and_exit(String.format("Fail to setup the parameters, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 
 		if (read_data)
 		{
 // Read the data from database
-			System.out.println("Read financial data from MySQL......");
+			if(FinanceRecorderCmnDef.is_show_console())
+				System.out.println("Read financial data from MySQL......");
 			ret = read_sql();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				show_error_and_exit(String.format("Fail to read financial data from MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		}
 		else
 		{
-// Write the financial data into MySQL
-			System.out.println("Write financial data into MySQL......");
-			long time_start_millisecond = System.currentTimeMillis();
-			ret = write_sql(use_multithread);
-			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				show_error_and_exit(String.format("Fail to write financial data into MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-			long time_end_millisecond = System.currentTimeMillis();
-			System.out.println("Write financial data into MySQL...... Done");
-
-			long time_lapse_millisecond = time_end_millisecond - time_start_millisecond;
-			if (time_lapse_millisecond >= 100 * 1000)
-				System.out.printf("######### Time Lapse: %d second(s) #########\n", (int)((time_end_millisecond - time_start_millisecond) / 1000));
-			else if (time_lapse_millisecond >= 10 * 1000)
-				System.out.printf("######### Time Lapse: %.1f second(s) #########\n", (float)((time_end_millisecond - time_start_millisecond) / 1000.0));
+			boolean need_write = true;
+// Setup the config for writing data into MySQL
+			if (conf_filename != null)
+			{
+				if(FinanceRecorderCmnDef.is_show_console())
+				{
+					if (finance_data_type_index_list != null || time_month_begin != null || time_month_end != null)
+						System.out.println("Ingnore the Source/Time parameters");
+					System.out.printf("Setup config from file[%s]\n", conf_filename);
+				}
+				ret = setup_param(conf_filename);
+			}
 			else
-				System.out.printf("######### Time Lapse: %.2f second(s) #########\n", (float)((time_end_millisecond - time_start_millisecond) / 1000.0));
+			{
+				if (finance_data_type_index_list == null)
+				{
+					String msg = "No data sources are selected to be written into";
+					FinanceRecorderCmnDef.debug(msg);
+					if (FinanceRecorderCmnDef.is_show_console())
+						System.out.println(msg);
+					need_write = false;
+//					System.exit(0);
+				}
+				else
+					ret = setup_param(finance_data_type_index_list,time_month_begin, time_month_end);
+			}
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				show_error_and_exit(String.format("Fail to setup the parameters, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+
+			if (need_write)
+			{
+// Write the financial data into MySQL
+				if(FinanceRecorderCmnDef.is_show_console())
+					System.out.println("Write financial data into MySQL......");
+
+				long time_start_millisecond = System.currentTimeMillis();
+				ret = write_sql(use_multithread);
+				if (FinanceRecorderCmnDef.CheckFailure(ret))
+					show_error_and_exit(String.format("Fail to write financial data into MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+				long time_end_millisecond = System.currentTimeMillis();
+
+				if(FinanceRecorderCmnDef.is_show_console())
+					System.out.println("Write financial data into MySQL...... Done");
+
+				long time_lapse_millisecond = time_end_millisecond - time_start_millisecond;
+				String time_lapse_msg; 
+				if (time_lapse_millisecond >= 100 * 1000)
+					time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+				else if (time_lapse_millisecond >= 10 * 1000)
+					time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+				else
+					time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+				FinanceRecorderCmnDef.info(time_lapse_msg);
+				if(FinanceRecorderCmnDef.is_show_console())
+					System.out.println(time_lapse_msg);				
+			}
+			if (FinanceRecorderCmnDef.is_show_console() && check_error)
+				System.out.println("Let's check error......");
+	// Check the database and find the time range of each database
+			ret = check_sql(check_error);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				show_error_and_exit(String.format("Fail to check data in MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		}
-		if (check_error)
-			System.out.println("Let's check error......");
-// Check the database and find the time range of each database
-		ret = check_sql(check_error);
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			show_error_and_exit(String.format("Fail to check data in MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 
 		System.exit(0);
 	}
 
 	private static void show_error_and_exit(String err_msg)
 	{
-		System.err.println(err_msg);
+		FinanceRecorderCmnDef.error(err_msg);
+		if (FinanceRecorderCmnDef.is_show_console())
+			System.err.println(err_msg);
 		System.exit(1);
 	}
 
 	private static void show_usage()
 	{
+		if (!FinanceRecorderCmnDef.is_show_console())
+		{
+			FinanceRecorderCmnDef.warn("STDOUT/STDERR are Disabled");
+			return;
+		}
 		System.out.println("====================== Usage ======================");
 		System.out.println("-h|--help\nDescription: The usage");
 		System.out.println("-r|--remove\nDescription: Remove some MySQL database(s)");
@@ -213,6 +270,7 @@ public class FinanceRecorder
 		System.out.println("--multi_thread\nDescription: Write into MySQL database by using multiple threads");
 		System.out.println("--read_data\nDescription: Read from MySQL database\nCaution: Ignore the attribute of writing data into MySQL");
 		System.out.println("--check_error\nDescription: Check if the data in the MySQL database is correct");
+		System.out.println("--enable_console\nDescription: Print the runtime info on STDOUT/STDERR");
 		System.out.println("===================================================");
 	}
 
@@ -254,9 +312,13 @@ public class FinanceRecorder
 		ret = finance_recorder_mgr.read(total_data_list);
 // Show the result statistics
 		int index = 0;
+		String msg;
 		for (List<String> data_list : total_data_list)
 		{
-			System.out.printf("%d: %d\n", index, data_list.size());
+			msg = String.format("%d: %d", index, data_list.size());
+			FinanceRecorderCmnDef.info(msg);
+			if (FinanceRecorderCmnDef.is_show_console())
+				System.out.println(msg);
 			index++;
 		}
 
