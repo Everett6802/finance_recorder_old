@@ -83,6 +83,7 @@ public class FinanceRecorderCmnDef
 	public static final String CONF_ENTRY_IGNORE_FLAG = "#";
 	public static final int MAX_CONCURRENT_THREAD = 4;
 	public static final int MAX_MONTH_RANGE_IN_THREAD = 3;
+	public static final String WORKDAY_CANLENDAR_FILENAME = ".workday_canlendar.conf";
 	public static final String DATABASE_TIME_RANGE_FILENAME = ".database_time_range.conf";
 	public static final String DATABASE_TIME_RANGE_FILE_DST_PROJECT_NAME = "finance_analyzer";
 
@@ -131,6 +132,90 @@ public class FinanceRecorderCmnDef
 	{
 		DatabaseEnableBatch_Yes,
 		DatabaseEnableBatch_No,
+	};
+
+	public static class TimeCfg
+	{
+		enum TimeType{TIME_MONTH, TIME_DATE};
+//		private static final String DELIM = "-";
+		private TimeType time_type;
+		private int year;
+		private int month;
+		private int day;
+		private String time_str;
+
+		public static int get_int_value(int year, int month, int day)
+		{
+			return ((year & 0xFFFF) << 16) | ((month & 0xFF) << 8) | (day & 0xFF);
+		}
+		public static int get_int_value(TimeCfg time_cfg)
+		{
+			return get_int_value(time_cfg.get_year(), time_cfg.get_month(), time_cfg.get_day());
+		}
+
+		public TimeCfg(String cur_time_str) // Format: "2015-09" or "2015-09-04"
+		{
+			time_str = String.format("%s", cur_time_str);
+			int[] date_list = get_date_value(cur_time_str);
+			if (date_list != null)
+			{
+// Try to parse the date format
+				year = date_list[0];
+				month = date_list[1];
+				day = date_list[2];
+				time_type = TimeType.TIME_DATE;
+			}
+			else
+			{
+				int[] month_list = get_month_value(cur_time_str);
+				if (month_list == null)
+				{
+					throw new IllegalArgumentException(String.format("Incorrect time format: %s", cur_time_str));
+				}
+// Try to parse the month format
+				year = date_list[0];
+				month = date_list[1];
+				time_type = TimeType.TIME_MONTH;
+			}
+		}
+
+		public TimeCfg(int cur_year, int cur_month)
+		{
+			year = cur_year;
+			month = cur_month;
+			day = 0;
+			time_str = String.format("%04d-%02d", year, month);
+			time_type = TimeType.TIME_MONTH;
+		}
+
+		public TimeCfg(int cur_year, int cur_month, int cur_day)
+		{
+			year = cur_year;
+			month = cur_month;
+			day = cur_day;
+			time_str = String.format("%04d-%02d-%02d", year, month, day);
+			time_type = TimeType.TIME_DATE;
+		}
+
+		public int get_year(){return year;}
+		public int get_month(){return month;}
+		public int get_day(){return day;}
+		@Override
+		public String toString(){return time_str;}
+
+		public boolean is_month_type(){return (time_type == TimeType.TIME_MONTH);}
+		@Override
+		public boolean equals(Object object)
+		{
+			TimeCfg another_time_cfg = (TimeCfg)object;
+			if (year != another_time_cfg.get_year())
+				return false;
+			if (month != another_time_cfg.get_month())
+				return false;
+			if (!is_month_type() && day != another_time_cfg.get_day())
+				return false;
+			return true;
+		}
 	};
 
 	public static class TimeRangeCfg
@@ -797,13 +882,28 @@ public class FinanceRecorderCmnDef
 		Matcher month_matcher = get_month_value_matcher(time_str);
 		if (month_matcher == null)
 		{
-			FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
+//			FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
 			return null;
 		}
 		int year = Integer.valueOf(month_matcher.group(1));
 		int month = Integer.valueOf(month_matcher.group(2));
 
 		return new int[]{year, month};
+	}
+
+	public static int[] get_date_value(String time_str)
+	{
+		Matcher date_matcher = get_date_value_matcher(time_str);
+		if (date_matcher == null)
+		{
+//			FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
+			return null;
+		}
+		int year = Integer.valueOf(date_matcher.group(1));
+		int month = Integer.valueOf(date_matcher.group(2));
+		int day = Integer.valueOf(date_matcher.group(3));
+
+		return new int[]{year, month, day};
 	}
 
 	public static int[] get_start_and_end_month_value_range(FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg)

@@ -80,7 +80,7 @@ public class FinanceRecorderLogger
 			System.exit(1);
 		}
 	}
-	
+
 	public void deinitialize()
 	{
 		MsgDumper.deinitialize();

@@ -2,11 +2,10 @@
 .project
 .settings/
 .database_time_range.conf
+.workday_canlendar.conf
 bin/
 lib/
 log/
 data/
 publish/
-
-
 
