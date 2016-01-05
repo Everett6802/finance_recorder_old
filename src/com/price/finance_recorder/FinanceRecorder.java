@@ -33,7 +33,6 @@ public class FinanceRecorder
 
 	public static void main(String args[])
 	{
-		FinanceRecorderCmnDef.debug("WTF");
 		boolean use_multithread = false;
 		boolean read_data = false;
 		boolean check_error = false;
