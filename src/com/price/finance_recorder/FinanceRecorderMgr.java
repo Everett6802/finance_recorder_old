@@ -13,6 +13,7 @@ import java.util.regex.*;
 
 public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserverInf
 {
+	private static FinanceRecorderWorkdayCalendar finance_recorder_workday_calendar = FinanceRecorderWorkdayCalendar.get_instance();
 	private HashMap<Integer,FinanceRecorderCmnDef.TimeRangeCfg> finance_source_time_range_table = new HashMap<Integer, FinanceRecorderCmnDef.TimeRangeCfg>();
 
 	public short update_by_config_file(String filename)

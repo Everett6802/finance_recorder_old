@@ -735,8 +735,6 @@ public class FinanceRecorderCmnDef
 		OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION,
 		FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION
 	};
-//	public static final short NOTIFY_GET_DATA = 0;
-//	public static final int EACH_UPDATE_DATA_AMOUNT = 20;
 
 // Setter and Getter
 // Allow to assign the variable only once
@@ -755,13 +753,8 @@ public class FinanceRecorderCmnDef
 	public static boolean is_show_console(){return show_console;}
 
 	private static FinanceRecorderLogger finance_recorder_logger = FinanceRecorderLogger.get_instance();
-	private static FinanceRecorderWorkdayCalendar finance_recorder_workday_calendar = FinanceRecorderWorkdayCalendar.get_instance();
+	public static void wait_for_logging(){finance_recorder_logger.deinitialize();}
 
-	public static void wait_for_death()
-	{
-		finance_recorder_logger.deinitialize();
-	}
-	
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Functions
 	private static final String get_code_position(){return String.format("%s:%d", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__());}

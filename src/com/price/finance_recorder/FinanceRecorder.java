@@ -31,7 +31,6 @@ public class FinanceRecorder
 		return cur_path;
 	}
 
-	
 	public static void main(String args[])
 	{
 		FinanceRecorderCmnDef.debug("WTF");
@@ -160,7 +159,6 @@ public class FinanceRecorder
 				show_error_and_exit(String.format("Fail to remove the old MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		}
 
-
 		if (read_data)
 		{
 // Read the data from database
@@ -236,6 +234,7 @@ public class FinanceRecorder
 				show_error_and_exit(String.format("Fail to check data in MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		}
 
+		FinanceRecorderCmnDef.wait_for_logging();
 		System.exit(0);
 	}
 
@@ -244,6 +243,7 @@ public class FinanceRecorder
 		FinanceRecorderCmnDef.error(err_msg);
 		if (FinanceRecorderCmnDef.is_show_console())
 			System.err.println(err_msg);
+		FinanceRecorderCmnDef.wait_for_logging();
 		System.exit(1);
 	}
 
