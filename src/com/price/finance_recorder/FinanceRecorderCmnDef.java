@@ -170,6 +170,7 @@ public class FinanceRecorderCmnDef
 				int[] month_list = get_month_value(cur_time_str);
 				if (month_list == null)
 				{
+//					assert false : String.format("Incorrect time format: %s", cur_time_str);
 					throw new IllegalArgumentException(String.format("Incorrect time format: %s", cur_time_str));
 				}
 // Try to parse the month format
@@ -220,65 +221,106 @@ public class FinanceRecorderCmnDef
 
 	public static class TimeRangeCfg
 	{
-		public enum TimeType{TIME_DATE, TIME_MONTH};
-		public TimeType time_type = null;
-		public String time_start_str = null; // Format: "2015-09" or "2015-09-04"
-		public String time_end_str = null; // Format: "2015-09" or "2015-09-04"
+		private TimeCfg time_start_cfg = null;
+		private TimeCfg time_end_cfg = null;
+		private String time_range_description = null;
+		private boolean type_is_month = false;
 
-		public TimeRangeCfg(String start_str, String end_str)
+		public static boolean time_in_range(TimeRangeCfg time_range_cfg, TimeCfg time_cfg)
 		{
-			TimeType time_type_start = null;
-			if (start_str != null)
+			int time_cfg_value = TimeCfg.get_int_value(time_cfg);
+			return (time_cfg_value >= TimeCfg.get_int_value(time_range_cfg.time_start_cfg) && time_cfg_value <= TimeCfg.get_int_value(time_range_cfg.time_end_cfg));
+		}
+
+		public static boolean time_in_range(TimeRangeCfg time_range_cfg, int year, int month, int day)
+		{
+			return time_in_range(time_range_cfg, new TimeCfg(year, month, day));
+		}
+
+		public TimeRangeCfg(String time_start_str, String time_end_str)
+		{
+			if (time_start_str != null)
+				time_start_cfg = new TimeCfg(time_start_str);
+			if (time_end_str != null)
+				time_end_cfg = new TimeCfg(time_end_str);
+			if (time_start_cfg != null && time_end_cfg != null)
 			{
-				if (get_date_value_matcher(start_str) != null)
-					time_type_start = TimeType.TIME_DATE;
-				else if (get_month_value_matcher(start_str) != null)
-					time_type_start = TimeType.TIME_MONTH;
-				else
-					assert false : String.format("Incorrect start time format: %s", start_str);
+				if (time_start_cfg.is_month_type() != time_end_cfg.is_month_type())
+				{
+					String errmsg = String.format("The time format is NOT identical, start: %s, end: %s", time_start_cfg.toString(), time_end_cfg.toString());
+					throw new IllegalArgumentException(errmsg);
+				}
+				type_is_month = time_start_cfg.is_month_type();
 			}
-			TimeType time_type_end = null;
-			if (end_str != null)
-			{
-				if (get_date_value_matcher(end_str) != null)
-					time_type_end = TimeType.TIME_DATE;
-				else if (get_month_value_matcher(end_str) != null)
-					time_type_end = TimeType.TIME_MONTH;
-				else
-					assert false : String.format("Incorrect end time format: %s", end_str);
-			}
-			if (time_type_start != null && time_type_end != null)
-			{
-				assert time_type_start != time_type_end : String.format("Start and end time format is NOT consistent: %s:%s", start_str, end_str);
-				time_type = time_type_start;
-			}
-			else if (time_type_start != null)
-				time_type = time_type_start;
-			else if (time_type_end != null)
-				time_type = time_type_end;
-//			assert time_type == TimeType.TIME_NONE : String.format("Incorrect time format: %s:%s", start_str, end_str); 
-			time_start_str = start_str;
-			time_end_str = end_str;
+			else if (time_start_cfg != null)
+				type_is_month = time_start_cfg.is_month_type();
+			else if (time_end_cfg != null)
+				type_is_month = time_end_cfg.is_month_type();
+			else
+				throw new IllegalArgumentException("time_start_str and time_end_str should NOT be NULL simultaneously");
 		}
 		public TimeRangeCfg(int year_start, int month_start, int year_end, int month_end)
 		{
-			time_type = TimeType.TIME_MONTH;
-			time_start_str = String.format("%04d-%02d", year_start, month_start);
-			time_end_str = String.format("%04d-%02d", year_end, month_end);
+			time_start_cfg = new TimeCfg(year_start, month_start);
+			time_end_cfg = new TimeCfg(year_end, month_end);
+			type_is_month = true;
 		}
 		public TimeRangeCfg(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end)
 		{
-			time_type = TimeType.TIME_DATE;
-			time_start_str = String.format("%04d-%02d-%02d", year_start, month_start, day_start);
-			time_end_str = String.format("%04d-%02d-%02d", year_end, month_end, day_end);
+			time_start_cfg = new TimeCfg(year_start, month_start, day_start);
+			time_end_cfg = new TimeCfg(year_end, month_end, day_end);
+			type_is_month = false;
 		}
-		public boolean is_date_type(){return time_type == TimeType.TIME_DATE;}
+
+		public boolean is_single_time()
+		{
+			if (time_start_cfg != null && time_end_cfg != null)
+				return time_start_cfg.equals(time_end_cfg);
+			return false;
+		}
+
+		public boolean is_month_type()
+		{
+			return type_is_month;
+		}
 
 		@Override
 		public String toString() 
 		{
-			// TODO Auto-generated method stub
-			return String.format("%s:%s", time_start_str, time_end_str);
+			if (time_range_description == null)
+			{
+				if (time_start_cfg != null && time_end_cfg != null)
+					time_range_description = String.format("%s:%s", time_start_cfg.toString(), time_end_cfg.toString());
+				else if (time_start_cfg != null)
+					time_range_description = String.format("%s", time_start_cfg.toString());
+				else if (time_end_cfg != null)
+					time_range_description = String.format("%s", time_end_cfg.toString());
+			}
+			return time_range_description;
+		}
+
+		public TimeCfg get_start_time()
+		{
+//			assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
+			return time_start_cfg;
+		}
+
+		public String get_start_time_str()
+		{
+//			assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
+			return (time_start_cfg != null ? time_start_cfg.toString() : null);
+		}
+
+		public TimeCfg get_end_time()
+		{
+//			assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
+			return time_end_cfg;
+		}
+
+		public String get_end_time_str()
+		{
+//			assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
+			return (time_end_cfg != null ? time_end_cfg.toString() : null);
 		}
 	};
 
@@ -713,6 +755,7 @@ public class FinanceRecorderCmnDef
 	public static boolean is_show_console(){return show_console;}
 
 	private static FinanceRecorderLogger finance_recorder_logger = FinanceRecorderLogger.get_instance();
+	private static FinanceRecorderWorkdayCalendar finance_recorder_workday_calendar = FinanceRecorderWorkdayCalendar.get_instance();
 
 	public static void wait_for_death()
 	{
@@ -907,11 +950,13 @@ public class FinanceRecorderCmnDef
 	}
 
 	public static int[] get_start_and_end_month_value_range(FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg)
-	{			
-		int[] month_value_start = get_month_value(time_range_cfg.time_start_str);
+	{	
+		assert time_range_cfg.get_start_time() != null : "The start time in time_rangte_cfg should NOT be NULL";
+		int[] month_value_start = get_month_value(time_range_cfg.get_start_time_str());
 		if (month_value_start == null)
 			return null;
-		int[] month_value_end = get_month_value(time_range_cfg.time_end_str);
+		assert time_range_cfg.get_end_time() != null : "The end time in time_rangte_cfg should NOT be NULL";
+		int[] month_value_end = get_month_value(time_range_cfg.get_end_time_str());
 		if (month_value_end == null)
 			return null;
 

@@ -468,17 +468,17 @@ OUT:
 				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 			}
 		}
-		else if (time_range_cfg.is_date_type())
+		else if (time_range_cfg.is_month_type())
 		{
 // Transform the date field into SQL Date format
 			java.sql.Date sql_date_start = null;
 			java.sql.Date sql_date_end = null;
 			try
 			{
-				if (time_range_cfg.time_start_str != null)
-					sql_date_start = transform_java_sql_date_format(time_range_cfg.time_start_str);
-				if (time_range_cfg.time_end_str != null)
-					sql_date_end = transform_java_sql_date_format(time_range_cfg.time_end_str);
+				if (time_range_cfg.get_start_time_str() != null)
+					sql_date_start = transform_java_sql_date_format(time_range_cfg.get_start_time_str());
+				if (time_range_cfg.get_end_time_str() != null)
+					sql_date_end = transform_java_sql_date_format(time_range_cfg.get_end_time_str());
 			}
 			catch (ParseException e)
 			{
@@ -487,20 +487,20 @@ OUT:
 			}
 			try
 			{
-				if (time_range_cfg.time_start_str != null && time_range_cfg.time_end_str != null)
+				if (time_range_cfg.get_start_time_str() != null && time_range_cfg.get_end_time_str() != null)
 				{
 					cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_BETWEEN;
 					pstmt = connection.prepareStatement(cmd_select_data);
 					pstmt.setDate(1, sql_date_start);
 					pstmt.setDate(2, sql_date_end);
 				}
-				else if (time_range_cfg.time_start_str != null)
+				else if (time_range_cfg.get_start_time_str() != null)
 				{
 					cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN;
 					pstmt = connection.prepareStatement(cmd_select_data);
 					pstmt.setDate(1, sql_date_start);
 				}
-				else if (time_range_cfg.time_start_str != null)
+				else if (time_range_cfg.get_start_time_str() != null)
 				{
 					cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN;
 					pstmt = connection.prepareStatement(cmd_select_data);
@@ -519,27 +519,27 @@ OUT:
 		}
 		else
 		{
-			if (time_range_cfg.time_start_str != null && time_range_cfg.time_end_str != null)
+			if (time_range_cfg.get_start_time_str() != null && time_range_cfg.get_end_time_str() != null)
 			{
-				int[] time_start_list = FinanceRecorderCmnDef.get_month_value(time_range_cfg.time_start_str);
-				int[] time_end_list = FinanceRecorderCmnDef.get_month_value(time_range_cfg.time_end_str);
+				int[] time_start_list = FinanceRecorderCmnDef.get_month_value(time_range_cfg.get_start_time_str());
+				int[] time_end_list = FinanceRecorderCmnDef.get_month_value(time_range_cfg.get_end_time_str());
 				if (time_start_list == null || time_end_list == null)
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				int month_start = time_start_list[1];
 				int month_end = time_end_list[1];
 				cmd_select_data += String.format(FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT, month_start, month_end);
 			}
-			if (time_range_cfg.time_start_str != null)
+			if (time_range_cfg.get_start_time_str() != null)
 			{
-				int[] time_start_list = FinanceRecorderCmnDef.get_month_value(time_range_cfg.time_start_str);
+				int[] time_start_list = FinanceRecorderCmnDef.get_month_value(time_range_cfg.get_start_time_str());
 				if (time_start_list == null)
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				int month_start = time_start_list[1];
 				cmd_select_data += String.format(FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT, month_start);
 			}
-			if (time_range_cfg.time_end_str != null)
+			if (time_range_cfg.get_end_time_str() != null)
 			{
-				int[] time_end_list = FinanceRecorderCmnDef.get_month_value(time_range_cfg.time_end_str);
+				int[] time_end_list = FinanceRecorderCmnDef.get_month_value(time_range_cfg.get_end_time_str());
 				if (time_end_list == null)
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				int month_end = time_end_list[1];

@@ -373,7 +373,7 @@ OUT:
 		}
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		database_start_date_builder.append(database_time_range_cfg.time_start_str);
+		database_start_date_builder.append(database_time_range_cfg.get_start_time_str());
 		return ret;
 	}
 
