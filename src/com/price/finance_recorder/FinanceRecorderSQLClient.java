@@ -442,7 +442,7 @@ OUT:
 		return  FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	short select_data(String table_name, String cmd_table_field, FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg, List<String> data_list)
+	short select_data(String table_name, String cmd_table_field, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, List<String> data_list)
 	{
 // Check if the connection is established
 		if (connection == null)
@@ -521,8 +521,8 @@ OUT:
 		{
 			if (time_range_cfg.get_start_time_str() != null && time_range_cfg.get_end_time_str() != null)
 			{
-				int[] time_start_list = FinanceRecorderCmnDef.get_month_value(time_range_cfg.get_start_time_str());
-				int[] time_end_list = FinanceRecorderCmnDef.get_month_value(time_range_cfg.get_end_time_str());
+				int[] time_start_list = FinanceRecorderCmnClass.TimeCfg.get_month_value(time_range_cfg.get_start_time_str());
+				int[] time_end_list = FinanceRecorderCmnClass.TimeCfg.get_month_value(time_range_cfg.get_end_time_str());
 				if (time_start_list == null || time_end_list == null)
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				int month_start = time_start_list[1];
@@ -531,7 +531,7 @@ OUT:
 			}
 			if (time_range_cfg.get_start_time_str() != null)
 			{
-				int[] time_start_list = FinanceRecorderCmnDef.get_month_value(time_range_cfg.get_start_time_str());
+				int[] time_start_list = FinanceRecorderCmnClass.TimeCfg.get_month_value(time_range_cfg.get_start_time_str());
 				if (time_start_list == null)
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				int month_start = time_start_list[1];
@@ -539,7 +539,7 @@ OUT:
 			}
 			if (time_range_cfg.get_end_time_str() != null)
 			{
-				int[] time_end_list = FinanceRecorderCmnDef.get_month_value(time_range_cfg.get_end_time_str());
+				int[] time_end_list = FinanceRecorderCmnClass.TimeCfg.get_month_value(time_range_cfg.get_end_time_str());
 				if (time_end_list == null)
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				int month_end = time_end_list[1];
@@ -637,7 +637,7 @@ OUT:
 		return  FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	short select_data(String table_name, FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg, List<String> data_list){return select_data(table_name, "*", time_range_cfg, data_list);}
+	short select_data(String table_name, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, List<String> data_list){return select_data(table_name, "*", time_range_cfg, data_list);}
 	short select_data(String table_name, String cmd_table_field, List<String> data_list){return select_data(table_name, cmd_table_field, null, data_list);}
 	short select_data(String table_name, List<String> data_list){return select_data(table_name, "*", null, data_list);}
 }

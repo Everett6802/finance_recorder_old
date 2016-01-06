@@ -6,9 +6,9 @@ import java.util.concurrent.Callable;
 public class FinanceRecorderWriterTask implements Callable<Integer>
 {
 	private FinanceRecorderDataHandler finance_recorder_writer = null;
-	private FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = null;
+	private FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
 
-    public FinanceRecorderWriterTask(FinanceRecorderDataHandler finance_recorder_writer_obj, FinanceRecorderCmnDef.TimeRangeCfg cfg)
+    public FinanceRecorderWriterTask(FinanceRecorderDataHandler finance_recorder_writer_obj, FinanceRecorderCmnClass.TimeRangeCfg cfg)
     {
     	finance_recorder_writer = finance_recorder_writer_obj;
     	time_range_cfg = cfg;

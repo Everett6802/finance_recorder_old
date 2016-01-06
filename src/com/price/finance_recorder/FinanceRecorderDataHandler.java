@@ -21,7 +21,7 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 	private FinanceRecorderSQLClient sql_client_diff = null;
 	private HashMap<Integer, LinkedList<Integer>> finance_source_time_range_table = new HashMap<Integer, LinkedList<Integer>>();
 
-	private FinanceRecorderCmnDef.TimeRangeCfg database_time_range_cfg = null;
+	private FinanceRecorderCmnClass.TimeRangeCfg database_time_range_cfg = null;
 
 	public FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceDataType finance_data_type)
 	{
@@ -30,9 +30,9 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 		sql_client = new FinanceRecorderSQLClient(finance_data_type, this);
 	}
 
-	private short set_mapping_time_range(FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg)
+	private short set_mapping_time_range(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg)
 	{
-		int[] time_list = FinanceRecorderCmnDef.get_start_and_end_month_value_range(time_range_cfg);
+		int[] time_list = FinanceRecorderCmnClass.TimeRangeCfg.get_start_and_end_month_value_range(time_range_cfg);
 		assert time_list != null : "time_list should NOT be NULL";
 		int year_start = time_list[0]; 
 		int month_start = time_list[1];
@@ -62,7 +62,7 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 
 	final String get_description(){return FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index];}
 
-	short write_to_sql(FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type, FinanceRecorderCmnDef.DatabaseEnableBatchType database_enable_batch_type)
+	short write_to_sql(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type, FinanceRecorderCmnDef.DatabaseEnableBatchType database_enable_batch_type)
 	{
 // Set the mapping table of reading the specific CSV files and writing correct SQL database
 		short ret = set_mapping_time_range(time_range_cfg);
@@ -130,13 +130,13 @@ OUT:
 		return ret;
 	}
 
-	short read_from_sql(FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg, String cmd_table_field, LinkedList<String> data_list)
+	short read_from_sql(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String cmd_table_field, LinkedList<String> data_list)
 	{
 // Set the mapping table of reading the specific CSV files and writing correct SQL database
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 
 		String csv_filepath = null;
-		int[] time_list = FinanceRecorderCmnDef.get_start_and_end_month_value_range(time_range_cfg);
+		int[] time_list = FinanceRecorderCmnClass.TimeRangeCfg.get_start_and_end_month_value_range(time_range_cfg);
 		if (time_list == null)
 		{
 			FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_range_cfg.toString());
@@ -175,7 +175,7 @@ OUT:
 			else
 				time_end_str = null;
 			String table_name = String.format("year%04d", year);
-			ret = sql_client.select_data(table_name, cmd_table_field, new FinanceRecorderCmnDef.TimeRangeCfg(time_start_str, time_end_str), data_list);
+			ret = sql_client.select_data(table_name, cmd_table_field, new FinanceRecorderCmnClass.TimeRangeCfg(time_start_str, time_end_str), data_list);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				break OUT;
 			new_sum = data_list.size();
@@ -300,7 +300,7 @@ OUT:
 			FinanceRecorderCmnDef.format_error("Fail to find any date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], end_table_name);
 			return ret;
 		}
-		database_time_range_cfg = new FinanceRecorderCmnDef.TimeRangeCfg(start_date_list.getFirst(), end_date_list.getLast());
+		database_time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(start_date_list.getFirst(), end_date_list.getLast());
 // Destroy the connection to the MySQL
 		sql_client.disconnect_mysql();
 		return ret;
@@ -313,7 +313,7 @@ OUT:
 			FinanceRecorderCmnDef.format_error("Time range should be found first in %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index]);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
-		int[] time_list = FinanceRecorderCmnDef.get_start_and_end_month_value_range(database_time_range_cfg);
+		int[] time_list = FinanceRecorderCmnClass.TimeRangeCfg.get_start_and_end_month_value_range(database_time_range_cfg);
 		if (time_list == null)
 		{
 			FinanceRecorderCmnDef.format_error("Incorrect time format: %s", database_time_range_cfg.toString());

@@ -14,7 +14,7 @@ import java.util.regex.*;
 public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserverInf
 {
 	private static FinanceRecorderWorkdayCalendar finance_recorder_workday_calendar = FinanceRecorderWorkdayCalendar.get_instance();
-	private HashMap<Integer,FinanceRecorderCmnDef.TimeRangeCfg> finance_source_time_range_table = new HashMap<Integer, FinanceRecorderCmnDef.TimeRangeCfg>();
+	private HashMap<Integer,FinanceRecorderCmnClass.TimeRangeCfg> finance_source_time_range_table = new HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg>();
 
 	public short update_by_config_file(String filename)
 	{
@@ -78,7 +78,7 @@ OUT:
 						time_month_today = FinanceRecorderCmnDef.get_time_month_today();
 					time_month_start = time_month_today;
 				}
-				if (FinanceRecorderCmnDef.get_month_value_matcher(time_month_start) == null)
+				if (FinanceRecorderCmnClass.TimeCfg.get_month_value_matcher(time_month_start) == null)
 				{
 					FinanceRecorderCmnDef.format_error("Incorrect start time format[%s] in config file", time_month_start);
 					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
@@ -93,7 +93,7 @@ OUT:
 						time_month_today = FinanceRecorderCmnDef.get_time_month_today();
 					time_month_end = time_month_today;
 				}
-				if (FinanceRecorderCmnDef.get_month_value_matcher(time_month_end) == null)
+				if (FinanceRecorderCmnClass.TimeCfg.get_month_value_matcher(time_month_end) == null)
 				{
 					FinanceRecorderCmnDef.format_error("Incorrect end time format[%s] in config file", time_month_end);
 					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
@@ -101,8 +101,8 @@ OUT:
 				}
 
 				FinanceRecorderCmnDef.format_debug("New entry in config [%s %s:%s]", data_source, time_month_start, time_month_end);
-//				FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = new FinanceRecorderCmnDef.TimeRangeCfg(time_month_start, time_month_end);
-				FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = get_time_range_cfg_object_after_adjustment(finance_data_type_index, time_month_start, time_month_end);
+//				FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(time_month_start, time_month_end);
+				FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = get_time_range_cfg_object_after_adjustment(finance_data_type_index, time_month_start, time_month_end);
 				if (time_range_cfg == null)
 					return FinanceRecorderCmnDef.RET_FAILURE_UNEXPECTED_VALUE;
 				finance_source_time_range_table.put(finance_data_type_index, time_range_cfg);
@@ -129,13 +129,13 @@ OUT:
 	public short update_by_parameter(LinkedList<Integer> finance_data_type_index_list, String time_month_start, String time_month_end)
 	{
 // Check the time of start time
-		if (FinanceRecorderCmnDef.get_date_value_matcher(time_month_start) == null)
+		if (FinanceRecorderCmnClass.TimeCfg.get_date_value_matcher(time_month_start) == null)
 		{
 			FinanceRecorderCmnDef.format_error("Incorrect start time format[%s] in config file", time_month_start);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 		}
 // Check the time of start time
-		if (FinanceRecorderCmnDef.get_date_value_matcher(time_month_end) == null)
+		if (FinanceRecorderCmnClass.TimeCfg.get_date_value_matcher(time_month_end) == null)
 		{
 			FinanceRecorderCmnDef.format_error("Incorrect end time format[%s] in config file", time_month_end);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
@@ -144,8 +144,8 @@ OUT:
 		for (Integer finance_data_type_index : finance_data_type_index_list)
 		{
 			FinanceRecorderCmnDef.format_debug("New entry in config [%s %s:%s]", finance_data_type_index, time_month_start, time_month_end);
-//			FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = new FinanceRecorderCmnDef.TimeRangeCfg(time_month_start, time_month_end);
-			FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = get_time_range_cfg_object_after_adjustment(finance_data_type_index, time_month_start, time_month_end);
+//			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(time_month_start, time_month_end);
+			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = get_time_range_cfg_object_after_adjustment(finance_data_type_index, time_month_start, time_month_end);
 			if (time_range_cfg == null)
 				return FinanceRecorderCmnDef.RET_FAILURE_UNEXPECTED_VALUE;
 			finance_source_time_range_table.put(finance_data_type_index, time_range_cfg);
@@ -197,7 +197,7 @@ OUT:
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	private FinanceRecorderCmnDef.TimeRangeCfg get_time_range_cfg_object_after_adjustment(int finance_data_type_index, String time_month_start, String time_month_end)
+	private FinanceRecorderCmnClass.TimeRangeCfg get_time_range_cfg_object_after_adjustment(int finance_data_type_index, String time_month_start, String time_month_end)
 	{
 		StringBuilder csv_time_month_start_str_builder = new StringBuilder();
 		StringBuilder csv_time_month_end_str_builder = new StringBuilder();
@@ -206,7 +206,7 @@ OUT:
 			return null;
 		String month_start = time_month_start;
 		String month_end = time_month_end;
-		FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = null;
+		FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
 		try
 		{
 			java.util.Date csv_start_month_date = FinanceRecorderCmnDef.get_month_date(csv_time_month_start_str_builder.toString());
@@ -223,7 +223,7 @@ OUT:
 				FinanceRecorderCmnDef.format_warn("Out of range in %s! Change end month from %s to %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finance_data_type_index], time_month_end, csv_time_month_end_str_builder.toString());
 				month_end = csv_time_month_end_str_builder.toString();
 			}
-			time_range_cfg = new FinanceRecorderCmnDef.TimeRangeCfg(month_start, month_end);
+			time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(month_start, month_end);
 		}
 		catch (ParseException e)
 		{
@@ -251,11 +251,11 @@ OUT:
 	{
 // Write the data into MySQL one by one
 		short ret;
-		for (Map.Entry<Integer, FinanceRecorderCmnDef.TimeRangeCfg> entry : finance_source_time_range_table.entrySet())
+		for (Map.Entry<Integer, FinanceRecorderCmnClass.TimeRangeCfg> entry : finance_source_time_range_table.entrySet())
 		{
 			int finance_data_type_index = entry.getKey();
 			FinanceRecorderDataHandler finance_recorder_data_handler = new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceDataType.valueOf(finance_data_type_index));
-			FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = entry.getValue();
+			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = entry.getValue();
 
 			FinanceRecorderCmnDef.format_debug("Try to write data [%s %s] into MySQL......", finance_recorder_data_handler.get_description(), time_range_cfg.toString());
 // Write the data into MySQL
@@ -274,13 +274,13 @@ OUT:
 OUT:
 		do
 		{
-			for (Map.Entry<Integer, FinanceRecorderCmnDef.TimeRangeCfg> entry : finance_source_time_range_table.entrySet())
+			for (Map.Entry<Integer, FinanceRecorderCmnClass.TimeRangeCfg> entry : finance_source_time_range_table.entrySet())
 			{
 				int finance_data_type_index = entry.getKey();
 //				FinanceRecorderWriter finance_recorder_data_handler = new FinanceRecorderWriter(FinanceRecorderCmnDef.financeDataType.valueOf(finance_data_type_index));
-				FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = entry.getValue();
+				FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = entry.getValue();
 // Setup the time range
-				int[] time_list = FinanceRecorderCmnDef.get_start_and_end_month_value_range(time_range_cfg);
+				int[] time_list = FinanceRecorderCmnClass.TimeRangeCfg.get_start_and_end_month_value_range(time_range_cfg);
 				if (time_list == null)
 				{
 					ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
@@ -314,7 +314,7 @@ OUT:
 // Write the data into MySQL
 					FinanceRecorderDataHandler finance_recorder_data_handler = new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceDataType.valueOf(finance_data_type_index));
 //					FinanceRecorderCmnDef.format_debug("Try to write data [%s %04d%02d:%04d%02d] into MySQL......", finance_recorder_data_handler.get_description(), year_start, month_start, year_cur_end, month_cur_end);
-					FinanceRecorderWriterTask task = new FinanceRecorderWriterTask(new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceDataType.valueOf(finance_data_type_index)), new FinanceRecorderCmnDef.TimeRangeCfg(year_start, month_start, year_cur_end, month_cur_end));
+					FinanceRecorderWriterTask task = new FinanceRecorderWriterTask(new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceDataType.valueOf(finance_data_type_index)), new FinanceRecorderCmnClass.TimeRangeCfg(year_start, month_start, year_cur_end, month_cur_end));
 					Future<Integer> res = executor.submit(task);
 //					try{Thread.sleep(5);}
 //					catch (InterruptedException e){}
@@ -364,12 +364,12 @@ OUT:
 	{
 // Write the data into MySQL one by one
 		short ret;
-		for (Map.Entry<Integer, FinanceRecorderCmnDef.TimeRangeCfg> entry : finance_source_time_range_table.entrySet())
+		for (Map.Entry<Integer, FinanceRecorderCmnClass.TimeRangeCfg> entry : finance_source_time_range_table.entrySet())
 		{
 //			LinkedList<String> data_list = new LinkedList<String>();
 			int finance_data_type_index = entry.getKey();
 			FinanceRecorderDataHandler finance_recorder_data_handler = new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceDataType.valueOf(finance_data_type_index));
-			FinanceRecorderCmnDef.TimeRangeCfg time_range_cfg = entry.getValue();
+			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = entry.getValue();
 
 			FinanceRecorderCmnDef.format_debug("Try to read data [%s %s] from MySQL......", finance_recorder_data_handler.get_description(), time_range_cfg.toString());
 // Read the data from MySQL
@@ -511,7 +511,7 @@ OUT:
 				data_base_list = new LinkedList<String>();
 //				ret = finance_recorder_data_handler.find_database_time_range();
 				ret = finance_recorder_data_handler.read_from_sql(
-						new FinanceRecorderCmnDef.TimeRangeCfg(FinanceRecorderCmnDef.get_date_str(database_start_date_cfg.database_start_date), FinanceRecorderCmnDef.get_time_date_today()), 
+						new FinanceRecorderCmnClass.TimeRangeCfg(FinanceRecorderCmnDef.get_date_str(database_start_date_cfg.database_start_date), FinanceRecorderCmnDef.get_time_date_today()), 
 						FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[database_start_date_cfg.finance_data_type_index][0], 
 						data_base_list
 					);
@@ -525,7 +525,7 @@ OUT:
 			{
 				LinkedList<String> data_compare_list = new LinkedList<String>();
 				ret = finance_recorder_data_handler.read_from_sql(
-						new FinanceRecorderCmnDef.TimeRangeCfg(FinanceRecorderCmnDef.get_date_str(database_start_date_cfg.database_start_date), FinanceRecorderCmnDef.get_time_date_today()), 
+						new FinanceRecorderCmnClass.TimeRangeCfg(FinanceRecorderCmnDef.get_date_str(database_start_date_cfg.database_start_date), FinanceRecorderCmnDef.get_time_date_today()), 
 						FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[database_start_date_cfg.finance_data_type_index][0], 
 						data_compare_list
 					);
@@ -656,15 +656,15 @@ OUT:
 	public short run_daily()
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		ArrayList<FinanceRecorderCmnDef.TimeCfg> workday_array_next = new ArrayList<FinanceRecorderCmnDef.TimeCfg>();
+		ArrayList<FinanceRecorderCmnClass.TimeCfg> workday_array_next = new ArrayList<FinanceRecorderCmnClass.TimeCfg>();
 		ret = finance_recorder_workday_calendar.get_next_workday_array(2015, 1, 6, workday_array_next, 40);
-		for (FinanceRecorderCmnDef.TimeCfg workday_cfg : workday_array_next)
+		for (FinanceRecorderCmnClass.TimeCfg workday_cfg : workday_array_next)
 			System.out.printf("%s ", workday_cfg.toString());
 		System.out.printf("\n");
 
-		ArrayList<FinanceRecorderCmnDef.TimeCfg> workday_array_prev = new ArrayList<FinanceRecorderCmnDef.TimeCfg>();
+		ArrayList<FinanceRecorderCmnClass.TimeCfg> workday_array_prev = new ArrayList<FinanceRecorderCmnClass.TimeCfg>();
 		ret = finance_recorder_workday_calendar.get_prev_workday_array(2015, 1, 6, workday_array_prev, 60);
-		for (FinanceRecorderCmnDef.TimeCfg workday_cfg : workday_array_prev)
+		for (FinanceRecorderCmnClass.TimeCfg workday_cfg : workday_array_prev)
 			System.out.printf("%s ", workday_cfg.toString());
 		System.out.printf("\n");
 		return ret;
