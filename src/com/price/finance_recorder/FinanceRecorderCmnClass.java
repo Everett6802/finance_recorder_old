@@ -1,5 +1,6 @@
 package com.price.finance_recorder;
 
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -256,4 +257,65 @@ public class FinanceRecorderCmnClass
 		}
 	};
 
+	public static class SingleTimeRangeCfg extends TimeRangeCfg
+	{
+		public SingleTimeRangeCfg(String time_str) {super(time_str, time_str);} // Single day
+		SingleTimeRangeCfg(int year, int month) {super(year, month, year, month);} // Single month
+		SingleTimeRangeCfg(int year, int month, int day) {super(year, month, day, year, month, day);} // Single day
+	};
+
+	public static class FinanceDataArrayBase<T>
+	{
+		protected static int DEF_ARRAY_SIZE = 512;
+
+//		protected T[] array_data;
+		protected ArrayList<T> array_data = null;
+		protected int array_size;
+//		protected int array_pos;
+
+		public FinanceDataArrayBase()
+		{
+//			array_data = (T[]) new Object [array_size];
+			array_data = new ArrayList<T>();
+			array_size = 0;
+		}
+
+//		protected void alloc_new()
+//		{
+//			
+//		}
+
+		public boolean is_empty(){return array_data.isEmpty();}
+		public int get_size(){return array_size;}
+//		public int get_array_size(){return array_size;}
+//		public final T[] get_data_array(){return array_data;}
+		public final ArrayList<T> get_data_array(){return array_data;}
+
+		public void add(T data)
+		{
+//			if (array_pos + 1 >= array_size)
+//				alloc_new();
+//
+//			array_data[array_pos++] = data;
+			array_data.add(data);
+			array_size++;
+		}
+
+		public final T get_index(int index)
+		{
+			assert array_data != null : "array_data == NULL";
+			if(index < 0 && index >= array_size)
+			{
+				String errmsg = String.format("index[%d] is out of range: (0, %d)", index, array_size);
+				FinanceRecorderCmnDef.error(errmsg);
+				throw new IndexOutOfBoundsException(errmsg);
+			}
+//			return array_data[index];
+			return array_data.get(index);
+		}
+	};
+
+	public static class FinanceIntDataArray extends FinanceDataArrayBase<Integer>{};
+	public static class FinanceLongDataArray extends FinanceDataArrayBase<Long>{};
+	public static class FinanceFloatDataArray extends FinanceDataArrayBase<Float>{};
 }
