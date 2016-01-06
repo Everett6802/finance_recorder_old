@@ -652,4 +652,21 @@ OUT:
 	}
 	private short direct_string_to_file(String data){return direct_string_to_output_stream(data, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);}
 	private short direct_string_to_stdout(String data){return direct_string_to_output_stream(data, null);}
+
+	public short run_daily()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		ArrayList<FinanceRecorderCmnDef.TimeCfg> workday_array_next = new ArrayList<FinanceRecorderCmnDef.TimeCfg>();
+		ret = finance_recorder_workday_calendar.get_next_workday_array(2015, 1, 6, workday_array_next, 40);
+		for (FinanceRecorderCmnDef.TimeCfg workday_cfg : workday_array_next)
+			System.out.printf("%s ", workday_cfg.toString());
+		System.out.printf("\n");
+
+		ArrayList<FinanceRecorderCmnDef.TimeCfg> workday_array_prev = new ArrayList<FinanceRecorderCmnDef.TimeCfg>();
+		ret = finance_recorder_workday_calendar.get_prev_workday_array(2015, 1, 6, workday_array_prev, 60);
+		for (FinanceRecorderCmnDef.TimeCfg workday_cfg : workday_array_prev)
+			System.out.printf("%s ", workday_cfg.toString());
+		System.out.printf("\n");
+		return ret;
+	}
 }

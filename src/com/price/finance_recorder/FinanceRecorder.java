@@ -33,6 +33,8 @@ public class FinanceRecorder
 
 	public static void main(String args[])
 	{
+		finance_recorder_mgr.run_daily();
+
 		boolean use_multithread = false;
 		boolean read_data = false;
 		boolean check_error = false;
