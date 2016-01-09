@@ -60,7 +60,7 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	final String get_description(){return FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index];}
+	final String get_description(){return FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index];}
 
 	short write_to_sql(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type, FinanceRecorderCmnDef.DatabaseEnableBatchType database_enable_batch_type)
 	{
@@ -271,7 +271,7 @@ OUT:
 
 		int start_year = year_array[0];
 		int end_year = year_array[1];
-		FinanceRecorderCmnDef.format_debug("Search for the time range from year %d-%d in %s", start_year, end_year, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index]);
+		FinanceRecorderCmnDef.format_debug("Search for the time range from year %d-%d in %s", start_year, end_year, FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index]);
 		String start_table_name = String.format("year%04d", start_year);
 		String end_table_name = String.format("year%04d", end_year);
 // Find the start date
@@ -279,12 +279,12 @@ OUT:
 		ret = sql_client.select_data(start_table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finace_data_type_index][0], start_date_list);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
-			FinanceRecorderCmnDef.format_error("Fail to find the start date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], start_table_name);
+			FinanceRecorderCmnDef.format_error("Fail to find the start date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index], start_table_name);
 			return ret;
 		}
 		if (start_date_list.isEmpty())
 		{
-			FinanceRecorderCmnDef.format_error("Fail to find any date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], start_table_name);
+			FinanceRecorderCmnDef.format_error("Fail to find any date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index], start_table_name);
 			return ret;
 		}
 // Find the end date
@@ -292,12 +292,12 @@ OUT:
 		ret = sql_client.select_data(end_table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finace_data_type_index][0], end_date_list);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
-			FinanceRecorderCmnDef.format_error("Fail to find the start date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], start_table_name);
+			FinanceRecorderCmnDef.format_error("Fail to find the start date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index], start_table_name);
 			return ret;
 		}
 		if (end_date_list.isEmpty())
 		{
-			FinanceRecorderCmnDef.format_error("Fail to find any date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], end_table_name);
+			FinanceRecorderCmnDef.format_error("Fail to find any date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index], end_table_name);
 			return ret;
 		}
 		database_time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(start_date_list.getFirst(), end_date_list.getLast());
@@ -310,7 +310,7 @@ OUT:
 	{
 		if (database_time_range_cfg == null)
 		{
-			FinanceRecorderCmnDef.format_error("Time range should be found first in %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index]);
+			FinanceRecorderCmnDef.format_error("Time range should be found first in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index]);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 		int[] time_list = FinanceRecorderCmnClass.TimeRangeCfg.get_start_and_end_month_value_range(database_time_range_cfg);
@@ -339,7 +339,7 @@ OUT:
 			return ret;
 		}
 
-		FinanceRecorderCmnDef.format_debug("Search for the time list from year %d-%d in %s", start_year, end_year, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index]);
+		FinanceRecorderCmnDef.format_debug("Search for the time list from year %d-%d in %s", start_year, end_year, FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index]);
 //		LinkedList<String> date_list = new LinkedList<String>();
 		String table_name;
 		for (int year = start_year ; year <= end_year ; year++)
@@ -349,13 +349,13 @@ OUT:
 			ret = sql_client.select_data(table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finace_data_type_index][0], date_list);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 			{
-				FinanceRecorderCmnDef.format_error("Fail to find the date list in %s:%s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], table_name);
+				FinanceRecorderCmnDef.format_error("Fail to find the date list in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index], table_name);
 				return ret;
 			}
 		}
 		if (date_list.isEmpty())
 		{
-			FinanceRecorderCmnDef.format_error("Fail to find any date in %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index]);
+			FinanceRecorderCmnDef.format_error("Fail to find any date in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index]);
 			return ret;
 		}
 
@@ -368,7 +368,7 @@ OUT:
 	{
 		if (database_time_range_cfg == null)
 		{
-			FinanceRecorderCmnDef.format_error("Time range should be found first in %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index]);
+			FinanceRecorderCmnDef.format_error("Time range should be found first in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index]);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 
@@ -381,13 +381,13 @@ OUT:
 	{
 		if (database_time_range_cfg == null)
 		{
-			FinanceRecorderCmnDef.format_error("Time range should be found first in %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index]);
+			FinanceRecorderCmnDef.format_error("Time range should be found first in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index]);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		time_range_str_builder.append(String.format("%s %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], database_time_range_cfg.toString()));
-//		System.out.printf("%s: %s\n", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index], database_time_range_cfg.toString());
+		time_range_str_builder.append(String.format("%s %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index], database_time_range_cfg.toString()));
+//		System.out.printf("%s: %s\n", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index], database_time_range_cfg.toString());
 		return ret;
 	}
 

@@ -15,19 +15,24 @@ public class FinanceRecorderCmnDef
 //Return values
 	public static final short RET_SUCCESS = 0;
 
-	public static final short RET_FAILURE_UNKNOWN = 1;
-	public static final short RET_FAILURE_INVALID_ARGUMENT = 2;
-	public static final short RET_FAILURE_INVALID_POINTER = 3;
-	public static final short RET_FAILURE_INSUFFICIENT_MEMORY = 4;
-	public static final short RET_FAILURE_INCORRECT_OPERATION = 5;
-	public static final short RET_FAILURE_NOT_FOUND = 6;
-	public static final short RET_FAILURE_INCORRECT_CONFIG = 7;
-	public static final short RET_FAILURE_HANDLE_THREAD = 8;
-	public static final short RET_FAILURE_INCORRECT_PATH = 9;
-	public static final short RET_FAILURE_IO_OPERATION = 10;
-	public static final short RET_FAILURE_UNEXPECTED_VALUE = 11;
+	public static final short RET_WARN_BASE = 0x1;
+	public static final short RET_WARN_INDEX_DUPLICATE = RET_WARN_BASE + 1;
+	public static final short RET_WARN_INDEX_IGNORE = RET_WARN_BASE + 2;
 
-	public static final short RET_FAILURE_MYSQL_BASE = 100;
+	public static final short RET_FAILURE_BASE = 0x100;
+	public static final short RET_FAILURE_UNKNOWN = RET_FAILURE_BASE + 1;
+	public static final short RET_FAILURE_INVALID_ARGUMENT = RET_FAILURE_BASE + 2;
+	public static final short RET_FAILURE_INVALID_POINTER = RET_FAILURE_BASE + 3;
+	public static final short RET_FAILURE_INSUFFICIENT_MEMORY = RET_FAILURE_BASE + 4;
+	public static final short RET_FAILURE_INCORRECT_OPERATION = RET_FAILURE_BASE + 5;
+	public static final short RET_FAILURE_NOT_FOUND = RET_FAILURE_BASE + 6;
+	public static final short RET_FAILURE_INCORRECT_CONFIG = RET_FAILURE_BASE + 7;
+	public static final short RET_FAILURE_HANDLE_THREAD = RET_FAILURE_BASE + 8;
+	public static final short RET_FAILURE_INCORRECT_PATH = RET_FAILURE_BASE + 9;
+	public static final short RET_FAILURE_IO_OPERATION = RET_FAILURE_BASE + 10;
+	public static final short RET_FAILURE_UNEXPECTED_VALUE = RET_FAILURE_BASE + 11;
+
+	public static final short RET_FAILURE_MYSQL_BASE = 0x200;
 	public static final short RET_FAILURE_MYSQL = RET_FAILURE_MYSQL_BASE + 1;
 	public static final short RET_FAILURE_MYSQL_UNKNOWN_DATABASE = RET_FAILURE_MYSQL_BASE + 2;
 	public static final short RET_FAILURE_MYSQL_NO_DRIVER = RET_FAILURE_MYSQL_BASE + 3;
@@ -41,9 +46,16 @@ public class FinanceRecorderCmnDef
 	public static boolean CheckFailureNotFound(short x) {return (x == RET_FAILURE_NOT_FOUND ? true : false);}
 	public static boolean CheckMySQLFailureUnknownDatabase(short x) {return (x == RET_FAILURE_MYSQL_UNKNOWN_DATABASE ? true : false);}
 
-	private static final String[] RetDescription = new String[]
+	private static final String[] WarnRetDescription = new String[]
 	{
-		"Success",
+		"Warning Base",
+		"Warning Index Duplicate",
+		"Warning Index Ignore"
+	};
+
+	private static final String[] ErrorRetDescription = new String[]
+	{
+		"Failure Base",
 		"Failure Unknown",
 		"Failure Invalid Argument",
 		"Failure Invalid Pointer",
@@ -57,9 +69,9 @@ public class FinanceRecorderCmnDef
 		"Failure Unexpected Value"
 	};
 
-	private static final String[] SQLRetDescription = new String[]
+	private static final String[] SQLErrorRetDescription = new String[]
 	{
-		"SQL Success",
+		"SQL Failure Base",
 		"SQL Failure Common",
 		"SQL Failure Unknown Database",
 		"SQL Failure No Driver",
@@ -70,10 +82,14 @@ public class FinanceRecorderCmnDef
 
 	public static String GetErrorDescription(short error_code)
 	{
-		if (error_code > RET_FAILURE_MYSQL_BASE)
-			return SQLRetDescription[error_code - RET_FAILURE_MYSQL_BASE];
+		if (error_code >= RET_FAILURE_MYSQL_BASE)
+			return SQLErrorRetDescription[error_code - RET_FAILURE_MYSQL_BASE];
+		else if (error_code >= RET_FAILURE_BASE && error_code < RET_FAILURE_MYSQL_BASE)
+			return ErrorRetDescription[error_code - RET_FAILURE_BASE];
+		else if (error_code >= RET_WARN_BASE)
+			return WarnRetDescription[error_code - RET_WARN_BASE];
 		else
-			return RetDescription[error_code];
+			return "Success";
 	}
 
 //	public static final String CONF_FOLDERNAME = "conf";
@@ -86,7 +102,12 @@ public class FinanceRecorderCmnDef
 	public static final String WORKDAY_CANLENDAR_FILENAME = ".workday_canlendar.conf";
 	public static final String DATABASE_TIME_RANGE_FILENAME = ".database_time_range.conf";
 	public static final String DATABASE_TIME_RANGE_FILE_DST_PROJECT_NAME = "finance_analyzer";
+	public static final int FINANCE_SOURCE_SIZE = FinanceRecorderCmnDef.FinanceDataType.values().length;
 
+	public static final String MYSQL_TABLE_NAME_BASE = "year";
+	public static final String MYSQL_DATE_FILED_NAME = "date";
+	public static final String MYSQL_FILED_NAME_BASE = "value";
+	
 	public static enum FinanceDataType
 	{
 		FinanceData_StockExchangeAndVolume(0),
@@ -117,7 +138,29 @@ public class FinanceRecorderCmnDef
 		}
 		public int value(){return this.value;}
 	};
+	public static enum FinanceFieldType
+	{
+		FinanceField_INT(0),
+		FinanceField_LONG(1),
+		FinanceField_FLOAT(2),
+		FinanceField_DATE(3);
 
+		private int value = 0;
+		private FinanceFieldType(int value){this.value = value;}
+		public static FinanceFieldType valueOf(int value)
+		{
+			switch (value)
+			{
+			case 0: return FinanceField_INT;
+			case 1: return FinanceField_LONG;
+			case 2: return FinanceField_FLOAT;
+			case 3: return FinanceField_DATE;
+			default: return null;
+			}
+		}
+		public int value(){return this.value;}
+	};
+	
 	public static enum DatabaseNotExistIngoreType
 	{
 		DatabaseNotExistIngore_Yes,
@@ -145,7 +188,7 @@ public class FinanceRecorderCmnDef
 		"option_put_call_ratio",
 		"future_top10_dealers_and_legal_persons"
 	};
-	public static final String[] FINANCE_DATA_DESCRIPTION_LIST = new String[]
+	public static final String[] FINANCE_DATABASE_DESCRIPTION_LIST = new String[]
 	{
 		"臺股指數及成交量",
 		"三大法人現貨買賣超",
@@ -193,7 +236,7 @@ public class FinanceRecorderCmnDef
 	private static final String[] STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION = new String[]
 	{
 		"DATE NOT NULL PRIMARY KEY", // 日期
-		"BIGINT", // 自營商(自行買賣)_買進金額
+//		"BIGINT", // 自營商(自行買賣)_買進金額
 		"BIGINT", // 自營商(自行買賣)_賣出金額
 		"BIGINT", // 自營商(自行買賣)_買賣差額
 		"BIGINT", // 自營商(避險)_買進金額
@@ -545,6 +588,29 @@ public class FinanceRecorderCmnDef
 		OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION,
 		FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION
 	};
+	public static final FinanceFieldType[][] FINANCE_DATABASE_FIELD_TYPE_LIST = new FinanceFieldType[][]
+	{
+		TransformFieldTypeString2Enum(STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION)
+	};
+	public static final int FINANCE_DATABASE_FIELD_AMOUNT_LIST[] =
+	{
+		STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION.length,
+		STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION.length,
+		STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION.length,
+		STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION.length,
+		FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION.length,
+		FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION.length,
+		OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION.length,
+		OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION.length,
+		FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION.length
+	};
 
 // Setter and Getter
 // Allow to assign the variable only once
@@ -567,6 +633,33 @@ public class FinanceRecorderCmnDef
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Functions
+	private static FinanceFieldType[] TransformFieldTypeString2Enum(String[] field_type_string_list)
+	{
+		FinanceFieldType[] file_type_int_list = new FinanceFieldType[field_type_string_list.length];
+		for (int i = 0 ; i < field_type_string_list.length ; i++)
+		{
+			String field_type_string = field_type_string_list[i].split(" ")[0];
+			switch(field_type_string)
+			{
+			case "INT":
+				file_type_int_list[i] = FinanceFieldType.FinanceField_INT;
+				break;
+			case "BIGINT":
+				file_type_int_list[i] = FinanceFieldType.FinanceField_LONG;
+				break;
+			case "LONG":
+				file_type_int_list[i] = FinanceFieldType.FinanceField_LONG;
+				break;
+			case "DATE":
+				file_type_int_list[i] = FinanceFieldType.FinanceField_DATE;
+				break;
+			default:
+				throw new IllegalArgumentException(String.format("Unknown field type: %s", field_type_string));
+			}
+		}
+		return file_type_int_list;
+	}
+
 	private static final String get_code_position(){return String.format("%s:%d", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__());}
 
 	public static String field_array_to_string(String[] field_array)

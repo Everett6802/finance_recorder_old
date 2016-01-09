@@ -62,7 +62,7 @@ OUT:
 				String[] entry_arr = line.split(" ");
 // Get the type of data source
 				data_source = entry_arr[0];
-				int finance_data_type_index = Arrays.asList(FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST).indexOf(data_source);
+				int finance_data_type_index = Arrays.asList(FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST).indexOf(data_source);
 				if (finance_data_type_index == -1)
 				{
 					FinanceRecorderCmnDef.format_error("Unknown data source type[%s] in config file", data_source);
@@ -166,7 +166,7 @@ OUT:
 		int result_list_len = result_list.length;
 		if (result_list_len == 0)
 		{
-			FinanceRecorderCmnDef.format_error("No %s CSV files are found", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finance_data_type_index]);
+			FinanceRecorderCmnDef.format_error("No %s CSV files are found", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_data_type_index]);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 //		Pattern csv_filename_pattern = Pattern.compile(String.format("%s([\\d]{6}).csv", FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_data_type_index]));
@@ -215,12 +215,12 @@ OUT:
 			java.util.Date end_month_date = FinanceRecorderCmnDef.get_month_date(time_month_end);
 			if (start_month_date.before(csv_start_month_date))
 			{
-				FinanceRecorderCmnDef.format_warn("Out of range in %s! Change start month from %s to %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finance_data_type_index], time_month_start, csv_time_month_start_str_builder.toString());
+				FinanceRecorderCmnDef.format_warn("Out of range in %s! Change start month from %s to %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_data_type_index], time_month_start, csv_time_month_start_str_builder.toString());
 				month_start = csv_time_month_start_str_builder.toString();
 			}
 			if (end_month_date.after(csv_end_month_date))
 			{
-				FinanceRecorderCmnDef.format_warn("Out of range in %s! Change end month from %s to %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finance_data_type_index], time_month_end, csv_time_month_end_str_builder.toString());
+				FinanceRecorderCmnDef.format_warn("Out of range in %s! Change end month from %s to %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_data_type_index], time_month_end, csv_time_month_end_str_builder.toString());
 				month_end = csv_time_month_end_str_builder.toString();
 			}
 			time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(month_start, month_end);
@@ -441,7 +441,7 @@ OUT:
 			@Override
 			public String toString()
 			{
-				return String.format("%s: %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finance_data_type_index], FinanceRecorderCmnDef.get_date_str(database_start_date));
+				return String.format("%s: %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_data_type_index], FinanceRecorderCmnDef.get_date_str(database_start_date));
 			}
 		};
 
@@ -551,9 +551,9 @@ OUT:
 						base_database_print_str = null;
 					}
 					String err_result = String.format("The size in NOT identical, %s: %d, %s: %d", 
-						FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[database_start_date_cfg.finance_data_type_index], 
+						FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[database_start_date_cfg.finance_data_type_index], 
 						data_compare_list.size(), 
-						FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[data_base_finance_data_type_index], 
+						FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[data_base_finance_data_type_index], 
 						sub_data_base_list.size()
 					);
 					FinanceRecorderCmnDef.format_error(err_result);
@@ -571,7 +571,7 @@ OUT:
 						while (compare_data.compareTo(base_data) != 0)
 						{
 							String err_result_detail = String.format("Date NOT Found %s: %s",
-									FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[database_start_date_cfg.finance_data_type_index], 
+									FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[database_start_date_cfg.finance_data_type_index], 
 									base_data
 								);
 							FinanceRecorderCmnDef.format_error(err_result_detail);

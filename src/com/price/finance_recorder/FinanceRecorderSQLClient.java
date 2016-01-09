@@ -576,7 +576,7 @@ OUT:
 				index = Arrays.asList(finance_data_sql_field_definition).indexOf(table_field_list[i]);
 				if (index == -1)
 				{
-					FinanceRecorderCmnDef.format_error("Unknown field: %s in %s", table_field_list[i], FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index]);
+					FinanceRecorderCmnDef.format_error("Unknown field: %s in %s", table_field_list[i], FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index]);
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				}
 				field_index_list.add(index);
@@ -584,7 +584,7 @@ OUT:
 		}
 		if (field_index_list.isEmpty())
 		{
-			FinanceRecorderCmnDef.format_error("No fields are selected in %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index]);
+			FinanceRecorderCmnDef.format_error("No fields are selected in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index]);
 			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 		}
 		int field_index_list_len = field_index_list.size();
