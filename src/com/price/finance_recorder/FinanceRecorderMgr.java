@@ -14,6 +14,7 @@ import java.util.regex.*;
 public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserverInf
 {
 	private static FinanceRecorderWorkdayCalendar finance_recorder_workday_calendar = FinanceRecorderWorkdayCalendar.get_instance();
+	private static FinanceRecorderDatabaseTimeRange finance_recorder_database_time_range = FinanceRecorderDatabaseTimeRange.get_instance();
 	private HashMap<Integer,FinanceRecorderCmnClass.TimeRangeCfg> finance_source_time_range_table = new HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg>();
 
 	public short update_by_config_file(String filename)

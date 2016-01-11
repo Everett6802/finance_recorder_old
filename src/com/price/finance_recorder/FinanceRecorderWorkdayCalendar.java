@@ -18,12 +18,6 @@ public class FinanceRecorderWorkdayCalendar
 			allocate();
 		return instance;
 	}
-
-	private FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
-	private HashMap<Integer, ArrayList<LinkedList<Integer>>> workday_map = new HashMap<Integer, ArrayList<LinkedList<Integer>>>();
-	private ArrayList<Integer> workday_year_sort_array = new ArrayList<Integer>();
-	int workday_year_sort_array_size;
-
 	private static synchronized void allocate() // For thread-safe
 	{
 		if (instance == null)
@@ -37,6 +31,11 @@ public class FinanceRecorderWorkdayCalendar
 			}
 		} 
 	}
+
+	private FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
+	private HashMap<Integer, ArrayList<LinkedList<Integer>>> workday_map = new HashMap<Integer, ArrayList<LinkedList<Integer>>>();
+	private ArrayList<Integer> workday_year_sort_array = new ArrayList<Integer>();
+	int workday_year_sort_array_size;
 
 	private short initialize()
 	{

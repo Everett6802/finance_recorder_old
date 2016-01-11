@@ -218,7 +218,7 @@ public class FinanceRecorderCmnClass
 			return time_range_description;
 		}
 
-		public TimeCfg get_start_time()
+		public final TimeCfg get_start_time()
 		{
 //			assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
 			return time_start_cfg;
@@ -230,7 +230,7 @@ public class FinanceRecorderCmnClass
 			return (time_start_cfg != null ? time_start_cfg.toString() : null);
 		}
 
-		public TimeCfg get_end_time()
+		public final TimeCfg get_end_time()
 		{
 //			assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
 			return time_end_cfg;
@@ -241,6 +241,18 @@ public class FinanceRecorderCmnClass
 //			assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
 			return (time_end_cfg != null ? time_end_cfg.toString() : null);
 		}
+
+		private void reset_time(TimeCfg new_start_time_cfg, TimeCfg new_end_time_cfg)
+		{
+			if (new_start_time_cfg != null)
+				time_start_cfg = new_start_time_cfg;
+			if (new_end_time_cfg != null)
+				time_end_cfg = new_end_time_cfg;
+			time_range_description = null;
+		}
+
+		public void set_start_time(TimeCfg new_start_time_cfg){reset_time(new_start_time_cfg, null);}
+		public void set_end_time(TimeCfg new_end_time_cfg){reset_time(null, new_end_time_cfg);}
 
 		public static int[] get_start_and_end_month_value_range(TimeRangeCfg time_range_cfg)
 		{	

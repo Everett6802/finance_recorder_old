@@ -236,7 +236,7 @@ public class FinanceRecorderCmnDef
 	private static final String[] STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION = new String[]
 	{
 		"DATE NOT NULL PRIMARY KEY", // 日期
-//		"BIGINT", // 自營商(自行買賣)_買進金額
+		"BIGINT", // 自營商(自行買賣)_買進金額
 		"BIGINT", // 自營商(自行買賣)_賣出金額
 		"BIGINT", // 自營商(自行買賣)_買賣差額
 		"BIGINT", // 自營商(避險)_買進金額
@@ -647,8 +647,8 @@ public class FinanceRecorderCmnDef
 			case "BIGINT":
 				file_type_int_list[i] = FinanceFieldType.FinanceField_LONG;
 				break;
-			case "LONG":
-				file_type_int_list[i] = FinanceFieldType.FinanceField_LONG;
+			case "FLOAT":
+				file_type_int_list[i] = FinanceFieldType.FinanceField_FLOAT;
 				break;
 			case "DATE":
 				file_type_int_list[i] = FinanceFieldType.FinanceField_DATE;
