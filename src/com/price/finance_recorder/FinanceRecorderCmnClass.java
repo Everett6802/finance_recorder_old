@@ -93,8 +93,8 @@ public class FinanceRecorderCmnClass
 					throw new IllegalArgumentException(String.format("Incorrect time format: %s", cur_time_str));
 				}
 // Try to parse the month format
-				year = date_list[0];
-				month = date_list[1];
+				year = month_list[0];
+				month = month_list[1];
 				time_type = TimeType.TIME_MONTH;
 			}
 		}
@@ -197,11 +197,7 @@ public class FinanceRecorderCmnClass
 				return time_start_cfg.equals(time_end_cfg);
 			return false;
 		}
-
-		public boolean is_month_type()
-		{
-			return type_is_month;
-		}
+		public boolean is_month_type(){return type_is_month;}
 
 		@Override
 		public String toString() 
@@ -425,6 +421,13 @@ public class FinanceRecorderCmnClass
 		}
 	};
 
+	static public short add_query(QuerySet query_set, FinanceRecorderCmnDef.FinanceSourceType source_type, int field_index){return query_set.add_query(source_type.value(), field_index);}
+	static public short add_query_ex(QuerySet query_set, FinanceRecorderCmnDef.FinanceSourceType source_type, int field_index, HashSet<Integer> source_type_index_set)
+	{
+		source_type_index_set.add(source_type.value());
+		return add_query(query_set, source_type, field_index);
+	}
+
 	public static class ResultSet
 	{
 		private static short get_combined_index(int x, int y) {return (short)(((x & 0xFF) << 8) | (y & 0xFF));}
@@ -445,7 +448,7 @@ public class FinanceRecorderCmnClass
 		public ResultSet()
 		{
 			data_set_mapping = new HashMap<Integer, Integer>();
-			FinanceStringDataArray date_data = new FinanceStringDataArray();
+			date_data = new FinanceStringDataArray();
 			int_data_set = new ArrayList<FinanceIntDataArray>();
 			long_data_set = new ArrayList<FinanceLongDataArray>();
 			float_data_set = new ArrayList<FinanceFloatDataArray>();
@@ -521,13 +524,15 @@ public class FinanceRecorderCmnClass
 			return FinanceRecorderCmnDef.RET_SUCCESS;
 		}
 
-		public short add_set(int source_index, final ArrayList<Integer> field_array)
+		public short add_set(int source_index, final LinkedList<Integer> field_list)
 		{
 			short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-			int field_list_size = field_array.size();
-			for (int index = 0 ; index < field_list_size ; index++)
+			int field_list_size = field_list.size();
+			ListIterator<Integer> iter = field_list.listIterator(0);
+			while (iter.hasNext())
 			{
-				ret = add_set(source_index, field_array.get(index));
+				Integer index = iter.next();
+				ret = add_set(source_index, field_list.get(index));
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					return ret;
 			}
@@ -550,6 +555,14 @@ public class FinanceRecorderCmnClass
 			return FinanceRecorderCmnDef.RET_SUCCESS;
 		}
 
+		public final FinanceStringDataArray get_date_array(){return date_data;}
+		public final String get_date(int index)
+		{
+			if (index < 0 || index >= date_data_pos)
+				throw new IndexOutOfBoundsException(String.format("The Index [%d] is out of range (0, %d)", index, date_data_pos));
+			return date_data.get_index(index);
+		}
+
 		private short find_data_pos(int source_index, int field_index, short[] field_type_array)
 		{
 			short key = get_combined_index(source_index, field_index);
@@ -569,8 +582,8 @@ public class FinanceRecorderCmnClass
 			if (FinanceRecorderCmnDef.CheckFailure(find_data_pos(source_index, field_index, field_type_array)))
 				throw new IllegalArgumentException(String.format("The key[%d] from (%d, %d) is NOT FOUND", source_index, field_index));
 		}
-		
-		public short set_data(int source_index, int field_index, String data_string)
+
+		public short set_data(int source_index, int field_index, Object data_obj)
 		{
 			short[] field_type_array = new short[2];
 			short ret = find_data_pos(source_index, field_index, field_type_array);
@@ -582,13 +595,13 @@ public class FinanceRecorderCmnClass
 			switch(FinanceRecorderCmnDef.FinanceFieldType.valueOf(field_type_index))
 			{
 			case FinanceField_INT:
-				int_data_set.get(field_type_pos).add(Integer.getInteger(data_string));
+				int_data_set.get(field_type_pos).add((Integer)data_obj);
 				break;
 			case FinanceField_LONG:
-				long_data_set.get(field_type_pos).add(Long.getLong(data_string));
+				long_data_set.get(field_type_pos).add((Long)data_obj);
 				break;
 			case FinanceField_FLOAT:
-				float_data_set.get(field_type_pos).add(Float.valueOf(data_string));
+				float_data_set.get(field_type_pos).add((Float)data_obj);
 				break;
 			default:
 				FinanceRecorderCmnDef.format_error("Unsupported field_type_index: %d", field_type_index);
@@ -646,6 +659,9 @@ public class FinanceRecorderCmnClass
 
 		public short show_data()
 		{
+			if (FinanceRecorderCmnDef.is_show_console())
+				return FinanceRecorderCmnDef.RET_SUCCESS;
+
 			final int STAR_LEN = 120;
 			short key;
 			short value;
@@ -745,5 +761,12 @@ public class FinanceRecorderCmnClass
 		public int get_int_array_element(int source_index, int field_index, int index) {return get_int_array(source_index, field_index).get_index(index);}
 		public long get_long_array_element(int source_index, int field_index, int index) {return get_long_array(source_index, field_index).get_index(index);}
 		public float get_float_array_element(int source_index, int field_index, int index) {return get_float_array(source_index, field_index).get_index(index);}
+
+		public boolean is_empty(){return date_data.is_empty();}
+		public int get_size()
+		{
+			assert date_data.get_size() == date_data_pos : String.format("Incorrect data size, expected: %d, actual: %d", date_data.get_size(), date_data_pos);
+			return date_data_pos;
+		}
 	};
 }

@@ -4,6 +4,8 @@ import java.sql.*;
 import java.text.*;
 import java.util.*;
 
+import com.price.finance_recorder.FinanceRecorderCmnDef.FinanceFieldType;
+
 
 public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 {
@@ -45,7 +47,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 	private FinanceRecorderCmnDef.FinanceObserverInf finance_observer = null;
 	private int finace_data_type_index;
 
-	FinanceRecorderSQLClient(FinanceRecorderCmnDef.FinanceDataType finance_data_type, FinanceRecorderCmnDef.FinanceObserverInf observer)
+	FinanceRecorderSQLClient(FinanceRecorderCmnDef.FinanceSourceType finance_data_type, FinanceRecorderCmnDef.FinanceObserverInf observer)
 	{
 		finace_data_type_index = finance_data_type.ordinal();
 		server = DEF_SERVER;
@@ -60,6 +62,34 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 //		java.util.Date dateStr = formatter.parse(date_str);
 		java.util.Date dateStr = FinanceRecorderCmnDef.get_date(date_str);
 		return new java.sql.Date(dateStr.getTime());
+	}
+
+	public static short get_sql_field_command(int source_index, LinkedList<Integer> query_field, StringBuilder field_cmd_builder)
+	{
+		if (query_field.isEmpty())
+			throw new IllegalArgumentException("The query should NOT be empty");
+//		string field_cmd;
+// Select all the fields in the table
+		if ((int)query_field.size() == FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index] - 1) // Caution: Don't include the "date" field
+			field_cmd_builder.append("*");
+		else
+		{
+// Assemble the MySQL command of the designated field
+// The "date" field is a must
+			String field_cmd = String.format("%s", FinanceRecorderCmnDef.MYSQL_DATE_FILED_NAME);
+//			int query_field_size = query_field.size();
+//			for(int field_index = 0 ; field_index < query_field_size ; field_index++)
+			ListIterator<Integer> iter = query_field.listIterator();
+			while(iter.hasNext())
+			{
+//				snprintf(field_buf, 16, ",%s%d", MYSQL_FILED_NAME_BASE, query_field[field_index]);
+//				field_cmd += string(field_buf);
+				field_cmd += String.format(",%s%d", FinanceRecorderCmnDef.MYSQL_FILED_NAME_BASE, iter);
+			}
+			field_cmd_builder.append(field_cmd);
+		}
+
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	short try_connect_mysql(
@@ -442,7 +472,8 @@ OUT:
 		return  FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	short select_data(String table_name, String cmd_table_field, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, List<String> data_list)
+//	short select_data(String table_name, String cmd_table_field, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, List<String> data_list)
+	short select_data(String table_name, String cmd_table_field, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnClass.ResultSet result_set)
 	{
 // Check if the connection is established
 		if (connection == null)
@@ -468,7 +499,7 @@ OUT:
 				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 			}
 		}
-		else if (time_range_cfg.is_month_type())
+		else if (!time_range_cfg.is_month_type())
 		{
 // Transform the date field into SQL Date format
 			java.sql.Date sql_date_start = null;
@@ -589,40 +620,70 @@ OUT:
 		}
 		int field_index_list_len = field_index_list.size();
 
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Read the result from MySQL
 		ResultSet rs = null;
 		try
 		{
 			FinanceRecorderCmnDef.format_debug("Select from data by command: %s", pstmt);
 			rs = pstmt.executeQuery();
+			OUT:
 			while(rs.next())
 			{
-				String result_str = "";
 				for(int i = 0 ; i < field_index_list_len ; i++)
 				{
 					String field_type = finance_data_sql_field_type_definition[field_index_list.get(i)];
 					if (field_type.equals("INT"))
-						result_str += String.format("%d,", rs.getInt(finance_data_sql_field_definition[field_index_list.get(i)]));
+						result_set.set_data(finace_data_type_index, FinanceFieldType.FinanceField_INT.value(), rs.getInt(finance_data_sql_field_definition[field_index_list.get(i)]));
 					else if (field_type.equals("BIGINT"))
-						result_str += String.format("%d,", rs.getLong(finance_data_sql_field_definition[field_index_list.get(i)]));
+						result_set.set_data(finace_data_type_index, FinanceFieldType.FinanceField_LONG.value(), rs.getLong(finance_data_sql_field_definition[field_index_list.get(i)]));
 					else if (field_type.equals("FLOAT"))
-						result_str += String.format("%f,", rs.getFloat(finance_data_sql_field_definition[field_index_list.get(i)]));
+						result_set.set_data(finace_data_type_index, FinanceFieldType.FinanceField_FLOAT.value(), rs.getFloat(finance_data_sql_field_definition[field_index_list.get(i)]));
 					else if (field_type.contains("DATE"))
-						result_str += String.format("%s,", rs.getString(finance_data_sql_field_definition[field_index_list.get(i)]));
+					{
+						String date_field = finance_data_sql_field_definition[field_index_list.get(i)];
+						String date_field_data = rs.getString(date_field);
+						result_set.set_date(date_field_data);
+					}
 					else
 					{
 						FinanceRecorderCmnDef.format_debug("Unknown SQL field type: %s", field_type);
-						return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+						ret = FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+						break OUT;
 					}
 				}
-//				FinanceRecorderCmnDef.format_debug("Query Data: %s", result_str);
-				data_list.add(result_str.substring(0, result_str.length() - 1));
+
+//				String result_str = "";
+//				for(int i = 0 ; i < field_index_list_len ; i++)
+//				{
+//					String field_type = finance_data_sql_field_type_definition[field_index_list.get(i)];
+//					if (field_type.equals("INT"))
+//						result_str += String.format("%d,", rs.getInt(finance_data_sql_field_definition[field_index_list.get(i)]));
+//					else if (field_type.equals("BIGINT"))
+//						result_str += String.format("%d,", rs.getLong(finance_data_sql_field_definition[field_index_list.get(i)]));
+//					else if (field_type.equals("FLOAT"))
+//						result_str += String.format("%f,", rs.getFloat(finance_data_sql_field_definition[field_index_list.get(i)]));
+//					else if (field_type.contains("DATE"))
+//						result_str += String.format("%s,", rs.getString(finance_data_sql_field_definition[field_index_list.get(i)]));
+//					else
+//					{
+//						FinanceRecorderCmnDef.format_debug("Unknown SQL field type: %s", field_type);
+//						return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+//					}
+//				}
+////				FinanceRecorderCmnDef.format_debug("Query Data: %s", result_str);
+//				data_list.add(result_str.substring(0, result_str.length() - 1));
 			}
 		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{
 			FinanceRecorderCmnDef.format_error("Fail to select from data by command[%s], due to: %s", pstmt, ex.getMessage());
-			return  FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+			ret = FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+		}
+		catch(Exception ex)
+		{
+			FinanceRecorderCmnDef.format_error("Error occur due to SQL command[%s], due to: %s", pstmt, ex.getMessage());
+			ret = FinanceRecorderCmnDef.RET_FAILURE_UNKNOWN;
 		}
 		finally
 		{
@@ -634,10 +695,14 @@ OUT:
 			}
 		}
 
-		return  FinanceRecorderCmnDef.RET_SUCCESS;
+		return ret;
 	}
 
-	short select_data(String table_name, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, List<String> data_list){return select_data(table_name, "*", time_range_cfg, data_list);}
-	short select_data(String table_name, String cmd_table_field, List<String> data_list){return select_data(table_name, cmd_table_field, null, data_list);}
-	short select_data(String table_name, List<String> data_list){return select_data(table_name, "*", null, data_list);}
+//	short select_data(String table_name, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, List<String> data_list){return select_data(table_name, "*", time_range_cfg, data_list);}
+//	short select_data(String table_name, String cmd_table_field, List<String> data_list){return select_data(table_name, cmd_table_field, null, data_list);}
+//	short select_data(String table_name, List<String> data_list){return select_data(table_name, "*", null, data_list);}
+	short select_data(String table_name, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnClass.ResultSet result_set){return select_data(table_name, "*", time_range_cfg, result_set);}
+	short select_data(String table_name, String cmd_table_field, FinanceRecorderCmnClass.ResultSet result_set){return select_data(table_name, cmd_table_field, null, result_set);}
+	short select_data(String table_name, FinanceRecorderCmnClass.ResultSet result_set){return select_data(table_name, "*", null, result_set);}
+
 }

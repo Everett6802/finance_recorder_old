@@ -33,11 +33,12 @@ public class FinanceRecorder
 
 	public static void main(String args[])
 	{
-		finance_recorder_mgr.run_daily();
+//		finance_recorder_mgr.run_daily();
 
 		boolean use_multithread = false;
 		boolean read_data = false;
 		boolean check_error = false;
+		boolean run_daily = false;
 		LinkedList<Integer> remove_database_list = null;
 		LinkedList<Integer> finance_data_type_index_list = null;
 		String time_month_begin = null;
@@ -135,6 +136,11 @@ public class FinanceRecorder
 				FinanceRecorderCmnDef.enable_show_console(true);
 				index_offset = 1;
 			}
+			else if (option.equals("--run_daily"))
+			{
+				run_daily = true;
+				index_offset = 1;
+			}
 			else
 			{
 				show_error_and_exit(String.format("Unknown argument: %s", option));
@@ -160,14 +166,14 @@ public class FinanceRecorder
 				show_error_and_exit(String.format("Fail to remove the old MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		}
 
-		if (read_data)
+		if (run_daily)
 		{
 // Read the data from database
 			if(FinanceRecorderCmnDef.is_show_console())
-				System.out.println("Read financial data from MySQL......");
-			ret = read_sql();
+				System.out.println("Run daily data");
+			ret = run_daily();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				show_error_and_exit(String.format("Fail to read financial data from MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+				show_error_and_exit(String.format("Fail to run daily data, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		}
 		else
 		{
@@ -273,27 +279,28 @@ public class FinanceRecorder
 		System.out.println("--read_data\nDescription: Read from MySQL database\nCaution: Ignore the attribute of writing data into MySQL");
 		System.out.println("--check_error\nDescription: Check if the data in the MySQL database is correct");
 		System.out.println("--enable_console\nDescription: Print the runtime info on STDOUT/STDERR");
+		System.out.println("--run_daily\nDescription: Run daily data\nCaution: Other flags are ignored");
 		System.out.println("===================================================");
 	}
 
 	private static short setup_param(String filename)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		finance_recorder_mgr.update_by_config_file(filename);
+		ret = finance_recorder_mgr.update_by_config_file(filename);
 		return ret;
 	}
 
 	private static short setup_param(LinkedList<Integer> finance_data_type_index_list, String time_month_begin, String time_month_end)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		finance_recorder_mgr.update_by_parameter(finance_data_type_index_list, time_month_begin, time_month_end);
+		ret = finance_recorder_mgr.update_by_parameter(finance_data_type_index_list, time_month_begin, time_month_end);
 		return ret;
 	}
 
 	private static short delete_sql(LinkedList<Integer> finance_data_type_index_list)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		finance_recorder_mgr.clear_multi(finance_data_type_index_list);
+		ret = finance_recorder_mgr.clear_multi(finance_data_type_index_list);
 		return ret;
 	}
 
@@ -307,25 +314,45 @@ public class FinanceRecorder
 		return ret;
 	}
 
-	private static short read_sql()
+	private static short run_daily()
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		List<List<String>> total_data_list = new ArrayList<List<String>>();
-		ret = finance_recorder_mgr.read(total_data_list);
-// Show the result statistics
-		int index = 0;
-		String msg;
-		for (List<String> data_list : total_data_list)
-		{
-			msg = String.format("%d: %d", index, data_list.size());
-			FinanceRecorderCmnDef.info(msg);
-			if (FinanceRecorderCmnDef.is_show_console())
-				System.out.println(msg);
-			index++;
-		}
-
+		ret = finance_recorder_mgr.run_daily();
 		return ret;
 	}
+
+//	private static short read_sql()
+//	{
+//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+//		FinanceRecorderCmnClass.ResultSet result_set = new FinanceRecorderCmnClass.ResultSet();
+//		ret = finance_recorder_mgr.read(result_set);
+//// Show the result statistics
+//		int index = 0;
+//		String msg;
+//		for (List<String> data_list : total_data_list)
+//		{
+//			msg = String.format("%d: %d", index, data_list.size());
+//			FinanceRecorderCmnDef.info(msg);
+//			if (FinanceRecorderCmnDef.is_show_console())
+//				System.out.println(msg);
+//			index++;
+//		}
+////		List<List<String>> total_data_list = new ArrayList<List<String>>();
+////		ret = finance_recorder_mgr.read(total_data_list);
+////// Show the result statistics
+////		int index = 0;
+////		String msg;
+////		for (List<String> data_list : total_data_list)
+////		{
+////			msg = String.format("%d: %d", index, data_list.size());
+////			FinanceRecorderCmnDef.info(msg);
+////			if (FinanceRecorderCmnDef.is_show_console())
+////				System.out.println(msg);
+////			index++;
+////		}
+//
+//		return ret;
+//	}
 
 	private static short check_sql(boolean check_error)
 	{

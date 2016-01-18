@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 public class FinanceRecorderDatabaseTimeRange 
@@ -99,7 +100,7 @@ public class FinanceRecorderDatabaseTimeRange
 		return ret;
 	}
 
-	short restrict_time_range(final ArrayList<Integer> source_type_index_set, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg)
+	short restrict_time_range(final HashSet<Integer> source_type_index_set, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg)
 	{
 		assert !source_type_index_set.isEmpty() : "source_type_index_set should NOT be empty";
 // Search for the max start time and min end time to make sure the MySQL data is NOT out of range

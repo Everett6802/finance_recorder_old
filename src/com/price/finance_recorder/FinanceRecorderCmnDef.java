@@ -92,47 +92,50 @@ public class FinanceRecorderCmnDef
 			return "Success";
 	}
 
-//	public static final String CONF_FOLDERNAME = "conf";
 	public static final String DATA_FOLDER_NAME = "/var/tmp/finance";
 	public static final String DATA_SPLIT = ",";
+	public static final String DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%2d%2d";
+	public static final String DAILY_FINANCE_EMAIL_TITLE_FORMAT = "daily_finance%04d%2d%2d";
 	public static final String CONF_FOLDERNAME = "conf";
+	public static final String RESULT_FOLDER_NAME = "result";
 	public static final String CONF_ENTRY_IGNORE_FLAG = "#";
 	public static final int MAX_CONCURRENT_THREAD = 4;
 	public static final int MAX_MONTH_RANGE_IN_THREAD = 3;
 	public static final String WORKDAY_CANLENDAR_FILENAME = ".workday_canlendar.conf";
 	public static final String DATABASE_TIME_RANGE_FILENAME = ".database_time_range.conf";
+	public static final String FINANCE_RECORDER_CONF_FILENAME = "finance_recorder.conf";
 	public static final String DATABASE_TIME_RANGE_FILE_DST_PROJECT_NAME = "finance_analyzer";
-	public static final int FINANCE_SOURCE_SIZE = FinanceRecorderCmnDef.FinanceDataType.values().length;
+	public static final int FINANCE_SOURCE_SIZE = FinanceRecorderCmnDef.FinanceSourceType.values().length;
 
 	public static final String MYSQL_TABLE_NAME_BASE = "year";
 	public static final String MYSQL_DATE_FILED_NAME = "date";
 	public static final String MYSQL_FILED_NAME_BASE = "value";
 	
-	public static enum FinanceDataType
+	public static enum FinanceSourceType
 	{
-		FinanceData_StockExchangeAndVolume(0),
-		FinanceData_StockTop3LegalPersonsNetBuyOrSell(1),
-		FinanceData_StockMarginTradingAndShortSelling(2),
-		FinanceData_FutureAndOptionTop3LegalPersonsOpenInterest(3),
-		FinanceData_FutureOrOptionTop3LegalPersonsOpenInterest(4),
-		FinanceData_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest(5),
-		FinanceData_OptionPutCallRatio(6),
-		FinanceData_FutureTop10DealersAndLegalPersons(7);
+		FinanceSource_StockExchangeAndVolume(0),
+		FinanceSource_StockTop3LegalPersonsNetBuyOrSell(1),
+		FinanceSource_StockMarginTradingAndShortSelling(2),
+		FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest(3),
+		FinanceSource_FutureOrOptionTop3LegalPersonsOpenInterest(4),
+		FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest(5),
+		FinanceSource_OptionPutCallRatio(6),
+		FinanceSource_FutureTop10DealersAndLegalPersons(7);
 
 		private int value = 0;
-		private FinanceDataType(int value){this.value = value;}
-		public static FinanceDataType valueOf(int value)
+		private FinanceSourceType(int value){this.value = value;}
+		public static FinanceSourceType valueOf(int value)
 		{
 			switch (value)
 			{
-			case 0: return FinanceData_StockExchangeAndVolume;
-			case 1: return FinanceData_StockTop3LegalPersonsNetBuyOrSell;
-			case 2: return FinanceData_StockMarginTradingAndShortSelling;
-			case 3: return FinanceData_FutureAndOptionTop3LegalPersonsOpenInterest;
-			case 4: return FinanceData_FutureOrOptionTop3LegalPersonsOpenInterest;
-			case 5: return FinanceData_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest;
-			case 6: return FinanceData_OptionPutCallRatio;
-			case 7: return FinanceData_FutureTop10DealersAndLegalPersons;
+			case 0: return FinanceSource_StockExchangeAndVolume;
+			case 1: return FinanceSource_StockTop3LegalPersonsNetBuyOrSell;
+			case 2: return FinanceSource_StockMarginTradingAndShortSelling;
+			case 3: return FinanceSource_FutureAndOptionTop3LegalPersonsOpenInterest;
+			case 4: return FinanceSource_FutureOrOptionTop3LegalPersonsOpenInterest;
+			case 5: return FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest;
+			case 6: return FinanceSource_OptionPutCallRatio;
+			case 7: return FinanceSource_FutureTop10DealersAndLegalPersons;
 			default: return null;
 			}
 		}
@@ -799,7 +802,6 @@ public class FinanceRecorderCmnDef
 		return get_date_str(new java.util.Date());
 	}
 
-
 	public static short copy_file(String src_filepath, String dst_filepath)
 	{
 		Path src_filepath_obj = Paths.get(src_filepath);
@@ -818,7 +820,7 @@ public class FinanceRecorderCmnDef
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public static short execute_command(String command, StringBuilder result_str_builder)
+	public static short execute_shell_command(String command, StringBuilder result_str_builder)
 	{
 		StringBuffer output = new StringBuffer();
 		Process p;
@@ -848,9 +850,58 @@ public class FinanceRecorderCmnDef
 		return RET_SUCCESS;
 	}
 
+	public static boolean check_file_exist(final String filepath)
+	{
+		File file = new File(filepath);
+		return file.exists();
+	}
+
+	public static boolean check_config_file_exist(final String config_filename)
+	{
+		String conf_filepath = String.format("%s/%s/%s", get_current_path(), CONF_FOLDERNAME, config_filename);
+		return check_file_exist(conf_filepath);
+	}
+
+	public static short create_folder_if_not_exist(final String path)
+	{
+		short ret = RET_SUCCESS;
+		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+		if (!check_file_exist(path))
+		{
+			File file = new File(path);
+			if (!file.mkdirs())
+				ret = RET_FAILURE_IO_OPERATION;
+		}
+		return ret;
+	}
+
+	public static short create_folder_in_project_if_not_exist(final String foldername_in_project)
+	{
+		String folder_path = String.format("%s/%s", get_current_path(), foldername_in_project);
+		return create_folder_if_not_exist(folder_path);
+	}
+
 	public static short send_email(String title, String address, String content)
 	{
-		return RET_SUCCESS;
+		short ret = RET_SUCCESS;
+		String cmd = String.format("echo \"%s\" | mail -s \"%s\" %s", content, title, address);
+		try
+		{
+			StringBuilder result_str_builder = new StringBuilder();
+			ret = execute_shell_command(cmd, result_str_builder);
+			if (CheckFailure(ret))
+				return ret;
+//			Process p = Runtime.getRuntime().exec(cmd);
+//			int exit_val = p.waitFor();
+//			format_debug("The process of the command[%s] exit value: %d", cmd, exit_val);
+		}
+		catch (Exception ex)
+		{
+			format_error("Fail to run command: %s, due to: %s", cmd, ex.toString());
+			return RET_FAILURE_UNKNOWN;
+		}
+
+		return ret;
 	}
 	
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -860,4 +911,3 @@ public class FinanceRecorderCmnDef
 		public short notify(short type);
 	}
 }
-
