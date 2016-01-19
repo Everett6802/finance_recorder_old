@@ -33,25 +33,16 @@ public class FinanceRecorder
 
 	public static void main(String args[])
 	{
-//		finance_recorder_mgr.run_daily();
-//		HashMap<Integer, Integer> data_set_mapping = new HashMap<Integer, Integer>();
-//		data_set_mapping.put(2, 256);
-//		data_set_mapping.put(4, 512);
-//		if (data_set_mapping.get(2) == null)
-//		{
-//			System.err.print("Error");
-//		}
-//		System.out.print(String.format("Result: %d\n", data_set_mapping.get(2)));
-
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		ret = finance_recorder_mgr.initialize();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Faiil to initialize the Manager class, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		
 		boolean use_multithread = false;
-		boolean read_data = false;
 		boolean check_error = false;
+		boolean read_only = false;
 		boolean run_daily = false;
+		boolean read_data = false;
 		LinkedList<Integer> remove_database_list = null;
 		LinkedList<Integer> finance_data_type_index_list = null;
 		String time_month_begin = null;
@@ -68,6 +59,7 @@ public class FinanceRecorder
 			String option = args[index];
 			if (option.equals("-h") || option.equals("--help"))
 			{
+				FinanceRecorderCmnDef.enable_show_console(true);
 				show_usage();
 				System.exit(0);
 			}
@@ -133,6 +125,11 @@ public class FinanceRecorder
 				use_multithread = true;
 				index_offset = 1;
 			}
+			else if (option.equals("--read_only"))
+			{
+				read_only = true;
+				index_offset = 1;
+			}
 			else if (option.equals("--read_data"))
 			{
 				read_data = true;
@@ -159,7 +156,7 @@ public class FinanceRecorder
 			}
 			index += index_offset;
 		}
-// Setup parameter is necessary
+// Setup parameter if necessary
 		if (finance_data_type_index_list != null)
 		{
 			if (time_month_begin == null)
@@ -199,7 +196,6 @@ public class FinanceRecorder
 				if (FinanceRecorderCmnDef.is_show_console())
 					System.out.println(msg);
 				need_write = false;
-//				System.exit(0);
 			}
 			else
 				ret = setup_param(finance_data_type_index_list,time_month_begin, time_month_end);
@@ -207,7 +203,7 @@ public class FinanceRecorder
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to setup the parameters, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 
-		if (need_write)
+		if (!read_only && need_write)
 		{
 // Write the financial data into MySQL
 			if(FinanceRecorderCmnDef.is_show_console())
@@ -292,6 +288,7 @@ public class FinanceRecorder
 	    System.out.println("--remove_old\nDescription: Remove the old MySQL databases");
 		System.out.println("--multi_thread\nDescription: Write into MySQL database by using multiple threads");
 		System.out.println("--check_error\nDescription: Check if the data in the MySQL database is correct");
+		System.out.println("--read_only\nDescription: No need to write MySQL data\n");
 		System.out.println("--run_daily\nDescription: Run daily data\nCaution: Executed after writing MySQL data if set");
 		System.out.println("--read_data\nDescription: Read from MySQL database\nCaution: Executed after writing MySQL data if set");
 		System.out.println("--enable_console\nDescription: Print the runtime info on STDOUT/STDERR");

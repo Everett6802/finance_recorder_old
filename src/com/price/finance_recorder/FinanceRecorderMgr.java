@@ -230,7 +230,7 @@ OUT:
 					{
 						if (buf.indexOf(config_field[i]) != -1)
 						{
-							FinanceRecorderCmnDef.format_debug("Parse the parameter in the filed: %s", config_field[i]);
+							FinanceRecorderCmnDef.format_debug("Parse the parameter in the file: %s", config_field[i]);
 							config_field_type = ConfigFieldType.valueOf(i);
 							break;
 						}
@@ -670,7 +670,8 @@ OUT:
 		ret = FinanceRecorderCmnDef.direct_string_to_output_stream(total_time_range_str, conf_filepath);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
-		FinanceRecorderCmnDef.direct_string_to_output_stream(total_time_range_str);
+		if (FinanceRecorderCmnDef.is_show_console())
+			FinanceRecorderCmnDef.direct_string_to_output_stream(total_time_range_str);
 
 // Copy the database time range config file to the FinanceAnalyzer project
 		String current_path = FinanceRecorderCmnDef.get_current_path();

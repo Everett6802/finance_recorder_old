@@ -670,7 +670,7 @@ public class FinanceRecorderCmnClass
 
 		public short show_data()
 		{
-			if (FinanceRecorderCmnDef.is_show_console())
+			if (!FinanceRecorderCmnDef.is_show_console())
 				return FinanceRecorderCmnDef.RET_SUCCESS;
 
 			final int STAR_LEN = 120;
