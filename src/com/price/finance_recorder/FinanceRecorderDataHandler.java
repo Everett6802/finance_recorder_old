@@ -137,16 +137,18 @@ OUT:
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 
 		String csv_filepath = null;
-		int[] time_list = FinanceRecorderCmnClass.TimeRangeCfg.get_start_and_end_month_value_range(time_range_cfg);
+		int[] time_list = null;
+		if (time_range_cfg.is_month_type())
+			time_list = FinanceRecorderCmnClass.TimeRangeCfg.get_start_and_end_month_value_range(time_range_cfg);
+		else
+			time_list = FinanceRecorderCmnClass.TimeRangeCfg.get_start_and_end_date_value_range(time_range_cfg);
 		if (time_list == null)
 		{
 			FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_range_cfg.toString());
 			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 		}
-		int year_start = time_list[0]; 
-		int month_start = time_list[1];
-		int year_end = time_list[2];
-		int month_end = time_list[3];
+		int start_year = time_list[0]; 
+		int end_year = time_range_cfg.is_month_type() ? time_list[2] : time_list[3];
 
 // Establish the connection to the MySQL and create the database if not exist 
 		ret = sql_client.try_connect_mysql(
@@ -165,29 +167,24 @@ OUT:
 //		int old_sum = 0;
 //		int new_sum;
 OUT:
-		if (year_start == year_end)
+// Search for each table year by year
+		for (int year = start_year ; year <= end_year ; year++)
 		{
-			ret = sql_client.select_data(String.format("year%04d", year_start), cmd_table_field, new FinanceRecorderCmnClass.TimeRangeCfg(String.format("%04d-%02d", year_start, month_start), String.format("%04d-%02d", year_end, month_end)), result_set);
-			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				break OUT;
-		}
-		else
-		{
-// The first end
-			ret = sql_client.select_data(String.format("year%04d", year_start), cmd_table_field, new FinanceRecorderCmnClass.TimeRangeCfg(String.format("%04d-%02d", year_start, month_start), null), result_set);
-			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				break OUT;
-			for (int year = year_start + 1; year < year_end ; year++)
+			String table_name = String.format("%s%d", FinanceRecorderCmnDef.MYSQL_TABLE_NAME_BASE, year);
+			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg_in_year = null;
+			if (year == start_year || year == end_year)
 			{
-				ret = sql_client.select_data(String.format("year%04d", year), cmd_table_field, result_set);
-				if (FinanceRecorderCmnDef.CheckFailure(ret))
-					break OUT;
+				if (start_year == end_year)
+					time_range_cfg_in_year = new FinanceRecorderCmnClass.TimeRangeCfg(time_range_cfg.get_start_time().toString(), time_range_cfg.get_end_time().toString());
+				else if (year == start_year)
+					time_range_cfg_in_year = new FinanceRecorderCmnClass.TimeRangeCfg(time_range_cfg.get_start_time().toString(), null);
+				else
+					time_range_cfg_in_year = new FinanceRecorderCmnClass.TimeRangeCfg(null, time_range_cfg.get_end_time().toString());
 			}
-			ret = sql_client.select_data(String.format("year%04d", year_end), cmd_table_field, new FinanceRecorderCmnClass.TimeRangeCfg(null, String.format("%04d-%02d", year_end, month_end)), result_set);
+			ret = sql_client.select_data(table_name, cmd_table_field, time_range_cfg_in_year, result_set);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				break OUT;
 		}
-
 // Destroy the connection to the MySQL
 		sql_client.disconnect_mysql();
 

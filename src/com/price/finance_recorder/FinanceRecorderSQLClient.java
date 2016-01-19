@@ -84,7 +84,8 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 			{
 //				snprintf(field_buf, 16, ",%s%d", MYSQL_FILED_NAME_BASE, query_field[field_index]);
 //				field_cmd += string(field_buf);
-				field_cmd += String.format(",%s%d", FinanceRecorderCmnDef.MYSQL_FILED_NAME_BASE, iter);
+				Integer index = iter.next();
+				field_cmd += String.format(",%s%d", FinanceRecorderCmnDef.MYSQL_FILED_NAME_BASE, index);
 			}
 			field_cmd_builder.append(field_cmd);
 		}
@@ -191,7 +192,6 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 			} 
 			catch (SQLException e) 
 			{
-				// TODO Auto-generated catch block
 				FinanceRecorderCmnDef.format_error("Fail to close the connection to MySQL, due to %s", e.toString());
 				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL; 
 			}
@@ -560,7 +560,7 @@ OUT:
 				int month_end = time_end_list[1];
 				cmd_select_data += String.format(FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT, month_start, month_end);
 			}
-			if (time_range_cfg.get_start_time_str() != null)
+			else if (time_range_cfg.get_start_time_str() != null)
 			{
 				int[] time_start_list = FinanceRecorderCmnClass.TimeCfg.get_month_value(time_range_cfg.get_start_time_str());
 				if (time_start_list == null)
@@ -568,7 +568,7 @@ OUT:
 				int month_start = time_start_list[1];
 				cmd_select_data += String.format(FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT, month_start);
 			}
-			if (time_range_cfg.get_end_time_str() != null)
+			else if (time_range_cfg.get_end_time_str() != null)
 			{
 				int[] time_end_list = FinanceRecorderCmnClass.TimeCfg.get_month_value(time_range_cfg.get_end_time_str());
 				if (time_end_list == null)
@@ -632,17 +632,18 @@ OUT:
 			{
 				for(int i = 0 ; i < field_index_list_len ; i++)
 				{
-					String field_type = finance_data_sql_field_type_definition[field_index_list.get(i)];
+					Integer field_index = field_index_list.get(i);
+					String field_type = finance_data_sql_field_type_definition[field_index];
 					if (field_type.equals("INT"))
-						result_set.set_data(finace_data_type_index, FinanceFieldType.FinanceField_INT.value(), rs.getInt(finance_data_sql_field_definition[field_index_list.get(i)]));
+						result_set.set_data(finace_data_type_index, field_index, rs.getInt(finance_data_sql_field_definition[field_index]));
 					else if (field_type.equals("BIGINT"))
-						result_set.set_data(finace_data_type_index, FinanceFieldType.FinanceField_LONG.value(), rs.getLong(finance_data_sql_field_definition[field_index_list.get(i)]));
+						result_set.set_data(finace_data_type_index, field_index, rs.getLong(finance_data_sql_field_definition[field_index]));
 					else if (field_type.equals("FLOAT"))
-						result_set.set_data(finace_data_type_index, FinanceFieldType.FinanceField_FLOAT.value(), rs.getFloat(finance_data_sql_field_definition[field_index_list.get(i)]));
+						result_set.set_data(finace_data_type_index, field_index, rs.getFloat(finance_data_sql_field_definition[field_index]));
 					else if (field_type.contains("DATE"))
 					{
-						String date_field = finance_data_sql_field_definition[field_index_list.get(i)];
-						String date_field_data = rs.getString(date_field);
+						String field_date_type = "DATE"; //finance_data_sql_field_definition[field_index_list.get(i)];
+						String date_field_data = rs.getString(field_date_type);
 						result_set.set_date(date_field_data);
 					}
 					else

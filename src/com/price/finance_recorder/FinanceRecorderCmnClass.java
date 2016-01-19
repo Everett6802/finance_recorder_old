@@ -252,6 +252,7 @@ public class FinanceRecorderCmnClass
 
 		public static int[] get_start_and_end_month_value_range(TimeRangeCfg time_range_cfg)
 		{	
+			assert time_range_cfg.is_month_type() : "The time_range_cfg should be Month type";
 			assert time_range_cfg.get_start_time() != null : "The start time in time_rangte_cfg should NOT be NULL";
 			int[] month_value_start = TimeCfg.get_month_value(time_range_cfg.get_start_time_str());
 			if (month_value_start == null)
@@ -262,6 +263,20 @@ public class FinanceRecorderCmnClass
 				return null;
 
 			return new int[]{month_value_start[0], month_value_start[1], month_value_end[0], month_value_end[1]};
+		}
+		public static int[] get_start_and_end_date_value_range(TimeRangeCfg time_range_cfg)
+		{	
+			assert !time_range_cfg.is_month_type() : "The time_range_cfg should be Date type";
+			assert time_range_cfg.get_start_time() != null : "The start time in time_rangte_cfg should NOT be NULL";
+			int[] date_value_start = TimeCfg.get_date_value(time_range_cfg.get_start_time_str());
+			if (date_value_start == null)
+				return null;
+			assert time_range_cfg.get_end_time() != null : "The end time in time_rangte_cfg should NOT be NULL";
+			int[] date_value_end = TimeCfg.get_date_value(time_range_cfg.get_end_time_str());
+			if (date_value_end == null)
+				return null;
+
+			return new int[]{date_value_start[0], date_value_start[1], date_value_start[2], date_value_end[0], date_value_end[1], date_value_end[2]};
 		}
 	};
 
@@ -301,10 +316,6 @@ public class FinanceRecorderCmnClass
 
 		public void add(T data)
 		{
-//			if (array_pos + 1 >= array_size)
-//				alloc_new();
-//
-//			array_data[array_pos++] = data;
 			array_data.add(data);
 			array_size++;
 		}
@@ -318,7 +329,6 @@ public class FinanceRecorderCmnClass
 				FinanceRecorderCmnDef.error(errmsg);
 				throw new IndexOutOfBoundsException(errmsg);
 			}
-//			return array_data[index];
 			return array_data.get(index);
 		}
 	};
@@ -335,6 +345,7 @@ public class FinanceRecorderCmnClass
 
 		public QuerySet()
 		{
+			query_array = new ArrayList<LinkedList<Integer>>();
 			for (int i = 0 ; i < FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE ; i++)
 				query_array.add(new LinkedList<Integer>());
 		}
@@ -519,6 +530,7 @@ public class FinanceRecorderCmnClass
 					FinanceRecorderCmnDef.format_error("The unsupported field type: %d", FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index]);
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				}
+				FinanceRecorderCmnDef.format_debug("ResultSet Map: %d, %d", key, value);
 				data_set_mapping.put(Integer.valueOf(key), Integer.valueOf(value));
 			}
 			return FinanceRecorderCmnDef.RET_SUCCESS;
@@ -527,12 +539,11 @@ public class FinanceRecorderCmnClass
 		public short add_set(int source_index, final LinkedList<Integer> field_list)
 		{
 			short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-			int field_list_size = field_list.size();
 			ListIterator<Integer> iter = field_list.listIterator(0);
 			while (iter.hasNext())
 			{
-				Integer index = iter.next();
-				ret = add_set(source_index, field_list.get(index));
+				Integer field_index = iter.next();
+				ret = add_set(source_index, field_index);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					return ret;
 			}
@@ -566,12 +577,12 @@ public class FinanceRecorderCmnClass
 		private short find_data_pos(int source_index, int field_index, short[] field_type_array)
 		{
 			short key = get_combined_index(source_index, field_index);
-			if (data_set_mapping.get(key) == null)
+			if (data_set_mapping.get(Integer.valueOf(key)) == null)
 			{
 				FinanceRecorderCmnDef.format_error("The key[%d] from (%d, %d) is NOT FOUND", key, source_index, field_index);
 				return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 			}
-			short value = data_set_mapping.get(key).shortValue();
+			short value = data_set_mapping.get(Integer.valueOf(key)).shortValue();
 			field_type_array[0] = get_upper_subindex(value);
 			field_type_array[1] = get_lower_subindex(value);
 			return FinanceRecorderCmnDef.RET_SUCCESS;
@@ -742,21 +753,24 @@ public class FinanceRecorderCmnClass
 			short[] field_type_array = new short[2];
 			find_and_check_data_pos(source_index, field_index, field_type_array);
 			check_data_pos_boundary(field_type_array[0], field_type_array[1], FinanceRecorderCmnDef.FinanceFieldType.FinanceField_INT.value(), int_data_set_size);
-			return int_data_set.get(field_type_array[0]);
+			assert field_type_array[0] == FinanceRecorderCmnDef.FinanceFieldType.FinanceField_INT.value() : String.format("The type[%d] is NOT INT", FinanceRecorderCmnDef.FinanceFieldType.FinanceField_FLOAT.value());
+			return int_data_set.get(field_type_array[1]);
 		}
 		public final FinanceLongDataArray get_long_array(int source_index, int field_index)
 		{
 			short[] field_type_array = new short[2];
 			find_and_check_data_pos(source_index, field_index, field_type_array);
 			check_data_pos_boundary(field_type_array[0], field_type_array[1], FinanceRecorderCmnDef.FinanceFieldType.FinanceField_LONG.value(), long_data_set_size);
-			return long_data_set.get(field_type_array[0]);
+			assert field_type_array[0] == FinanceRecorderCmnDef.FinanceFieldType.FinanceField_LONG.value() : String.format("The type[%d] is NOT LONG", FinanceRecorderCmnDef.FinanceFieldType.FinanceField_FLOAT.value());
+			return long_data_set.get(field_type_array[1]);
 		}
 		public final FinanceFloatDataArray get_float_array(int source_index, int field_index)
 		{
 			short[] field_type_array = new short[2];
 			find_and_check_data_pos(source_index, field_index, field_type_array);
 			check_data_pos_boundary(field_type_array[0], field_type_array[1], FinanceRecorderCmnDef.FinanceFieldType.FinanceField_FLOAT.value(), float_data_set_size);
-			return float_data_set.get(field_type_array[0]);
+			assert field_type_array[0] == FinanceRecorderCmnDef.FinanceFieldType.FinanceField_FLOAT.value() : String.format("The type[%d] is NOT FLOAT", FinanceRecorderCmnDef.FinanceFieldType.FinanceField_FLOAT.value());
+			return float_data_set.get(field_type_array[1]);
 		}
 		public int get_int_array_element(int source_index, int field_index, int index) {return get_int_array(source_index, field_index).get_index(index);}
 		public long get_long_array_element(int source_index, int field_index, int index) {return get_long_array(source_index, field_index).get_index(index);}

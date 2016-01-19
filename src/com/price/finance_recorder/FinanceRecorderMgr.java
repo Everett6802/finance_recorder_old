@@ -10,8 +10,6 @@ import java.util.concurrent.atomic.*;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.*;
 
-import com.price.finance_recorder.FinanceRecorderCmnDef.FinanceSourceType;
-
 
 public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserverInf
 {
@@ -35,14 +33,24 @@ public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserver
 		}
 		public int value(){return this.value;}
 	};
-	
+
 	private static final int SHOW_RESULT_STDOUT = 0x1;
 	private static final int SHOW_RESULT_FILE = 0x2;
 	private static final int SHOW_RESULT_EMAIL = 0x4;
 
 	private HashMap<Integer,FinanceRecorderCmnClass.TimeRangeCfg> finance_source_time_range_table = new HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg>();
 	private LinkedList<String> email_address_list = new LinkedList<String>();
-	
+
+	public short initialize()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		ret = parse_config();
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
 	public short update_by_config_file(String filename)
 	{
 		String current_path = FinanceRecorderCmnDef.get_current_path();
@@ -539,7 +547,6 @@ OUT:
 				if (!FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
 					return ret;
 			}
-
 			result_set.switch_to_check_date_mode();
 		}
 // Check the result
@@ -659,10 +666,11 @@ OUT:
 			FinanceRecorderCmnDef.format_debug("Database[%s] start date: %s", finance_recorder_data_handler.get_description(), database_start_date_builder.toString());
 		}
 // Write the time range into the config file
-		ret = direct_string_to_output_stream(total_time_range_str, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+		ret = FinanceRecorderCmnDef.direct_string_to_output_stream(total_time_range_str, conf_filepath);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
-		direct_string_to_output_stream(total_time_range_str);
+		FinanceRecorderCmnDef.direct_string_to_output_stream(total_time_range_str);
 
 // Copy the database time range config file to the FinanceAnalyzer project
 		String current_path = FinanceRecorderCmnDef.get_current_path();
@@ -842,62 +850,60 @@ OUT:
 		}
 		return ret;
 	}
-
-	private short direct_string_to_output_stream(String data, String conf_filename)
-	{
-// Open the config file for writing
-		OutputStreamWriter osw = null;
-		BufferedWriter bw = null;
-		try
-		{
-			if(conf_filename != null)
-			{
-// To file
-				String current_path = FinanceRecorderCmnDef.get_current_path();
-				String conf_filepath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME, conf_filename);
-				File f = new File(conf_filepath);
-				FileOutputStream fos = new FileOutputStream(f);
-				osw = new OutputStreamWriter(fos);
-			}
-			else
-			{
-// To Standard Output
-				osw = new OutputStreamWriter(System.out);
-			}
-			bw = new BufferedWriter(osw);
-		}
-		catch (IOException e)
-		{
-			FinanceRecorderCmnDef.format_error("Error occur while directing to output stream, due to: %s", e.toString());
-			return FinanceRecorderCmnDef.RET_FAILURE_IO_OPERATION;
-		}
-
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-// Read the conf file
-		try
-		{
-			bw.write(data);
-			bw.flush();
-		}
-		catch (IOException e)
-		{
-			FinanceRecorderCmnDef.format_error("Error occur while parsing the config file, due to: %s", e.toString());
-			ret = FinanceRecorderCmnDef.RET_FAILURE_IO_OPERATION;
-		}
-		finally
-		{
-			if (bw != null)
-			{
-				try{bw.close();}
-				catch(Exception e){}
-				bw = null;
-			}
-		}
-		return ret;
-	}
-//	private short direct_string_to_file(String data){return direct_string_to_output_stream(data, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);}
-//	private short direct_string_to_stdout(String data){return direct_string_to_output_stream(data, null);}
-	private short direct_string_to_output_stream(String data){return direct_string_to_output_stream(data, null);}
+//
+//	private short direct_string_to_output_stream(String data, String conf_filename)
+//	{
+//// Open the config file for writing
+//		OutputStreamWriter osw = null;
+//		BufferedWriter bw = null;
+//		try
+//		{
+//			if(conf_filename != null)
+//			{
+//// To file
+//				String current_path = FinanceRecorderCmnDef.get_current_path();
+//				String conf_filepath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME, conf_filename);
+//				File f = new File(conf_filepath);
+//				FileOutputStream fos = new FileOutputStream(f);
+//				osw = new OutputStreamWriter(fos);
+//			}
+//			else
+//			{
+//// To Standard Output
+//				osw = new OutputStreamWriter(System.out);
+//			}
+//			bw = new BufferedWriter(osw);
+//		}
+//		catch (IOException e)
+//		{
+//			FinanceRecorderCmnDef.format_error("Error occur while directing to output stream, due to: %s", e.toString());
+//			return FinanceRecorderCmnDef.RET_FAILURE_IO_OPERATION;
+//		}
+//
+//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+//// Read the conf file
+//		try
+//		{
+//			bw.write(data);
+//			bw.flush();
+//		}
+//		catch (IOException e)
+//		{
+//			FinanceRecorderCmnDef.format_error("Error occur while parsing the config file, due to: %s", e.toString());
+//			ret = FinanceRecorderCmnDef.RET_FAILURE_IO_OPERATION;
+//		}
+//		finally
+//		{
+//			if (bw != null)
+//			{
+//				try{bw.close();}
+//				catch(Exception e){}
+//				bw = null;
+//			}
+//		}
+//		return ret;
+//	}
+//	private short direct_string_to_output_stream(String data){return direct_string_to_output_stream(data, null);}
 
 	public short run_daily()
 	{
@@ -1049,7 +1055,7 @@ OUT:
 		if ((show_result_type & SHOW_RESULT_STDOUT) != 0)
 		{
 // Write the data into STDOUT
-			ret =  direct_string_to_output_stream(buf_string);
+			ret =  FinanceRecorderCmnDef.direct_string_to_output_stream(buf_string);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 		}
@@ -1057,19 +1063,21 @@ OUT:
 		if ((show_result_type & SHOW_RESULT_FILE) != 0)
 		{
 			String filename = String.format(FinanceRecorderCmnDef.DAILY_FINANCE_FILENAME_FORMAT, time_cfg.get_year(), time_cfg.get_month(), time_cfg.get_day());
-			String filepath = String.format("%s/%s", FinanceRecorderCmnDef.RESULT_FOLDER_NAME, filename);
+			String filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.RESULT_FOLDER_NAME, filename);
 			FinanceRecorderCmnDef.format_debug("Write daily data to file[%s]", filepath);
-			ret = direct_string_to_output_stream(buf_string, filepath);
+			ret = FinanceRecorderCmnDef.direct_string_to_output_stream(buf_string, filepath);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 //			System.out.printf("Check the result in file: %s\n", filepath);
 		}
-	// Send the result by email
+// Send the result by email
 		if ((show_result_type & SHOW_RESULT_EMAIL) != 0)
 		{
 			String title = String.format(FinanceRecorderCmnDef.DAILY_FINANCE_EMAIL_TITLE_FORMAT, time_cfg.get_year(), time_cfg.get_month(), time_cfg.get_day());
 			for (String email_address : email_address_list)
 			{
+				if (email_address.isEmpty())
+					continue;
 				FinanceRecorderCmnDef.format_debug("Write daily data by email[%s] to %s", title, email_address);
 				ret = FinanceRecorderCmnDef.send_email(title, email_address, buf_string);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))

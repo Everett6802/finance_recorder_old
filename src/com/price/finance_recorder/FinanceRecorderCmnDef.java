@@ -94,8 +94,8 @@ public class FinanceRecorderCmnDef
 
 	public static final String DATA_FOLDER_NAME = "/var/tmp/finance";
 	public static final String DATA_SPLIT = ",";
-	public static final String DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%2d%2d";
-	public static final String DAILY_FINANCE_EMAIL_TITLE_FORMAT = "daily_finance%04d%2d%2d";
+	public static final String DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%02d%02d";
+	public static final String DAILY_FINANCE_EMAIL_TITLE_FORMAT = "daily_finance%04d%02d%02d";
 	public static final String CONF_FOLDERNAME = "conf";
 	public static final String RESULT_FOLDER_NAME = "result";
 	public static final String CONF_ENTRY_IGNORE_FLAG = "#";
@@ -819,6 +819,56 @@ public class FinanceRecorderCmnDef
 		}
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
+
+	public static short direct_string_to_output_stream(String data, String filepath)
+	{
+// Open the config file for writing
+		OutputStreamWriter osw = null;
+		BufferedWriter bw = null;
+		try
+		{
+			if(filepath != null) // To file
+			{
+				File f = new File(filepath);
+				FileOutputStream fos = new FileOutputStream(f);
+				osw = new OutputStreamWriter(fos);
+			}
+			else // To Standard Output
+			{
+				osw = new OutputStreamWriter(System.out);
+			}
+			bw = new BufferedWriter(osw);
+		}
+		catch (IOException e)
+		{
+			FinanceRecorderCmnDef.format_error("Error occur while directing to output stream, due to: %s", e.toString());
+			return FinanceRecorderCmnDef.RET_FAILURE_IO_OPERATION;
+		}
+
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Read the conf file
+		try
+		{
+			bw.write(data);
+			bw.flush();
+		}
+		catch (IOException e)
+		{
+			FinanceRecorderCmnDef.format_error("Error occur while parsing the config file, due to: %s", e.toString());
+			ret = FinanceRecorderCmnDef.RET_FAILURE_IO_OPERATION;
+		}
+		finally
+		{
+			if (bw != null)
+			{
+				try{bw.close();}
+				catch(Exception e){}
+				bw = null;
+			}
+		}
+		return ret;
+	}
+	public static short direct_string_to_output_stream(String data){return direct_string_to_output_stream(data, null);}
 
 	public static short execute_shell_command(String command, StringBuilder result_str_builder)
 	{
