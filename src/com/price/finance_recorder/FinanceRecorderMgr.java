@@ -14,7 +14,7 @@ import java.util.regex.*;
 public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserverInf
 {
 	private static FinanceRecorderWorkdayCalendar workday_calendar = FinanceRecorderWorkdayCalendar.get_instance();
-	private static FinanceRecorderDatabaseTimeRange database_time_range = FinanceRecorderDatabaseTimeRange.get_instance();
+	private static FinanceRecorderDatabaseTimeRange database_time_range = null; //FinanceRecorderDatabaseTimeRange.get_instance();
 
 	enum ConfigFieldType
 	{
@@ -494,6 +494,7 @@ OUT:
 
 	public short query(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, final FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.ResultSet result_set)
 	{
+		database_time_range = FinanceRecorderDatabaseTimeRange.get_instance();
 		if (time_range_cfg.get_start_time() == null || time_range_cfg.get_end_time() == null)
 		{
 			FinanceRecorderCmnDef.error("The start/end time in time_range_cfg should NOT be NULL");
@@ -851,60 +852,6 @@ OUT:
 		}
 		return ret;
 	}
-//
-//	private short direct_string_to_output_stream(String data, String conf_filename)
-//	{
-//// Open the config file for writing
-//		OutputStreamWriter osw = null;
-//		BufferedWriter bw = null;
-//		try
-//		{
-//			if(conf_filename != null)
-//			{
-//// To file
-//				String current_path = FinanceRecorderCmnDef.get_current_path();
-//				String conf_filepath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME, conf_filename);
-//				File f = new File(conf_filepath);
-//				FileOutputStream fos = new FileOutputStream(f);
-//				osw = new OutputStreamWriter(fos);
-//			}
-//			else
-//			{
-//// To Standard Output
-//				osw = new OutputStreamWriter(System.out);
-//			}
-//			bw = new BufferedWriter(osw);
-//		}
-//		catch (IOException e)
-//		{
-//			FinanceRecorderCmnDef.format_error("Error occur while directing to output stream, due to: %s", e.toString());
-//			return FinanceRecorderCmnDef.RET_FAILURE_IO_OPERATION;
-//		}
-//
-//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-//// Read the conf file
-//		try
-//		{
-//			bw.write(data);
-//			bw.flush();
-//		}
-//		catch (IOException e)
-//		{
-//			FinanceRecorderCmnDef.format_error("Error occur while parsing the config file, due to: %s", e.toString());
-//			ret = FinanceRecorderCmnDef.RET_FAILURE_IO_OPERATION;
-//		}
-//		finally
-//		{
-//			if (bw != null)
-//			{
-//				try{bw.close();}
-//				catch(Exception e){}
-//				bw = null;
-//			}
-//		}
-//		return ret;
-//	}
-//	private short direct_string_to_output_stream(String data){return direct_string_to_output_stream(data, null);}
 
 	public short run_daily()
 	{

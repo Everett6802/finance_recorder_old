@@ -3,6 +3,7 @@
 .settings/
 .database_time_range.conf
 .workday_canlendar.conf
+finance_recorder.jar
 bin/
 lib/
 log/

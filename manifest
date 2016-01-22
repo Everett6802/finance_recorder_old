@@ -1,0 +1,3 @@
+Main-Class: com.price.finance_recorder.FinanceRecorder
+Class-Path: ./lib/msg_dumper.jar ./lib/mysql-connector-java-5.1.17-bin.jar ./lib/libmsg_dumper_syslog.so
+

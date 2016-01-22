@@ -915,7 +915,6 @@ public class FinanceRecorderCmnDef
 	public static short create_folder_if_not_exist(final String path)
 	{
 		short ret = RET_SUCCESS;
-		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
 		if (!check_file_exist(path))
 		{
 			File file = new File(path);
