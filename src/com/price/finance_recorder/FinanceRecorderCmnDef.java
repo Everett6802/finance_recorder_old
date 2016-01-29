@@ -97,7 +97,8 @@ public class FinanceRecorderCmnDef
 	public static final String DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%02d%02d";
 	public static final String DAILY_FINANCE_EMAIL_TITLE_FORMAT = "daily_finance%04d%02d%02d";
 	public static final String CONF_FOLDERNAME = "conf";
-	public static final String RESULT_FOLDER_NAME = "result";
+	public static final String BACKUP_FOLDERNAME = ".backup";
+	public static final String RESULT_FOLDERNAME = "result";
 	public static final String CONF_ENTRY_IGNORE_FLAG = "#";
 	public static final int MAX_CONCURRENT_THREAD = 4;
 	public static final int MAX_MONTH_RANGE_IN_THREAD = 3;

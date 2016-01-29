@@ -937,7 +937,7 @@ OUT:
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 	// Check the folder of keeping track of the result exist
-		ret = FinanceRecorderCmnDef.create_folder_in_project_if_not_exist(FinanceRecorderCmnDef.RESULT_FOLDER_NAME);
+		ret = FinanceRecorderCmnDef.create_folder_in_project_if_not_exist(FinanceRecorderCmnDef.RESULT_FOLDERNAME);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
@@ -1023,7 +1023,7 @@ OUT:
 		if ((show_result_type & SHOW_RESULT_FILE) != 0)
 		{
 			String filename = String.format(FinanceRecorderCmnDef.DAILY_FINANCE_FILENAME_FORMAT, time_cfg.get_year(), time_cfg.get_month(), time_cfg.get_day());
-			String filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.RESULT_FOLDER_NAME, filename);
+			String filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.RESULT_FOLDERNAME, filename);
 			FinanceRecorderCmnDef.format_debug("Write daily data to file[%s]", filepath);
 			ret = FinanceRecorderCmnDef.direct_string_to_output_stream(buf_string, filepath);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))

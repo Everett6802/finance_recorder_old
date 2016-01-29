@@ -11,8 +11,6 @@ import java.util.regex.Pattern;
 public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implements FinanceRecorderCmnDef.FinanceObserverInf
 {
 	private static final String CSV_FILE_FOLDER = "/var/tmp/finance";
-//	private static final String DATE_FORMAT_STRING = "yyyy-MM";
-//	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(DATE_FORMAT_STRING);
 	private static final boolean IgnoreErrorIfCSVNotExist = true;
 
 	private int finace_data_type_index;
@@ -130,7 +128,6 @@ OUT:
 		return ret;
 	}
 
-//	read_from_sql(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String cmd_table_field, LinkedList<String> data_list)
 	short read_from_sql(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String cmd_table_field, FinanceRecorderCmnClass.ResultSet result_set)
 	{
 // Set the mapping table of reading the specific CSV files and writing correct SQL database
@@ -162,10 +159,6 @@ OUT:
 			return ret;
 		}
 
-//		String time_start_str = null;
-//		String time_end_str = null;
-//		int old_sum = 0;
-//		int new_sum;
 OUT:
 // Search for each table year by year
 		for (int year = start_year ; year <= end_year ; year++)
@@ -277,7 +270,6 @@ OUT:
 		String start_table_name = String.format("year%04d", start_year);
 		String end_table_name = String.format("year%04d", end_year);
 // Find the start date
-//		LinkedList<String> start_date_list = new LinkedList<String>();
 		FinanceRecorderCmnClass.ResultSet start_date_result_set = new FinanceRecorderCmnClass.ResultSet();
 		ret = sql_client.select_data(start_table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finace_data_type_index][0], start_date_result_set);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -300,7 +292,7 @@ OUT:
 			FinanceRecorderCmnDef.format_error("Fail to find the start date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index], start_table_name);
 			return ret;
 		}
-//		if (end_date_list.isEmpty())
+
 		if (end_date_result_set.is_empty())
 		{
 			FinanceRecorderCmnDef.format_error("Fail to find any date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index], end_table_name);
@@ -314,7 +306,6 @@ OUT:
 		return ret;
 	}
 
-//	public short find_database_time_range_list(LinkedList<String> date_list)
 	public short find_database_time_range_list(FinanceRecorderCmnClass.ResultSet result_set)
 	{
 		if (database_time_range_cfg == null)
@@ -330,11 +321,9 @@ OUT:
 		}
 		int year_start = time_list[0]; 
 		int year_end = time_list[2];
-//		return find_database_time_range_list(year_start, year_end, date_list);
 		return find_database_time_range_list(year_start, year_end, result_set);
 	}
 
-//	public short find_database_time_range_list(int start_year, int end_year, LinkedList<String> date_list)
 	public short find_database_time_range_list(int start_year, int end_year, FinanceRecorderCmnClass.ResultSet result_set)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
@@ -357,7 +346,6 @@ OUT:
 		{
 // Find the date in each table
 			table_name = String.format("year%04d", year);
-//			ret = sql_client.select_data(table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finace_data_type_index][0], date_list);
 			ret = sql_client.select_data(table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finace_data_type_index][0], result_set);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 			{
@@ -365,7 +353,6 @@ OUT:
 				return ret;
 			}
 		}
-//		if (date_list.isEmpty())
 		if (result_set.is_empty())
 		{
 			FinanceRecorderCmnDef.format_error("Fail to find any date in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index]);
@@ -401,6 +388,16 @@ OUT:
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		time_range_str_builder.append(String.format("%s %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index], database_time_range_cfg.toString()));
 //		System.out.printf("%s: %s\n", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index], database_time_range_cfg.toString());
+		return ret;
+	}
+
+	public short backup_sql()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		ret = FinanceRecorderCmnDef.create_folder_if_not_exist(FinanceRecorderCmnDef.BACKUP_FOLDERNAME);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+
 		return ret;
 	}
 
