@@ -60,9 +60,17 @@ public class FinanceRecorder
 					show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
 
 				finance_data_type_index_list = new LinkedList<Integer>();
-				String[] data_source_array = args[index + 1].split(PARAM_SPLIT);
-				for (String data_source : data_source_array)
-					finance_data_type_index_list.addLast(Integer.valueOf(data_source));
+				if (args[index + 1].equals("all"))
+				{
+					for (int source_index = 0 ; source_index < FinanceRecorderCmnDef.FinanceSourceType.values().length ; source_index++)
+						finance_data_type_index_list.addLast(source_index);
+				}
+				else
+				{
+					String[] data_source_array = args[index + 1].split(PARAM_SPLIT);
+					for (String data_source : data_source_array)
+						finance_data_type_index_list.addLast(Integer.valueOf(data_source));
+				}
 				index_offset = 2;
 			}
 			else if (option.equals("-t") || option.equals("--time"))
@@ -187,7 +195,7 @@ public class FinanceRecorder
 		if (need_write(action_type))
 		{
 // Write the financial data into MySQL
-//			write_sql(use_multithread);
+			write_sql(use_multithread);
 // Check the database and find the time range of each database. Only needed when the content of the MySQL is modified
 			check_sql(check_error);
 		}
@@ -226,9 +234,10 @@ public class FinanceRecorder
 		System.out.println("====================== Usage ======================");
 		System.out.println("-h|--help\nDescription: The usage");
 		System.out.println("-r|--remove\nDescription: Remove some MySQL database(s)");
-		System.out.println("  Format: 1,2,3");
-		System.out.println("-s|--source\nDescription: Type of CSV date file\nDefault: All types\nCaution: Ignored if -f|--file set");
-		System.out.println("  Format: 1,2,3");
+		System.out.println("  Format: 1,2,3 (Start from 0)");
+		System.out.println("-s|--source\nDescription: Type of CSV date file\nCaution: Ignored if -f|--file set");
+		System.out.println("  Format: 1,2,3 (Start from 0)");
+		System.out.println("  all: All types");
 		for (int index = 0 ; index < FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST.length ; index++)
 			System.out.printf("  %d: %s\n", index, FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[index]);
 		System.out.println("-t|--time\nTime: The time range of the CSV data file\nDefault: Current month\nCaution1: Ignored if -f|--file set\nCaution2: -s|--source SHOULD be set if set");

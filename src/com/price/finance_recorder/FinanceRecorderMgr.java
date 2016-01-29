@@ -173,15 +173,15 @@ OUT:
 	public short update_by_parameter(LinkedList<Integer> finance_data_type_index_list, String time_month_start, String time_month_end)
 	{
 // Check the time of start time
-		if (FinanceRecorderCmnClass.TimeCfg.get_date_value_matcher(time_month_start) == null)
+		if (FinanceRecorderCmnClass.TimeCfg.get_month_value_matcher(time_month_start) == null)
 		{
-			FinanceRecorderCmnDef.format_error("Incorrect start time format[%s] in config file", time_month_start);
+			FinanceRecorderCmnDef.format_error("Incorrect start month format[%s] in config file", time_month_start);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 		}
 // Check the time of start time
-		if (FinanceRecorderCmnClass.TimeCfg.get_date_value_matcher(time_month_end) == null)
+		if (FinanceRecorderCmnClass.TimeCfg.get_month_value_matcher(time_month_end) == null)
 		{
-			FinanceRecorderCmnDef.format_error("Incorrect end time format[%s] in config file", time_month_end);
+			FinanceRecorderCmnDef.format_error("Incorrect end month format[%s] in config file", time_month_end);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 		}
 
