@@ -92,7 +92,7 @@ public class FinanceRecorderCmnDef
 			return "Success";
 	}
 
-	public static final String DATA_FOLDER_NAME = "/var/tmp/finance";
+	public static final String DATA_FOLDERPATH = "/var/tmp/finance";
 	public static final String DATA_SPLIT = ",";
 	public static final String DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%02d%02d";
 	public static final String DAILY_FINANCE_EMAIL_TITLE_FORMAT = "daily_finance%04d%02d%02d";
@@ -100,9 +100,11 @@ public class FinanceRecorderCmnDef
 	public static final String BACKUP_FOLDERNAME = ".backup";
 	public static final String RESULT_FOLDERNAME = "result";
 	public static final String CONF_ENTRY_IGNORE_FLAG = "#";
+	public static final String BACKUP_FILENAME = "backup.conf";
 	public static final int MAX_CONCURRENT_THREAD = 4;
-	public static final int MAX_MONTH_RANGE_IN_THREAD = 3;
+	public static final int WRITE_SQL_MAX_MONTH_RANGE_IN_THREAD = 3;
 	public static final String WORKDAY_CANLENDAR_FILENAME = ".workday_canlendar.conf";
+	public static final int BACKUP_SQL_MAX_MONTH_RANGE_IN_THREAD = 12;
 	public static final String DATABASE_TIME_RANGE_FILENAME = ".database_time_range.conf";
 	public static final String FINANCE_RECORDER_CONF_FILENAME = "finance_recorder.conf";
 	public static final String DATABASE_TIME_RANGE_FILE_DST_PROJECT_NAME = "finance_analyzer";
@@ -606,7 +608,6 @@ public class FinanceRecorderCmnDef
 	public static final int FINANCE_DATABASE_FIELD_AMOUNT_LIST[] =
 	{
 		STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION.length,
-		STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION.length,
 		STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION.length,
 		STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION.length,
 		FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION.length,
@@ -913,16 +914,23 @@ public class FinanceRecorderCmnDef
 		return check_file_exist(conf_filepath);
 	}
 
-	public static short create_folder_if_not_exist(final String path)
+	public static short create_folder(final String path)
 	{
 		short ret = RET_SUCCESS;
-		if (!check_file_exist(path))
+		File file = new File(path);
+		if (!file.mkdirs())
 		{
-			File file = new File(path);
-			if (!file.mkdirs())
-				ret = RET_FAILURE_IO_OPERATION;
+			format_error("Fail to create the folder: %s", path);
+			ret = RET_FAILURE_IO_OPERATION;
 		}
 		return ret;
+	}
+
+	public static short create_folder_if_not_exist(final String path)
+	{
+		if (!check_file_exist(path))
+			return create_folder(path);
+		return RET_SUCCESS;
 	}
 
 	public static short create_folder_in_project_if_not_exist(final String foldername_in_project)

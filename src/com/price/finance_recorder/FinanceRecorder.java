@@ -12,6 +12,23 @@ public class FinanceRecorder
 
 	public static void main(String args[])
 	{
+//		java.util.Date date_now = new java.util.Date();
+//		Calendar cal = Calendar.getInstance();
+//		cal.setTime(date_now);
+//		String time_month = String.format("%02d-%02d-%02d %02d:%02d:%02d", cal.get(Calendar.YEAR) % 100, cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DATE), cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND));
+//		System.out.print(time_month);
+//		List<String> data_list = new ArrayList<String>();
+//		data_list.add("1,2,3,4\n");
+//		data_list.add("11,22,33,44\n");
+//		data_list.add("111,222,333,444\n");
+//		FinanceRecorderCSVHandler csv_writer = new FinanceRecorderCSVHandler(null);
+//		String csv_filepath = String.format("%s/%s/%s_%04d%02d.csv", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.BACKUP_FOLDERNAME, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[0], 2016, 1);
+////		FinanceRecorderCmnDef.format_debug("Try to write the CSV: %s", csv_filepath);
+//		csv_writer.initialize(csv_filepath, FinanceRecorderCSVHandler.HandlerMode.HandlerMode_Write);
+//		csv_writer.write(data_list);
+//		csv_writer.deinitialize();
+//		System.exit(0);
+
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		ret = finance_recorder_mgr.initialize();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -21,6 +38,7 @@ public class FinanceRecorder
 		boolean use_multithread = false;
 		boolean check_error = false;
 		boolean run_daily = false;
+		boolean backup_database = false;
 		LinkedList<Integer> remove_database_list = null;
 		LinkedList<Integer> finance_data_type_index_list = null;
 		String time_month_begin = null;
@@ -124,6 +142,11 @@ public class FinanceRecorder
 					remove_database_list.addLast(i);
 				index_offset = 1;
 			}
+			else if (option.equals("--backup_database"))
+			{
+				backup_database = true;
+				index_offset = 1;
+			}
 			else if (option.equals("--multi_thread"))
 			{
 				use_multithread = true;
@@ -175,7 +198,7 @@ public class FinanceRecorder
 					System.out.println("Ingnore the Source/Time parameters");
 				System.out.printf("Setup config from file[%s]\n", conf_filename);
 			}
-			setup_param(conf_filename);
+			setup_time_range_table(conf_filename);
 		}
 		else
 		{
@@ -189,9 +212,9 @@ public class FinanceRecorder
 				action_type = ActionType.Action_None;
 			}
 			else
-				setup_param(finance_data_type_index_list, time_month_begin, time_month_end);
+				setup_time_range_table(finance_data_type_index_list, time_month_begin, time_month_end);
 		}
-
+// Should be the first action since the database time range could probably be modified
 		if (need_write(action_type))
 		{
 // Write the financial data into MySQL
@@ -199,6 +222,8 @@ public class FinanceRecorder
 // Check the database and find the time range of each database. Only needed when the content of the MySQL is modified
 			check_sql(check_error);
 		}
+// Initialize the database time range table
+		init_database_time_range_table();
 
 		if (run_daily)
 		{
@@ -206,6 +231,11 @@ public class FinanceRecorder
 			run_daily();
 		}
 
+		if (backup_database)
+		{
+			backup_sql();
+		}
+		
 		if (need_read(action_type))
 		{
 				
@@ -248,6 +278,7 @@ public class FinanceRecorder
 		System.out.println("-a|--action\nDescription: Read/Write the MySQLCaution: Not read/write MySQL if not set");
 		System.out.println("  Type: {R(r), W(w), RW(rw)/WR(wr)");
 	    System.out.println("--remove_old\nDescription: Remove the old MySQL databases");
+	    System.out.println("--backup_database\nDescription: Backup the current databases");
 		System.out.println("--multi_thread\nDescription: Write into MySQL database by using multiple threads");
 		System.out.println("--check_error\nDescription: Check if the data in the MySQL database is correct");
 		System.out.println("--run_daily\nDescription: Run daily data\nCaution: Executed after writing MySQL data if set");
@@ -258,20 +289,50 @@ public class FinanceRecorder
 	private static boolean need_read(ActionType type){return (type == ActionType.Action_Read || type == ActionType.Action_ReadWrite) ? true : false;}
 	private static boolean need_write(ActionType type){return (type == ActionType.Action_Write || type == ActionType.Action_ReadWrite) ? true : false;}
 
-	private static short setup_param(String filename)
+	private static short init_database_time_range_table()
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		ret = finance_recorder_mgr.update_by_config_file(filename);
+		ret = finance_recorder_mgr.init_database_time_range_table();
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			show_error_and_exit(String.format("Fail to initialize the database time range table, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+
+		return ret;
+	}
+	
+	private static short setup_time_range_table(String filename)
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		ret = finance_recorder_mgr.setup_time_range_table_by_config_file(filename);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to setup the parameters, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 
 		return ret;
 	}
 
-	private static short setup_param(LinkedList<Integer> finance_data_type_index_list, String time_month_begin, String time_month_end)
+	private static short setup_time_range_table(LinkedList<Integer> finance_data_type_index_list, String time_month_begin, String time_month_end)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		ret = finance_recorder_mgr.update_by_parameter(finance_data_type_index_list, time_month_begin, time_month_end);
+		ret = finance_recorder_mgr.setup_time_range_table_by_parameter(finance_data_type_index_list, time_month_begin, time_month_end);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			show_error_and_exit(String.format("Fail to setup the parameters, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+
+		return ret;
+	}
+
+	private static short setup_backup_time_range_table(String filename)
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		ret = finance_recorder_mgr.setup_backup_time_range_table_by_config_file(filename);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			show_error_and_exit(String.format("Fail to setup the parameters, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+
+		return ret;
+	}
+
+	private static short setup_backup_time_range_table(LinkedList<Integer> finance_data_type_index_list, String time_month_begin, String time_month_end)
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		ret = finance_recorder_mgr.setup_backup_time_range_table_by_parameter(finance_data_type_index_list, time_month_begin, time_month_end);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to setup the parameters, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 
@@ -287,6 +348,19 @@ public class FinanceRecorder
 		ret = finance_recorder_mgr.clear_multi(finance_data_type_index_list);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to remove the old MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+
+		return ret;
+	}
+
+	private static short backup_sql()
+	{
+		if(FinanceRecorderCmnDef.is_show_console())
+			System.out.println("Backup current MySQL data......");
+
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		ret = finance_recorder_mgr.backup_by_multithread();
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			show_error_and_exit(String.format("Fail to backup the MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 
 		return ret;
 	}

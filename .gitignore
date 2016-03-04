@@ -10,4 +10,5 @@ log/
 data/
 publish/
 result/
+.backup/
 

@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 
@@ -136,6 +137,27 @@ public class FinanceRecorderDatabaseTimeRange
 			FinanceRecorderCmnDef.format_warn("End search time out of range, restrict from %s to %s", time_range_cfg.get_end_time().toString(), database_time_range_array.get(min_end_time_source_type_index).get_end_time().toString());
 			time_range_cfg.set_end_time(database_time_range_array.get(min_end_time_source_type_index).get_end_time());
 		}
+
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	final FinanceRecorderCmnClass.TimeRangeCfg get_source_type_time_range(int finance_source_type_index)
+	{
+		if (finance_source_type_index < 0 || finance_source_type_index >= FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE)
+		{
+			FinanceRecorderCmnDef.format_error("The index[%d] is out of range [0, %d)", finance_source_type_index, FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE);
+			throw new IllegalArgumentException();
+//			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
+		}
+
+		return database_time_range_array.get(finance_source_type_index);
+	}
+
+	short get_all_source_type_time_range(HashMap<Integer,FinanceRecorderCmnClass.TimeRangeCfg> time_range_table)
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		for (int i = 0 ; i < FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE ; i++)
+			time_range_table.put(i, database_time_range_array.get(i));
 
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}

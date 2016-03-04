@@ -21,6 +21,12 @@ public class FinanceRecorderCmnClass
 		{
 			return ((year & 0xFFFF) << 16) | ((month & 0xFF) << 8) | (day & 0xFF);
 		}
+		public static int get_int_value(String time_str)
+		{
+			int[] data = get_date_value(time_str);
+			assert data != null : String.format("Unsupported time format: %s", time_str);
+			return ((data[0] & 0xFFFF) << 16) | ((data[1] & 0xFF) << 8) | (data[2] & 0xFF);
+		}
 		public static int get_int_value(TimeCfg time_cfg)
 		{
 			return get_int_value(time_cfg.get_year(), time_cfg.get_month(), time_cfg.get_day());
@@ -451,7 +457,8 @@ public class FinanceRecorderCmnClass
 		private ArrayList<FinanceLongDataArray> long_data_set;
 		private ArrayList<FinanceFloatDataArray> float_data_set;
 		private boolean check_date_data_mode;
-		private int date_data_pos;
+		private int date_data_size;
+		private int date_data_cur_pos;
 		private int int_data_set_size;
 		private int long_data_set_size;
 		private int float_data_set_size;
@@ -464,7 +471,8 @@ public class FinanceRecorderCmnClass
 			long_data_set = new ArrayList<FinanceLongDataArray>();
 			float_data_set = new ArrayList<FinanceFloatDataArray>();
 			check_date_data_mode = false;
-			date_data_pos = 0;
+			date_data_size = 0;
+			date_data_cur_pos = 0;
 			int_data_set_size = 0;
 			long_data_set_size = 0;
 			float_data_set_size = 0;
@@ -554,24 +562,65 @@ public class FinanceRecorderCmnClass
 		{
 			if (check_date_data_mode)
 			{
-				if (!date_data.get_index(date_data_pos).equals(element_value))
+				if (!date_data.get_index(date_data_cur_pos).equals(element_value))
 				{
-					FinanceRecorderCmnDef.format_error("The date(%s, %s) is NOT equal", date_data.get_index(date_data_pos), element_value);
+					FinanceRecorderCmnDef.format_error("The date(%s, %s) is NOT equal", date_data.get_index(date_data_cur_pos), element_value);
 					return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 				}
-				date_data_pos++;
+				date_data_cur_pos++;
 			}
 			else
+			{
 				date_data.add(element_value);
+				date_data_size++;
+			}
 			return FinanceRecorderCmnDef.RET_SUCCESS;
 		}
 
-		public final FinanceStringDataArray get_date_array(){return date_data;}
-		public final String get_date(int index)
+		public int find_date_index(String search_date, int search_start_index)
 		{
-			if (index < 0 || index >= date_data_pos)
-				throw new IndexOutOfBoundsException(String.format("The Index [%d] is out of range (0, %d)", index, date_data_pos));
+			int index = -1;
+			for (int i = search_start_index ; i < date_data_size ; i++)
+			{
+				if (date_data.get_index(i).equals(search_date))
+					return index;
+			}
+			return -1;
+		}
+
+		public int find_first_after_date_index(String search_date, int search_start_index)
+		{
+			int search_date_value = TimeCfg.get_int_value(search_date);
+			for (int index = search_start_index ; index < date_data_size ; index++)
+			{
+				int date_value = TimeCfg.get_int_value(date_data.get_index(index));
+				if (date_value >= search_date_value)
+					return index;
+			}
+			return date_data_size;
+		}
+
+		public final FinanceStringDataArray get_date_array(){return date_data;}
+		public final String get_date_array_element(int index)
+		{
+			if (index < 0 || index >= date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The Index [%d] is out of range [0, %d)", index, date_data_size));
 			return date_data.get_index(index);
+		}
+		public String[] get_date_array_elements(int source_index, int field_index, int start_index, int end_index) 
+		{
+			if (start_index < 0 || start_index >= date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
+			if (end_index < 0 || end_index >= date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range [0, %d)", start_index, date_data_size));
+			int data_len = end_index - start_index;
+			assert data_len > 0 : String.format("End Index[%d] SHOULD be larger than Start Index[%d]", end_index, start_index);
+			String data_array[] = new String[data_len];
+
+			int data_pos = 0;
+			for (int index = start_index ; index < end_index ; index++)
+				data_array[data_pos++] = date_data.get_index(index);
+			return data_array;
 		}
 
 		private short find_data_pos(int source_index, int field_index, short[] field_type_array)
@@ -624,7 +673,7 @@ public class FinanceRecorderCmnClass
 		public void switch_to_check_date_mode()
 		{
 			check_date_data_mode = true;
-			date_data_pos = 0;
+			date_data_cur_pos = 0;
 		}
 
 		public short check_data()
@@ -772,15 +821,122 @@ public class FinanceRecorderCmnClass
 			assert field_type_array[0] == FinanceRecorderCmnDef.FinanceFieldType.FinanceField_FLOAT.value() : String.format("The type[%d] is NOT FLOAT", FinanceRecorderCmnDef.FinanceFieldType.FinanceField_FLOAT.value());
 			return float_data_set.get(field_type_array[1]);
 		}
-		public int get_int_array_element(int source_index, int field_index, int index) {return get_int_array(source_index, field_index).get_index(index);}
-		public long get_long_array_element(int source_index, int field_index, int index) {return get_long_array(source_index, field_index).get_index(index);}
+		public int get_int_array_element(int source_index, int field_index, int index) 
+		{
+			if (index < 0 || index >= date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The Index [%d] is out of range [0, %d)", index, date_data_size));
+			return get_int_array(source_index, field_index).get_index(index);
+		}
+		public long get_long_array_element(int source_index, int field_index, int index) 
+		{
+			if (index < 0 || index >= date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The Index [%d] is out of range [0, %d)", index, date_data_size));
+			return get_long_array(source_index, field_index).get_index(index);
+		}
 		public float get_float_array_element(int source_index, int field_index, int index) {return get_float_array(source_index, field_index).get_index(index);}
+
+		public int[] get_int_array_elements(int source_index, int field_index, int start_index, int end_index) 
+		{
+			if (start_index < 0 || start_index >= date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
+			if (end_index < 0 || end_index >= date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range [0, %d)", start_index, date_data_size));
+			int data_len = end_index - start_index;
+			assert data_len > 0 : String.format("End Index[%d] SHOULD be larger than Start Index[%d]", end_index, start_index);
+			int data_array[] = new int[data_len];
+			FinanceIntDataArray int_data_array = get_int_array(source_index, field_index);
+			int data_pos = 0;
+			for (int index = start_index ; index < end_index ; index++)
+				data_array[data_pos++] = int_data_array.get_index(index);
+			return data_array;
+		}
+		public long[] get_long_array_elements(int source_index, int field_index, int start_index, int end_index) 
+		{
+			if (start_index < 0 || start_index >= date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
+			if (end_index < 0 || end_index >= date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range [0, %d)", start_index, date_data_size));
+			int data_len = end_index - start_index;
+			assert data_len > 0 : String.format("End Index[%d] SHOULD be larger than Start Index[%d]", end_index, start_index);
+			long data_array[] = new long[data_len];
+			FinanceLongDataArray long_data_array = get_long_array(source_index, field_index);
+			int data_pos = 0;
+			for (int index = start_index ; index < end_index ; index++)
+				data_array[data_pos++] = long_data_array.get_index(index);
+			return data_array;
+		}
+		public float[] get_float_array_elements(int source_index, int field_index, int start_index, int end_index) 
+		{
+			if (start_index < 0 || start_index >= date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
+			if (end_index < 0 || end_index >= date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range [0, %d)", start_index, date_data_size));
+			int data_len = end_index - start_index;
+			assert data_len > 0 : String.format("End Index[%d] SHOULD be larger than Start Index[%d]", end_index, start_index);
+			float data_array[] = new float[data_len];
+			FinanceFloatDataArray float_data_array = get_float_array(source_index, field_index);
+			int data_pos = 0;
+			for (int index = start_index ; index < end_index ; index++)
+				data_array[data_pos++] = float_data_array.get_index(index);
+			return data_array;
+		}
+
+		public String[] get_array_all_elements_string_list(int source_index, int start_index, int end_index)
+		{
+			if (start_index < 0 || start_index >= date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
+			if (end_index < 0 || end_index >= date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range [0, %d)", start_index, date_data_size));
+			int data_len = end_index - start_index;
+			assert data_len > 0 : String.format("End Index[%d] SHOULD be larger than Start Index[%d]", end_index, start_index);
+			String data_array_str[] = new String[data_len];
+			int data_pos = 0;
+			for (int index = start_index ; index < end_index ; index++)
+				data_array_str[data_pos++] = date_data.get_index(index);
+			short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+OUT:
+			for (int field_index = 1 ; field_index < FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index] ; field_index++)
+			{
+				switch(FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index])
+				{
+				case FinanceField_INT:
+				{
+					int[] data_array = get_int_array_elements(source_index, field_index, start_index, end_index);
+					data_pos = 0;
+					for (int index = start_index ; index < end_index ; index++, data_pos++)
+						data_array_str[data_pos] += String.format(",%d", data_array[data_pos]);
+				}
+				break;
+				case FinanceField_LONG:
+				{
+					long[] data_array = get_long_array_elements(source_index, field_index, start_index, end_index);
+					data_pos = 0;
+					for (int index = start_index ; index < end_index ; index++, data_pos++)
+						data_array_str[data_pos] += String.format(",%d", data_array[data_pos]);
+				}
+				break;
+				case FinanceField_FLOAT:
+				{
+					float[] data_array = get_float_array_elements(source_index, field_index, start_index, end_index);
+					data_pos = 0;
+					for (int index = start_index ; index < end_index ; index++, data_pos++)
+						data_array_str[data_pos] += String.format(",%.2f", data_array[data_pos]);
+				}
+				break;
+				default:
+					FinanceRecorderCmnDef.format_error("The unsupported field type: %d", FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index]);
+					ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
+					break OUT;
+				}
+			}
+			return data_array_str;
+		}
 
 		public boolean is_empty(){return date_data.is_empty();}
 		public int get_size()
 		{
-			assert date_data.get_size() == date_data_pos : String.format("Incorrect data size, expected: %d, actual: %d", date_data.get_size(), date_data_pos);
-			return date_data_pos;
+			assert date_data.get_size() == date_data_size : String.format("Incorrect data size, expected: %d, actual: %d", date_data.get_size(), date_data_size);
+			return date_data_size;
 		}
 	};
 }
