@@ -104,7 +104,7 @@ public class FinanceRecorderCmnDef
 	public static final int MAX_CONCURRENT_THREAD = 4;
 	public static final int WRITE_SQL_MAX_MONTH_RANGE_IN_THREAD = 3;
 	public static final String WORKDAY_CANLENDAR_FILENAME = ".workday_canlendar.conf";
-	public static final int BACKUP_SQL_MAX_MONTH_RANGE_IN_THREAD = 12;
+	public static final int BACKUP_SQL_MAX_MONTH_RANGE_IN_THREAD = 2;
 	public static final String DATABASE_TIME_RANGE_FILENAME = ".database_time_range.conf";
 	public static final String FINANCE_RECORDER_CONF_FILENAME = "finance_recorder.conf";
 	public static final String DATABASE_TIME_RANGE_FILE_DST_PROJECT_NAME = "finance_analyzer";
@@ -962,6 +962,23 @@ public class FinanceRecorderCmnDef
 		return ret;
 	}
 	
+// End index range: Positive: (0, data_size-1); Negative: (-1, -data_size)
+	public static int get_end_index_ex(int end_index, int data_size){return ((end_index < 0) ? end_index = data_size + end_index + 1 : end_index);}
+
+	public static boolean check_start_index_in_range(int start_index, int range_start, int range_end)
+	{
+		assert range_start >= 0 : "range_start should be larger than 0";
+		assert range_end >= 1 : "range_end should be larger than 1";
+		return ((start_index >= range_start && start_index < range_end) ? true : false);
+	}
+
+	public static boolean check_end_index_in_range(int end_index, int range_start, int range_end)
+	{
+		assert range_start >= 0 : "range_start should be larger than 0";
+		assert range_end >= 1 : "range_end should be larger than 1";
+		return ((end_index > range_start && end_index <= range_end) ? true : false);
+	}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Interface
 	public interface FinanceObserverInf

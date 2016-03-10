@@ -212,15 +212,16 @@ OUT:
 		int search_end_index;
 		boolean is_last_month = false;
 		String search_date;
+		FinanceRecorderCmnDef.format_debug("Backup the data[%s %s:%s]", FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index], result_set.get_date_array_element(0), result_set.get_date_array_element(-1));
 OUT:
 //		for (Map.Entry<Integer, LinkedList<Integer>> entry : finance_source_time_range_table.entrySet())
-		while(true)
+		while(!is_last_month)
 		{
-			if (is_last_month)
-			{
-				FinanceRecorderCmnDef.error("Something wrong happend while slicing the time range......");
-				return FinanceRecorderCmnDef.RET_FAILURE_UNKNOWN;
-			}
+//			if (is_last_month)
+//			{
+//				FinanceRecorderCmnDef.error("Something wrong happend while slicing the time range......");
+//				return FinanceRecorderCmnDef.RET_FAILURE_UNKNOWN;
+//			}
 			LinkedList<String> data_list = new LinkedList<String>();
 // Write the data into CSV file
 			csv_filepath = String.format("%s/%s/%s/%s_%04d%02d.csv", current_path, FinanceRecorderCmnDef.BACKUP_FOLDERNAME, csv_backup_foldername, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index], search_year, search_month);
@@ -249,7 +250,7 @@ OUT:
 				is_last_month = true;
 			}
 // Assemble the data and write into CSV
-			FinanceRecorderCmnDef.format_debug("Write the data[%s %s-%s]", FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index], result_set.get_date_array_element(search_start_index), result_set.get_date_array_element(search_end_index - 1));
+			FinanceRecorderCmnDef.format_debug("Write the data[%s %s:%s]", FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index], result_set.get_date_array_element(search_start_index), result_set.get_date_array_element(search_end_index - 1));
 			String[] data_array_str = result_set.get_array_all_elements_string_list(finace_source_type_index, search_start_index, search_end_index);
 			ret = csv_writer.write(Arrays.asList(data_array_str));
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
