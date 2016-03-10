@@ -839,8 +839,8 @@ public class FinanceRecorderCmnClass
 		{
 			if (start_index < 0 || start_index >= date_data_size)
 				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
-			if (end_index < 0 || end_index >= date_data_size)
-				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range [0, %d)", start_index, date_data_size));
+			if (end_index < 1 || end_index > date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range (1, %d]", start_index, date_data_size));
 			int data_len = end_index - start_index;
 			assert data_len > 0 : String.format("End Index[%d] SHOULD be larger than Start Index[%d]", end_index, start_index);
 			int data_array[] = new int[data_len];
@@ -854,8 +854,8 @@ public class FinanceRecorderCmnClass
 		{
 			if (start_index < 0 || start_index >= date_data_size)
 				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
-			if (end_index < 0 || end_index >= date_data_size)
-				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range [0, %d)", start_index, date_data_size));
+			if (end_index < 1 || end_index > date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range (1, %d]", start_index, date_data_size));
 			int data_len = end_index - start_index;
 			assert data_len > 0 : String.format("End Index[%d] SHOULD be larger than Start Index[%d]", end_index, start_index);
 			long data_array[] = new long[data_len];
@@ -869,8 +869,8 @@ public class FinanceRecorderCmnClass
 		{
 			if (start_index < 0 || start_index >= date_data_size)
 				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
-			if (end_index < 0 || end_index >= date_data_size)
-				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range [0, %d)", start_index, date_data_size));
+			if (end_index < 1 || end_index > date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range (1, %d]", start_index, date_data_size));
 			int data_len = end_index - start_index;
 			assert data_len > 0 : String.format("End Index[%d] SHOULD be larger than Start Index[%d]", end_index, start_index);
 			float data_array[] = new float[data_len];
@@ -885,8 +885,8 @@ public class FinanceRecorderCmnClass
 		{
 			if (start_index < 0 || start_index >= date_data_size)
 				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
-			if (end_index < 0 || end_index >= date_data_size)
-				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range [0, %d)", start_index, date_data_size));
+			if (end_index < 1 || end_index > date_data_size)
+				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range (1, %d]", start_index, date_data_size));
 			int data_len = end_index - start_index;
 			assert data_len > 0 : String.format("End Index[%d] SHOULD be larger than Start Index[%d]", end_index, start_index);
 			String data_array_str[] = new String[data_len];
