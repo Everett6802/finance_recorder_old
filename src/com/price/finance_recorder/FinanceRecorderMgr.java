@@ -1379,18 +1379,12 @@ OUT:
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					break OUT;
 
-// Add to the result set
-				FinanceRecorderCmnClass.ResultSet backup_result_set = new FinanceRecorderCmnClass.ResultSet();
-				ret = backup_result_set.add_set(finance_source_type_index, finance_backup_source_field_table.get(finance_source_type_index));
-				if (FinanceRecorderCmnDef.CheckFailure(ret))
-					return ret;
-
 				for (FinanceRecorderCmnClass.TimeRangeCfg time_range_slice_cfg : time_range_slice_cfg_list)
 				{
 // Backup the data from MySQL
 					FinanceRecorderDataHandler finance_recorder_data_handler = new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index));
 					FinanceRecorderCmnDef.format_debug("Try to backup data [%s %04d%02d:%04d%02d] from MySQL......", finance_recorder_data_handler.get_description(), time_range_slice_cfg.get_start_time().get_year(), time_range_slice_cfg.get_start_time().get_month(), time_range_slice_cfg.get_end_time().get_year(), time_range_slice_cfg.get_end_time().get_month());
-					FinanceRecorderBackupSQLTask task = new FinanceRecorderBackupSQLTask(new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index)), time_range_slice_cfg, csv_backup_foldername, backup_result_set);
+					FinanceRecorderBackupSQLTask task = new FinanceRecorderBackupSQLTask(new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index)), time_range_slice_cfg, csv_backup_foldername, finance_backup_source_field_table.get(finance_source_type_index));
 					Future<Integer> res = executor.submit(task);
 					res_list.add(res);
 				}

@@ -961,8 +961,12 @@ public class FinanceRecorderCmnDef
 
 		return ret;
 	}
-	
-// End index range: Positive: (0, data_size-1); Negative: (-1, -data_size)
+
+// Index range: Positive: [0, data_size-1]; Negative: [-1, -data_size]
+	public static int get_index_ex(int index, int data_size){return ((index < 0) ? index = data_size + index : index);}
+// Start index range: Positive: [0, data_size-1]; Negative: [-1, -data_size]
+	public static int get_start_index_ex(int index, int data_size){return get_index_ex(index, data_size);}
+// End index range: Positive: [1, data_size]; Negative: [-1, -data_size]
 	public static int get_end_index_ex(int end_index, int data_size){return ((end_index < 0) ? end_index = data_size + end_index + 1 : end_index);}
 
 	public static boolean check_start_index_in_range(int start_index, int range_start, int range_end)

@@ -15,7 +15,7 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 	private static final String CSV_FILE_FOLDER = "/var/tmp/finance";
 	private static final boolean IgnoreErrorIfCSVNotExist = true;
 
-	private int finace_source_type_index;
+	private int finance_source_type_index;
 //	private FinanceRecorderCSVHandler csv_reader = null;
 	private FinanceRecorderSQLClient sql_client = null;
 	private HashMap<Integer, LinkedList<Integer>> finance_source_time_range_table = new HashMap<Integer, LinkedList<Integer>>();
@@ -24,7 +24,7 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 
 	public FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceSourceType finance_data_type)
 	{
-		finace_source_type_index = finance_data_type.ordinal();
+		finance_source_type_index = finance_data_type.ordinal();
 		sql_client = new FinanceRecorderSQLClient(finance_data_type, this);
 	}
 
@@ -58,7 +58,7 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	final String get_description(){return FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_source_type_index];}
+	final String get_description(){return FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index];}
 
 	short write_to_sql(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type, FinanceRecorderCmnDef.DatabaseEnableBatchType database_enable_batch_type)
 	{
@@ -70,7 +70,7 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 		String csv_filepath = null;
 // Establish the connection to the MySQL and create the database if not exist 
 		ret = sql_client.try_connect_mysql(
-				FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index], 
+				FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index], 
 				FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes,
 				database_create_thread_type
 			);
@@ -86,7 +86,7 @@ OUT:
 			for (int month : month_list)
 			{
 // Read the data from CSV file
-				csv_filepath = String.format("%s/%s_%04d%02d.csv", FinanceRecorderCmnDef.DATA_FOLDERPATH, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index], year, month);
+				csv_filepath = String.format("%s/%s_%04d%02d.csv", FinanceRecorderCmnDef.DATA_FOLDERPATH, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index], year, month);
 //				FinanceRecorderCmnDef.format_debug("Try to read the CSV: %s", csv_filepath);
 				ret = csv_reader.initialize(csv_filepath, FinanceRecorderCSVHandler.HandlerMode.HandlerMode_Read);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -110,7 +110,7 @@ OUT:
 			{
 // Create the table
 				String table_name = String.format("year%04d", year);
-				ret = sql_client.create_table(table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_LIST[finace_source_type_index]);
+				ret = sql_client.create_table(table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_LIST[finance_source_type_index]);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					break OUT;
 // Write the data into MySQL database
@@ -151,13 +151,13 @@ OUT:
 
 // Establish the connection to the MySQL and create the database if not exist 
 		ret = sql_client.try_connect_mysql(
-			FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index], 
+			FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index], 
 			FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No,
 			FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single
 		);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
-//			FinanceRecorderCmnDef.format_warn("The MySQL database[%d, %s] does NOT exist", finace_source_type_index, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index]);
+//			FinanceRecorderCmnDef.format_warn("The MySQL database[%d, %s] does NOT exist", finance_source_type_index, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index]);
 			return ret;
 		}
 
@@ -186,21 +186,27 @@ OUT:
 		return ret;
 	}
 
-	short backup_from_sql(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String csv_backup_foldername, FinanceRecorderCmnClass.ResultSet result_set)
+	short backup_from_sql(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String csv_backup_foldername, LinkedList<Integer> finance_backup_source_field_list)
 	{
 // CAUTION: The data set in the reslt_set variable should be added before calling this function 
-//		FinanceRecorderCmnClass.ResultSet result_set = new FinanceRecorderCmnClass.ResultSet();
+// Add to the result set
+		FinanceRecorderCmnClass.ResultSet result_set = new FinanceRecorderCmnClass.ResultSet();
+		short ret = result_set.add_set(finance_source_type_index, finance_backup_source_field_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+
 // Read the data from the database
-		short ret = read_from_sql(time_range_cfg, "*", result_set);
+		ret = read_from_sql(time_range_cfg, "*", result_set);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 //If the database does NOT exist, just ignore the warning
 			if (!FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
 				return ret;
+		FinanceRecorderCmnDef.format_debug("Backup the data[%s %s:%s %d]", FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index], result_set.get_date_array_element(0), result_set.get_date_array_element(-1), result_set.get_size());
 
 // Set the mapping table of reading the SQL database and writing correct specific CSV files
-		ret = set_mapping_time_range(time_range_cfg);
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			return ret;
+//		ret = set_mapping_time_range(time_range_cfg);
+//		if (FinanceRecorderCmnDef.CheckFailure(ret))
+//			return ret;
 		String current_path = FinanceRecorderCmnDef.get_current_path();
 		String csv_filepath = null;
 
@@ -212,7 +218,6 @@ OUT:
 		int search_end_index;
 		boolean is_last_month = false;
 		String search_date;
-		FinanceRecorderCmnDef.format_debug("Backup the data[%s %s:%s]", FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index], result_set.get_date_array_element(0), result_set.get_date_array_element(-1));
 OUT:
 //		for (Map.Entry<Integer, LinkedList<Integer>> entry : finance_source_time_range_table.entrySet())
 		while(!is_last_month)
@@ -224,7 +229,7 @@ OUT:
 //			}
 			LinkedList<String> data_list = new LinkedList<String>();
 // Write the data into CSV file
-			csv_filepath = String.format("%s/%s/%s/%s_%04d%02d.csv", current_path, FinanceRecorderCmnDef.BACKUP_FOLDERNAME, csv_backup_foldername, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index], search_year, search_month);
+			csv_filepath = String.format("%s/%s/%s/%s_%04d%02d.csv", current_path, FinanceRecorderCmnDef.BACKUP_FOLDERNAME, csv_backup_foldername, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index], search_year, search_month);
 //			FinanceRecorderCmnDef.format_debug("Try to write the CSV: %s", csv_filepath);
 			ret = csv_writer.initialize(csv_filepath, FinanceRecorderCSVHandler.HandlerMode.HandlerMode_Write);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -250,8 +255,8 @@ OUT:
 				is_last_month = true;
 			}
 // Assemble the data and write into CSV
-			FinanceRecorderCmnDef.format_debug("Write the data[%s %s:%s]", FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index], result_set.get_date_array_element(search_start_index), result_set.get_date_array_element(search_end_index - 1));
-			String[] data_array_str = result_set.get_array_all_elements_string_list(finace_source_type_index, search_start_index, search_end_index);
+			FinanceRecorderCmnDef.format_debug("Write the data[%s %s:%s]", FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index], result_set.get_date_array_element(search_start_index), result_set.get_date_array_element(search_end_index - 1));
+			String[] data_array_str = result_set.get_array_all_elements_string_list(finance_source_type_index, search_start_index, search_end_index);
 			ret = csv_writer.write(Arrays.asList(data_array_str));
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				break OUT;
@@ -271,7 +276,7 @@ OUT:
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Establish the connection to the MySQL 
 		ret = sql_client.try_connect_mysql(
-				FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index], 
+				FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index], 
 				FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No,
 				FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single
 			);
@@ -281,7 +286,7 @@ OUT:
 			if (!FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
 				return ret;
 			unknown_database = true;
-//			FinanceRecorderCmnDef.format_warn("The database[type index: %d] does NOT exist, just skip this error", finace_source_type_index);
+//			FinanceRecorderCmnDef.format_warn("The database[type index: %d] does NOT exist, just skip this error", finance_source_type_index);
 			ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		}
 		if (!unknown_database)
@@ -331,13 +336,13 @@ OUT:
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Establish the connection to the MySQL and create the database if not exist 
 		ret = sql_client.try_connect_mysql(
-			FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index], 
+			FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index], 
 			FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No,
 			FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single
 		);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
-//			FinanceRecorderCmnDef.format_warn("The MySQL database[%d, %s] does NOT exist", finace_source_type_index, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index]);
+//			FinanceRecorderCmnDef.format_warn("The MySQL database[%d, %s] does NOT exist", finance_source_type_index, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index]);
 			return ret;
 		}
 // Search for the table name list in the database
@@ -348,36 +353,36 @@ OUT:
 
 		int start_year = year_array[0];
 		int end_year = year_array[1];
-		FinanceRecorderCmnDef.format_debug("Search for the time range from year %d-%d in %s", start_year, end_year, FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_source_type_index]);
+		FinanceRecorderCmnDef.format_debug("Search for the time range from year %d-%d in %s", start_year, end_year, FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index]);
 		String start_table_name = String.format("year%04d", start_year);
 		String end_table_name = String.format("year%04d", end_year);
 // Find the start date
 		FinanceRecorderCmnClass.ResultSet start_date_result_set = new FinanceRecorderCmnClass.ResultSet();
-		ret = sql_client.select_data(start_table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finace_source_type_index][0], start_date_result_set);
+		ret = sql_client.select_data(start_table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finance_source_type_index][0], start_date_result_set);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
-			FinanceRecorderCmnDef.format_error("Fail to find the start date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_source_type_index], start_table_name);
+			FinanceRecorderCmnDef.format_error("Fail to find the start date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index], start_table_name);
 			return ret;
 		}
 //		if (start_date_list.isEmpty())
 		if (start_date_result_set.is_empty())
 		{
-			FinanceRecorderCmnDef.format_error("Fail to find any date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_source_type_index], start_table_name);
+			FinanceRecorderCmnDef.format_error("Fail to find any date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index], start_table_name);
 			return ret;
 		}
 // Find the end date
 //		LinkedList<String> end_date_list = new LinkedList<String>();
 		FinanceRecorderCmnClass.ResultSet end_date_result_set = new FinanceRecorderCmnClass.ResultSet();
-		ret = sql_client.select_data(end_table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finace_source_type_index][0], end_date_result_set);
+		ret = sql_client.select_data(end_table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finance_source_type_index][0], end_date_result_set);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
-			FinanceRecorderCmnDef.format_error("Fail to find the start date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_source_type_index], start_table_name);
+			FinanceRecorderCmnDef.format_error("Fail to find the start date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index], start_table_name);
 			return ret;
 		}
 
 		if (end_date_result_set.is_empty())
 		{
-			FinanceRecorderCmnDef.format_error("Fail to find any date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_source_type_index], end_table_name);
+			FinanceRecorderCmnDef.format_error("Fail to find any date in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index], end_table_name);
 			return ret;
 		}
 		String start_date_str = start_date_result_set.get_date_array().get_index(0);
@@ -392,7 +397,7 @@ OUT:
 	{
 		if (database_time_range_cfg == null)
 		{
-			FinanceRecorderCmnDef.format_error("Time range should be found first in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_source_type_index]);
+			FinanceRecorderCmnDef.format_error("Time range should be found first in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index]);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 		int[] time_list = FinanceRecorderCmnClass.TimeRangeCfg.get_start_and_end_month_value_range(database_time_range_cfg);
@@ -411,33 +416,33 @@ OUT:
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Establish the connection to the MySQL and create the database if not exist 
 		ret = sql_client.try_connect_mysql(
-			FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index], 
+			FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index], 
 			FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No,
 			FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single
 		);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
-//			FinanceRecorderCmnDef.format_warn("The MySQL database[%d, %s] does NOT exist", finace_source_type_index, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finace_source_type_index]);
+//			FinanceRecorderCmnDef.format_warn("The MySQL database[%d, %s] does NOT exist", finance_source_type_index, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index]);
 			return ret;
 		}
 
-		FinanceRecorderCmnDef.format_debug("Search for the time list from year %d-%d in %s", start_year, end_year, FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_source_type_index]);
+		FinanceRecorderCmnDef.format_debug("Search for the time list from year %d-%d in %s", start_year, end_year, FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index]);
 //		LinkedList<String> date_list = new LinkedList<String>();
 		String table_name;
 		for (int year = start_year ; year <= end_year ; year++)
 		{
 // Find the date in each table
 			table_name = String.format("year%04d", year);
-			ret = sql_client.select_data(table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finace_source_type_index][0], result_set);
+			ret = sql_client.select_data(table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[finance_source_type_index][0], result_set);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 			{
-				FinanceRecorderCmnDef.format_error("Fail to find the date list in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_source_type_index], table_name);
+				FinanceRecorderCmnDef.format_error("Fail to find the date list in %s:%s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index], table_name);
 				return ret;
 			}
 		}
 		if (result_set.is_empty())
 		{
-			FinanceRecorderCmnDef.format_error("Fail to find any date in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_source_type_index]);
+			FinanceRecorderCmnDef.format_error("Fail to find any date in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index]);
 			return ret;
 		}
 
@@ -450,7 +455,7 @@ OUT:
 	{
 		if (database_time_range_cfg == null)
 		{
-			FinanceRecorderCmnDef.format_error("Time range should be found first in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_source_type_index]);
+			FinanceRecorderCmnDef.format_error("Time range should be found first in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index]);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 
@@ -463,13 +468,13 @@ OUT:
 	{
 		if (database_time_range_cfg == null)
 		{
-			FinanceRecorderCmnDef.format_error("Time range should be found first in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_source_type_index]);
+			FinanceRecorderCmnDef.format_error("Time range should be found first in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index]);
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		time_range_str_builder.append(String.format("%s %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_source_type_index], database_time_range_cfg.toString()));
-//		System.out.printf("%s: %s\n", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_source_type_index], database_time_range_cfg.toString());
+		time_range_str_builder.append(String.format("%s %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index], database_time_range_cfg.toString()));
+//		System.out.printf("%s: %s\n", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index], database_time_range_cfg.toString());
 		return ret;
 	}
 

@@ -330,7 +330,7 @@ public class FinanceRecorderCmnClass
 		{
 			assert array_data != null : "array_data == NULL";
 			if (index < 0)
-				index = FinanceRecorderCmnDef.get_end_index_ex(index, array_size);
+				index = FinanceRecorderCmnDef.get_index_ex(index, array_size);
 			if(index < 0 && index >= array_size)
 			{
 				String errmsg = String.format("index[%d] is NOT in ranage: [0, %d) or [-%d, 0)", index, array_size, array_size);
@@ -612,7 +612,7 @@ public class FinanceRecorderCmnClass
 		public String[] get_date_array_elements(int source_index, int field_index, int start_index, int end_index) 
 		{
 			if (start_index < 0)
-				start_index = FinanceRecorderCmnDef.get_end_index_ex(start_index, date_data_size);
+				start_index = FinanceRecorderCmnDef.get_start_index_ex(start_index, date_data_size);
 			if (end_index < 0)
 				end_index = FinanceRecorderCmnDef.get_end_index_ex(end_index, date_data_size);
 			if (!FinanceRecorderCmnDef.check_start_index_in_range(start_index, 0, date_data_size))

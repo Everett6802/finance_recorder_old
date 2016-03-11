@@ -1,5 +1,6 @@
 package com.price.finance_recorder;
 
+import java.util.LinkedList;
 import java.util.concurrent.Callable;
 
 
@@ -8,14 +9,16 @@ public class FinanceRecorderBackupSQLTask implements Callable<Integer>
 	private FinanceRecorderDataHandler finance_recorder_backuper = null;
 	private FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
 	String backup_csv_foldername = null;
-	FinanceRecorderCmnClass.ResultSet backup_result_set = null;
+	LinkedList<Integer> finance_backup_source_field_list = null;
+//	FinanceRecorderCmnClass.ResultSet backup_result_set = null;
 
-	public FinanceRecorderBackupSQLTask(FinanceRecorderDataHandler finance_recorder_backuper_obj, FinanceRecorderCmnClass.TimeRangeCfg cfg, String csv_foldername, FinanceRecorderCmnClass.ResultSet result_set)
+	public FinanceRecorderBackupSQLTask(FinanceRecorderDataHandler finance_recorder_backuper_obj, FinanceRecorderCmnClass.TimeRangeCfg cfg, String csv_foldername, LinkedList<Integer> field_list)
 	{
 		finance_recorder_backuper = finance_recorder_backuper_obj;
 		time_range_cfg = cfg;
 		backup_csv_foldername = csv_foldername;
-		backup_result_set = result_set;
+		finance_backup_source_field_list = field_list;
+//		backup_result_set = result_set;
 	}
 
 	@Override
@@ -25,7 +28,7 @@ public class FinanceRecorderBackupSQLTask implements Callable<Integer>
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		try
 		{
-			ret = finance_recorder_backuper.backup_from_sql(time_range_cfg, backup_csv_foldername, backup_result_set);
+			ret = finance_recorder_backuper.backup_from_sql(time_range_cfg, backup_csv_foldername, finance_backup_source_field_list);
 		}
 		catch (IllegalArgumentException e)
 		{
