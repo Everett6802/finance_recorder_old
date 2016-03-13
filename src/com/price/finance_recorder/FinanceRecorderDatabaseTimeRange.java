@@ -153,6 +153,13 @@ public class FinanceRecorderDatabaseTimeRange
 		return database_time_range_array.get(finance_source_type_index);
 	}
 
+	short restrict_time_range(int source_type_index, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg)
+	{
+		HashSet<Integer> source_type_index_set = new HashSet<Integer>();
+		source_type_index_set.add(source_type_index);
+		return restrict_time_range(source_type_index_set, time_range_cfg);
+	}
+
 	short get_all_source_type_time_range(HashMap<Integer,FinanceRecorderCmnClass.TimeRangeCfg> time_range_table)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;

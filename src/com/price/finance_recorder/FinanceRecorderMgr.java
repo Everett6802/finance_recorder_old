@@ -776,75 +776,6 @@ OUT:
 		return ret;
 	}
 
-	public short backup(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, final FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.ResultSet result_set)
-	{
-//		if (database_time_range == null)
-//		{
-//			FinanceRecorderCmnDef.error("The database time range object is NOT initialized");
-//			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
-//		}
-//
-//		if (time_range_cfg.get_start_time() == null || time_range_cfg.get_end_time() == null)
-//		{
-//			FinanceRecorderCmnDef.error("The start/end time in time_range_cfg should NOT be NULL");
-//			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
-//		}
-//		if (time_range_cfg.is_month_type())
-//		{
-//			FinanceRecorderCmnDef.error("The time format of time_range_cfg should be Day type");
-//			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
-//		}
-		if (!query_set.is_add_query_done())
-		{
-			FinanceRecorderCmnDef.error("The setting of query data is NOT complete");
-			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
-		}
-// Collect the information that what kind of the data source will be queried
-		HashSet<Integer> source_type_index_set = new HashSet<Integer>();
-		for (int i = 0 ; i < FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE ; i++)
-		{
-			if (!query_set.get_index(i).isEmpty())
-				source_type_index_set.add(i);
-		}
-// Restrict the search time range
-		FinanceRecorderCmnClass.TimeRangeCfg restrict_time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(time_range_cfg.get_start_time_str(), time_range_cfg.get_end_time_str());
-		database_time_range.restrict_time_range(source_type_index_set, restrict_time_range_cfg);
-
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-//		FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
-		for (int finance_source_type_index = 0 ; finance_source_type_index < FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE ; finance_source_type_index++)
-		{
-			LinkedList<Integer> query_field = query_set.get_index(finance_source_type_index);
-			if (query_field.isEmpty())
-				continue;
-// Add to the result set
-			ret = result_set.add_set(finance_source_type_index, query_field);
-			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				return ret;
-
-			FinanceRecorderDataHandler finance_recorder_data_handler = new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index));
-			FinanceRecorderCmnDef.format_debug("Try to read data [%s %s] from MySQL......", finance_recorder_data_handler.get_description(), restrict_time_range_cfg.toString());
-// Format the SQL query command
-			StringBuilder field_cmd_builder = new StringBuilder();
-			ret = FinanceRecorderSQLClient.get_sql_field_command(finance_source_type_index, query_field, field_cmd_builder);
-			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				return ret;
-// Read the data from MySQL
-			ret = finance_recorder_data_handler.read_from_sql(restrict_time_range_cfg, field_cmd_builder.toString(), result_set);
-			if (FinanceRecorderCmnDef.CheckFailure(ret))
-			{
-// If the database does NOT exist, just ignore the warning
-				if (!FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
-					return ret;
-			}
-			result_set.switch_to_check_date_mode();
-		}
-// Check the result
-		ret = result_set.check_data();
-
-		return ret;
-	}
-
 	public short read_all(	FinanceRecorderCmnClass.ResultSet result_set)
 	{
 // Read all the data from MySQL one by one
@@ -1373,9 +1304,13 @@ OUT:
 			{
 				int finance_source_type_index = entry.getKey();
 				FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = entry.getValue();
+// Restrict the search time range
+				FinanceRecorderCmnClass.TimeRangeCfg restrict_time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(time_range_cfg.get_start_time_str(), time_range_cfg.get_end_time_str());
+				database_time_range.restrict_time_range(finance_source_type_index, restrict_time_range_cfg);
+
 // Split the time range into several smaller time range slice
 				ArrayList<FinanceRecorderCmnClass.TimeRangeCfg> time_range_slice_cfg_list = new ArrayList<FinanceRecorderCmnClass.TimeRangeCfg>();
-				ret = get_time_range_slice(time_range_cfg, FinanceRecorderCmnDef.BACKUP_SQL_MAX_MONTH_RANGE_IN_THREAD, time_range_slice_cfg_list);
+				ret = get_time_range_slice(restrict_time_range_cfg, FinanceRecorderCmnDef.BACKUP_SQL_MAX_MONTH_RANGE_IN_THREAD, time_range_slice_cfg_list);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					break OUT;
 

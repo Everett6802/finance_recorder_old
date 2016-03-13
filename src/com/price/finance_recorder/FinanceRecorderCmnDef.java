@@ -983,6 +983,50 @@ public class FinanceRecorderCmnDef
 		return ((end_index > range_start && end_index <= range_end) ? true : false);
 	}
 
+	public static short get_subfolder_list(String folderpath, List<String> subfolder_list)
+	{
+		File dir = new File(folderpath);
+		if (!dir.exists())
+		{
+			format_error("The folder does Not exist", folderpath);
+			return RET_FAILURE_NOT_FOUND;
+		}
+		String[] children = dir.list();
+		if (children != null) 
+		{
+			for (int i = 0 ; i < children.length ; i++)
+				subfolder_list.add(children[i]);
+		}
+		return RET_SUCCESS;
+	}
+
+	private static boolean delete_dir(File dir) 
+	{
+		if (dir.isDirectory())
+		{ 
+			String[] children = dir.list(); 
+			for (int i=0; i<children.length; i++)
+			{
+				boolean success = delete_dir(new File(dir, children[i]));
+				if (!success)
+					return false;
+			}
+		} 
+// The directory is now empty or this is a file so delete it 
+		return dir.delete(); 
+	}
+
+	public static short delete_subfolder(String folderpath)
+	{
+		File dir = new File(folderpath);
+		if (!dir.exists())
+		{
+//			format_error("The folder does Not exist", folderpath);
+			return RET_FAILURE_NOT_FOUND;
+		}
+		return delete_dir(dir) ? RET_SUCCESS : RET_FAILURE_UNKNOWN;
+	}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Interface
 	public interface FinanceObserverInf

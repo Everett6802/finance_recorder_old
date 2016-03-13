@@ -12,23 +12,6 @@ public class FinanceRecorder
 
 	public static void main(String args[])
 	{
-//		java.util.Date date_now = new java.util.Date();
-//		Calendar cal = Calendar.getInstance();
-//		cal.setTime(date_now);
-//		String time_month = String.format("%02d-%02d-%02d %02d:%02d:%02d", cal.get(Calendar.YEAR) % 100, cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DATE), cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND));
-//		System.out.print(time_month);
-//		List<String> data_list = new ArrayList<String>();
-//		data_list.add("1,2,3,4\n");
-//		data_list.add("11,22,33,44\n");
-//		data_list.add("111,222,333,444\n");
-//		FinanceRecorderCSVHandler csv_writer = new FinanceRecorderCSVHandler(null);
-//		String csv_filepath = String.format("%s/%s/%s_%04d%02d.csv", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.BACKUP_FOLDERNAME, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[0], 2016, 1);
-////		FinanceRecorderCmnDef.format_debug("Try to write the CSV: %s", csv_filepath);
-//		csv_writer.initialize(csv_filepath, FinanceRecorderCSVHandler.HandlerMode.HandlerMode_Write);
-//		csv_writer.write(data_list);
-//		csv_writer.deinitialize();
-//		System.exit(0);
-
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		ret = finance_recorder_mgr.initialize();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -39,6 +22,8 @@ public class FinanceRecorder
 		boolean check_error = false;
 		boolean run_daily = false;
 		boolean backup_database = false;
+		boolean list_database_folder = false;
+		boolean cleanup_database_folder = false;
 		LinkedList<Integer> remove_database_list = null;
 		LinkedList<Integer> finance_data_type_index_list = null;
 		String time_month_begin = null;
@@ -142,9 +127,19 @@ public class FinanceRecorder
 					remove_database_list.addLast(i);
 				index_offset = 1;
 			}
-			else if (option.equals("--backup_database"))
+			else if (option.equals("--backup"))
 			{
 				backup_database = true;
+				index_offset = 1;
+			}
+			else if (option.equals("--backup_list"))
+			{
+				list_database_folder = true;
+				index_offset = 1;
+			}
+			else if (option.equals("--backup_cleanup"))
+			{
+				cleanup_database_folder = true;
 				index_offset = 1;
 			}
 			else if (option.equals("--multi_thread"))
@@ -235,7 +230,14 @@ public class FinanceRecorder
 		{
 			backup_sql();
 		}
-		
+		if (list_database_folder)
+		{
+			backup_sql_list();
+		}
+		if (cleanup_database_folder)
+		{
+			backup_sql_cleanup();
+		}
 		if (need_read(action_type))
 		{
 				
@@ -278,7 +280,9 @@ public class FinanceRecorder
 		System.out.println("-a|--action\nDescription: Read/Write the MySQLCaution: Not read/write MySQL if not set");
 		System.out.println("  Type: {R(r), W(w), RW(rw)/WR(wr)");
 	    System.out.println("--remove_old\nDescription: Remove the old MySQL databases");
-	    System.out.println("--backup_database\nDescription: Backup the current databases");
+	    System.out.println("--backup\nDescription: Backup the current databases");
+	    System.out.println("--backup_list\nDescription: List database backup folder");
+	    System.out.println("--backup_cleanup\nDescription: CleanUp all database backup sub-folders");
 		System.out.println("--multi_thread\nDescription: Write into MySQL database by using multiple threads");
 		System.out.println("--check_error\nDescription: Check if the data in the MySQL database is correct");
 		System.out.println("--run_daily\nDescription: Run daily data\nCaution: Executed after writing MySQL data if set");
@@ -363,6 +367,72 @@ public class FinanceRecorder
 			show_error_and_exit(String.format("Fail to backup the MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 
 		return ret;
+	}
+
+	private static short backup_sql_list()
+	{
+		if(!FinanceRecorderCmnDef.is_show_console())
+		{
+			FinanceRecorderCmnDef.warn("The STDOUT/STDERR is Disabled");
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
+
+		class FoldernameCompare implements Comparable
+		{
+			public String foldername;
+			public FoldernameCompare(String name)
+			{
+				foldername = name;
+			}
+			@Override
+			public int compareTo(Object other) 
+			{
+				Long value = Long.parseLong(foldername);
+				Long another_value = Long.parseLong(((FoldernameCompare)other).foldername);
+				if (value > another_value)
+					return 1;
+				else if (value < another_value)
+					return -1;
+				else 
+					return 0;
+			}
+			@Override
+			public String toString()
+			{
+				return foldername;
+			}
+		};
+
+		String filepath = String.format("%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.BACKUP_FOLDERNAME);
+		List<String> subfolder_list = new ArrayList<String>();
+		short ret = FinanceRecorderCmnDef.get_subfolder_list(filepath, subfolder_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			show_error_and_exit(String.format("Fail to show backup list of the MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		List<FoldernameCompare> sorted_subfolder_list = new LinkedList<FoldernameCompare>();
+		for (String subfolder : subfolder_list)
+			sorted_subfolder_list.add(new FoldernameCompare(subfolder));
+// Sort the data by number
+		Collections.sort(sorted_subfolder_list);
+		System.out.println("The backup folder list:");
+		for (FoldernameCompare sorted_subfolder : sorted_subfolder_list)
+			System.out.println(sorted_subfolder);
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	private static short backup_sql_cleanup()
+	{
+		String filepath = String.format("%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.BACKUP_FOLDERNAME);
+		List<String> subfolder_list = new ArrayList<String>();
+		short ret = FinanceRecorderCmnDef.get_subfolder_list(filepath, subfolder_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			show_error_and_exit(String.format("Fail to show backup list of the MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		for (String subfolder : subfolder_list)
+		{
+			ret = FinanceRecorderCmnDef.delete_subfolder(String.format("%s/%s", filepath, subfolder));
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				show_error_and_exit(String.format("Fail to delete backup folder: %s, due to: %s", subfolder, FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		}
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	private static short write_sql(boolean use_multithread)
