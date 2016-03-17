@@ -193,7 +193,9 @@ public class FinanceRecorder
 			}
 			index += index_offset;
 		}
-
+/////////////////////////////////////////////////////////////////
+// CAUTION: The process stops after restore !!!
+/////////////////////////////////////////////////////////////////
 		if (restore_database)
 		{
 // Cleanup the old database
@@ -206,13 +208,12 @@ public class FinanceRecorder
 			if (restore_folderpath == null)
 				restore_folderpath = FinanceRecorderCmnDef.get_current_path();
 			restore_sql(String.format("%s/%s", restore_folderpath, restore_foldername));
+			wait_to_exit();
 		}
-		else
-		{
+
 // Remove the old database
-			if (remove_database_list != null)
-				delete_sql(remove_database_list);
-		}
+		if (remove_database_list != null)
+			delete_sql(remove_database_list);
 
 // Setup time range if necessary
 		if (finance_data_type_index_list != null)
@@ -284,6 +285,11 @@ public class FinanceRecorder
 //				
 //		}
 
+		wait_to_exit();
+	}
+
+	private static void wait_to_exit()
+	{
 		FinanceRecorderCmnDef.wait_for_logging();
 		System.exit(0);
 	}
@@ -320,7 +326,7 @@ public class FinanceRecorder
 		System.out.println("  Format: history.conf");
 		System.out.println("-a|--action\nDescription: Read/Write the MySQL\nCaution: Not read/write MySQL if not set");
 		System.out.println("  Type: {R(r), W(w), RW(rw)/WR(wr)");
-		System.out.println("--restore\nDescription: Restore the MySQL databases from certain a backup folder\nDefault: $CurrentWorkingFolder/.backup\nCaution: Remove old MySQL before backup");
+		System.out.println("--restore\nDescription: Restore the MySQL databases from certain a backup folder\nDefault: $CurrentWorkingFolder/.backup\nCaution: Remove old MySQL before backup. The proccess stops after restore");
 		System.out.println("  Format: 160313060053");
 		System.out.println("--restore_path\nDescription: The path where the backup folder is located in\nCaution: Enabled if --restore set");
 		System.out.println("  Format: /home/super/Projects/finance_recorder_java/.backup");
@@ -338,6 +344,16 @@ public class FinanceRecorder
 	private static boolean need_read(ActionType type){return (type == ActionType.Action_Read || type == ActionType.Action_ReadWrite) ? true : false;}
 	private static boolean need_write(ActionType type){return (type == ActionType.Action_Write || type == ActionType.Action_ReadWrite) ? true : false;}
 
+	private static short init_workday_calendar_table()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		ret = finance_recorder_mgr.init_workday_calendar_table();
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			show_error_and_exit(String.format("Fail to initialize the workday calendar table, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+
+		return ret;
+	}
+
 	private static short init_database_time_range_table()
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
@@ -347,7 +363,7 @@ public class FinanceRecorder
 
 		return ret;
 	}
-	
+
 	private static short setup_time_range_table(String filename)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
@@ -421,46 +437,15 @@ public class FinanceRecorder
 			FinanceRecorderCmnDef.warn("The STDOUT/STDERR is Disabled");
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
-
-		class FoldernameCompare implements Comparable
-		{
-			public String foldername;
-			public FoldernameCompare(String name)
-			{
-				foldername = name;
-			}
-			@Override
-			public int compareTo(Object other) 
-			{
-				Long value = Long.parseLong(foldername);
-				Long another_value = Long.parseLong(((FoldernameCompare)other).foldername);
-				if (value > another_value)
-					return 1;
-				else if (value < another_value)
-					return -1;
-				else 
-					return 0;
-			}
-			@Override
-			public String toString()
-			{
-				return foldername;
-			}
-		};
-
-		String filepath = String.format("%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.BACKUP_FOLDERNAME);
-		List<String> subfolder_list = new ArrayList<String>();
-		short ret = FinanceRecorderCmnDef.get_subfolder_list(filepath, subfolder_list);
+// Find the backup folder list
+		List<String> sorted_backup_list = new LinkedList<String>();
+		short ret = finance_recorder_mgr.get_sorted_backup_list(sorted_backup_list);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			show_error_and_exit(String.format("Fail to show backup list of the MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-		List<FoldernameCompare> sorted_subfolder_list = new LinkedList<FoldernameCompare>();
-		for (String subfolder : subfolder_list)
-			sorted_subfolder_list.add(new FoldernameCompare(subfolder));
-// Sort the data by number
-		Collections.sort(sorted_subfolder_list);
+			return ret;
+// Print the result
 		System.out.println("The backup folder list:");
-		for (FoldernameCompare sorted_subfolder : sorted_subfolder_list)
-			System.out.println(sorted_subfolder);
+		for (String backup_foldername : sorted_backup_list)
+			System.out.println(backup_foldername);
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
@@ -518,29 +503,32 @@ public class FinanceRecorder
 	{
 // Write the financial data into MySQL
 		if(FinanceRecorderCmnDef.is_show_console())
-			System.out.println("Backup MySQL from financial data......");
+			System.out.println("Restore MySQL from financial data......");
 
-		long time_start_millisecond = System.currentTimeMillis();
+//		long time_start_millisecond = System.currentTimeMillis();
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		ret = finance_recorder_mgr.restore(restore_path);
+		if (restore_path == null)
+			ret = finance_recorder_mgr.restore_latest();
+		else
+			ret = finance_recorder_mgr.restore(restore_path);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to backup MySQL from financial data, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-		long time_end_millisecond = System.currentTimeMillis();
-
-		if(FinanceRecorderCmnDef.is_show_console())
-			System.out.println("Backup MySQL from financial data...... Done");
-
-		long time_lapse_millisecond = time_end_millisecond - time_start_millisecond;
-		String time_lapse_msg; 
-		if (time_lapse_millisecond >= 100 * 1000)
-			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
-		else if (time_lapse_millisecond >= 10 * 1000)
-			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
-		else
-			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
-		FinanceRecorderCmnDef.info(time_lapse_msg);
-		if(FinanceRecorderCmnDef.is_show_console())
-			System.out.println(time_lapse_msg);
+//		long time_end_millisecond = System.currentTimeMillis();
+//
+//		if(FinanceRecorderCmnDef.is_show_console())
+//			System.out.println("Backup MySQL from financial data...... Done");
+//
+//		long time_lapse_millisecond = time_end_millisecond - time_start_millisecond;
+//		String time_lapse_msg; 
+//		if (time_lapse_millisecond >= 100 * 1000)
+//			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+//		else if (time_lapse_millisecond >= 10 * 1000)
+//			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+//		else
+//			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+//		FinanceRecorderCmnDef.info(time_lapse_msg);
+//		if(FinanceRecorderCmnDef.is_show_console())
+//			System.out.println(time_lapse_msg);
 
 		return ret;
 	}

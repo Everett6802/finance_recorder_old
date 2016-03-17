@@ -36,6 +36,11 @@ public class FinanceRecorderDatabaseTimeRange
 			}
 		} 
 	}
+	private static synchronized void release() // For thread-safe
+	{
+		if (instance != null)
+			instance = null;
+	}
 
 	private ArrayList<FinanceRecorderCmnClass.TimeRangeCfg> database_time_range_array = null; 
 	private short initialize()

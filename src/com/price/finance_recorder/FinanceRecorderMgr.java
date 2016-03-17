@@ -13,7 +13,7 @@ import java.util.regex.*;
 
 public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserverInf
 {
-	private static FinanceRecorderWorkdayCalendar workday_calendar = FinanceRecorderWorkdayCalendar.get_instance();
+	private static FinanceRecorderWorkdayCalendar workday_calendar = null;// FinanceRecorderWorkdayCalendar.get_instance();
 	private static FinanceRecorderDatabaseTimeRange database_time_range = null; //FinanceRecorderDatabaseTimeRange.get_instance();
 
 	enum ConfigFieldType
@@ -584,23 +584,76 @@ OUT:
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short restore(String restore_path)
+	public short restore(String restore_foldername)
 	{
-// Write the data into MySQL one by one
-		short ret;
-		for (Map.Entry<Integer, FinanceRecorderCmnClass.TimeRangeCfg> entry : finance_source_time_range_table.entrySet())
+// Backup the workday calendar/database time range config files
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		String current_path = FinanceRecorderCmnDef.get_current_path();
+		String workday_canlendar_src_filepath = String.format("%s/%s/%s/%s", current_path, FinanceRecorderCmnDef.BACKUP_FOLDERNAME, restore_foldername, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME);
+		String database_time_range_src_filepath = String.format("%s/%s/%s/%s", current_path, FinanceRecorderCmnDef.BACKUP_FOLDERNAME, restore_foldername,FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+		String dst_folderpath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.BACKUP_FOLDERNAME, restore_foldername);
+// Copy the workday calendar config file
+		FinanceRecorderCmnDef.format_debug("Copy workday calendar config file[%s] from bakcup folder[%s]", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME, restore_foldername);
+		File workday_calendar_file_handle = new File(workday_canlendar_src_filepath);
+		if (!workday_calendar_file_handle.exists())
 		{
-			int finance_source_type_index = entry.getKey();
-			FinanceRecorderDataHandler finance_recorder_data_handler = new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index));
-			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = entry.getValue();
-
-			FinanceRecorderCmnDef.format_debug("Try to write data [%s %s] into MySQL......", finance_recorder_data_handler.get_description(), time_range_cfg.toString());
-// Write the data into MySQL
-			ret = finance_recorder_data_handler.write_to_sql(time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single, FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_No);
-			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				return ret;
+			FinanceRecorderCmnDef.format_error("The workday calendar config file[%s] does NOT exist", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME);
+			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;	
+		}
+		ret = FinanceRecorderCmnDef.copy_file(workday_canlendar_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME));
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+// Copy the database time range config file
+		FinanceRecorderCmnDef.format_debug("Copy database time range config file[%s] from bakcup folder[%s]", FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME, restore_foldername);
+		File database_time_range_file_handle = new File(database_time_range_src_filepath);
+		if (!database_time_range_file_handle.exists())
+		{
+			FinanceRecorderCmnDef.format_error("The database time range config file[%s] does NOT exist", FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;	
+		}
+		ret = FinanceRecorderCmnDef.copy_file(workday_canlendar_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME));
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+// We assume the process stops after restore so that the databse time range singleton can be initialized here !!!
+		ret = init_database_time_range_table();
+// Write the data into MySQL one by one
+		int data_name_list_length = FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST.length;
+		for (int finance_source_type_index = 0 ; finance_source_type_index < data_name_list_length ; finance_source_type_index++)
+		{
+			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
+			try
+			{
+				time_range_cfg = database_time_range.get_source_type_time_range(finance_source_type_index);
+				FinanceRecorderDataHandler finance_recorder_data_handler = new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index), dst_folderpath);
+				FinanceRecorderCmnDef.format_debug("Try to restore data [%s %s] into MySQL......", finance_recorder_data_handler.get_description(), time_range_cfg.toString());
+	// Write the data into MySQL
+				ret = finance_recorder_data_handler.write_to_sql(time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single, FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_No);
+				if (FinanceRecorderCmnDef.CheckFailure(ret))
+					return ret;
+			}
+			catch (IllegalArgumentException e)
+			{
+				FinanceRecorderCmnDef.format_debug("No data[%d] to restore, skipped...", finance_source_type_index);
+			}
 		}
 		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	public short restore_latest()
+	{
+// Write the data into MySQL one by one
+		List<String> sorted_backup_list = new LinkedList<String>();
+		short ret = get_sorted_backup_list(sorted_backup_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+		if (sorted_backup_list.isEmpty())
+		{
+			FinanceRecorderCmnDef.error("The backup files are NOT found");
+			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+		}
+		String backup_foldername = sorted_backup_list.get(sorted_backup_list.size() - 1);
+
+		return restore(backup_foldername);
 	}
 
 	private short get_time_range_slice(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, int slice_size, ArrayList<FinanceRecorderCmnClass.TimeRangeCfg> time_range_slice_cfg_list)
@@ -713,6 +766,17 @@ OUT:
 			executor.shutdownNow();
 
 		return ret;
+	}
+
+	public short init_workday_calendar_table()
+	{
+		if (workday_calendar != null)
+		{
+			FinanceRecorderCmnDef.error("The workday calendar object has already been initialized");
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
+		workday_calendar = FinanceRecorderWorkdayCalendar.get_instance();
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	public short init_database_time_range_table()
@@ -1094,6 +1158,12 @@ OUT:
 
 	public short run_daily()
 	{
+		if (workday_calendar == null)
+		{
+			FinanceRecorderCmnDef.error("The workday calendar object is NOT initialized");
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
+
 // Find the latest workday
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		int[] date_list = new int[3];
@@ -1400,5 +1470,51 @@ OUT:
 			return ret;
 
 		return ret;
+	}
+
+	public static short get_sorted_backup_list(List<String> sorted_backup_list)
+	{
+		class FoldernameCompare implements Comparable
+		{
+			public String foldername;
+			public FoldernameCompare(String name)
+			{
+				foldername = name;
+			}
+			@Override
+			public int compareTo(Object other) 
+			{
+				Long value = Long.parseLong(foldername);
+				Long another_value = Long.parseLong(((FoldernameCompare)other).foldername);
+				if (value > another_value)
+					return 1;
+				else if (value < another_value)
+					return -1;
+				else 
+					return 0;
+			}
+			@Override
+			public String toString()
+			{
+				return foldername;
+			}
+		};
+
+		String filepath = String.format("%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.BACKUP_FOLDERNAME);
+		List<String> subfolder_list = new ArrayList<String>();
+		short ret = FinanceRecorderCmnDef.get_subfolder_list(filepath, subfolder_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+			FinanceRecorderCmnDef.format_error("Fail to get backup folderlist of the MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret));
+			return ret;
+		}
+		List<FoldernameCompare> sorted_subfolder_list = new LinkedList<FoldernameCompare>();
+		for (String subfolder : subfolder_list)
+			sorted_subfolder_list.add(new FoldernameCompare(subfolder));
+// Sort the data by number
+		Collections.sort(sorted_subfolder_list);
+		for (FoldernameCompare sorted_subfolder : sorted_subfolder_list)
+			sorted_backup_list.add(sorted_subfolder.toString());
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 }

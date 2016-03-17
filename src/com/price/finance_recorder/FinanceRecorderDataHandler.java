@@ -1,5 +1,6 @@
 package com.price.finance_recorder;
 
+import java.io.File;
 import java.sql.*;
 import java.text.*;
 import java.util.*;
@@ -16,6 +17,7 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 	private static final boolean IgnoreErrorIfCSVNotExist = true;
 
 	private int finance_source_type_index;
+	private String data_folderpath = null;
 //	private FinanceRecorderCSVHandler csv_reader = null;
 	private FinanceRecorderSQLClient sql_client = null;
 	private HashMap<Integer, LinkedList<Integer>> finance_source_time_range_table = new HashMap<Integer, LinkedList<Integer>>();
@@ -27,6 +29,12 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 		finance_source_type_index = finance_data_type.ordinal();
 		sql_client = new FinanceRecorderSQLClient(finance_data_type, this);
 	}
+	public FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceSourceType finance_data_type, String csv_folderpath)
+	{
+		this(finance_data_type);
+		data_folderpath = csv_folderpath;
+	}
+
 
 	private short set_mapping_time_range(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg)
 	{
@@ -76,6 +84,16 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 			);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
+
+		if (data_folderpath == null)
+			data_folderpath = FinanceRecorderCmnDef.DATA_FOLDERPATH;
+		File data_folderpath_folder = new File(data_folderpath);
+		if (!data_folderpath_folder.exists())
+		{
+			FinanceRecorderCmnDef.format_error("The data folder[%s] does NOT exist", data_folderpath);
+			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+		}
+
 		FinanceRecorderCSVHandler csv_reader = new FinanceRecorderCSVHandler(this);
 OUT:
 		for (Map.Entry<Integer, LinkedList<Integer>> entry : finance_source_time_range_table.entrySet())
@@ -86,7 +104,7 @@ OUT:
 			for (int month : month_list)
 			{
 // Read the data from CSV file
-				csv_filepath = String.format("%s/%s_%04d%02d.csv", FinanceRecorderCmnDef.DATA_FOLDERPATH, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index], year, month);
+				csv_filepath = String.format("%s/%s_%04d%02d.csv", data_folderpath, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index], year, month);
 //				FinanceRecorderCmnDef.format_debug("Try to read the CSV: %s", csv_filepath);
 				ret = csv_reader.initialize(csv_filepath, FinanceRecorderCSVHandler.HandlerMode.HandlerMode_Read);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -219,14 +237,8 @@ OUT:
 		boolean is_last_month = false;
 		String search_date;
 OUT:
-//		for (Map.Entry<Integer, LinkedList<Integer>> entry : finance_source_time_range_table.entrySet())
 		while(!is_last_month)
 		{
-//			if (is_last_month)
-//			{
-//				FinanceRecorderCmnDef.error("Something wrong happend while slicing the time range......");
-//				return FinanceRecorderCmnDef.RET_FAILURE_UNKNOWN;
-//			}
 			LinkedList<String> data_list = new LinkedList<String>();
 // Write the data into CSV file
 			csv_filepath = String.format("%s/%s/%s/%s_%04d%02d.csv", current_path, FinanceRecorderCmnDef.BACKUP_FOLDERNAME, csv_backup_foldername, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index], search_year, search_month);
