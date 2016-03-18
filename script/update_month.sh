@@ -20,5 +20,5 @@ fi
 
 #echo "m = ${m}"
 
-cd /home/super/Projects/finance_recorder_java
-java -Djava.library.path=lib -jar finance_recorder.jar--action W -t ${m} -s all --check_error
+cd ~/Projects/finance_recorder_java
+java -Djava.library.path=lib -jar finance_recorder.jar --action W -t ${m} -s all --check_error
