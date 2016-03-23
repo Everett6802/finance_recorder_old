@@ -584,14 +584,15 @@ OUT:
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short restore(String restore_foldername)
+	public short restore(String restore_folderpath, String restore_foldername)
 	{
 // Backup the workday calendar/database time range config files
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		String current_path = FinanceRecorderCmnDef.get_current_path();
-		String workday_canlendar_src_filepath = String.format("%s/%s/%s/%s", current_path, FinanceRecorderCmnDef.BACKUP_FOLDERNAME, restore_foldername, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME);
-		String database_time_range_src_filepath = String.format("%s/%s/%s/%s", current_path, FinanceRecorderCmnDef.BACKUP_FOLDERNAME, restore_foldername,FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
-		String dst_folderpath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.BACKUP_FOLDERNAME, restore_foldername);
+		String src_folderpath = String.format("%s/%s/%s", (restore_folderpath != null ? restore_folderpath : current_path), FinanceRecorderCmnDef.BACKUP_FOLDERNAME, restore_foldername);
+		String workday_canlendar_src_filepath = String.format("%s/%s", src_folderpath, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME);
+		String database_time_range_src_filepath = String.format("%s/%s", src_folderpath,FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+		String dst_folderpath = String.format("%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME);
 // Copy the workday calendar config file
 		FinanceRecorderCmnDef.format_debug("Copy workday calendar config file[%s] from bakcup folder[%s]", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME, restore_foldername);
 		File workday_calendar_file_handle = new File(workday_canlendar_src_filepath);
@@ -611,7 +612,7 @@ OUT:
 			FinanceRecorderCmnDef.format_error("The database time range config file[%s] does NOT exist", FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
 			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;	
 		}
-		ret = FinanceRecorderCmnDef.copy_file(workday_canlendar_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME));
+		ret = FinanceRecorderCmnDef.copy_file(database_time_range_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME));
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 // We assume the process stops after restore so that the databse time range singleton can be initialized here !!!
@@ -624,7 +625,7 @@ OUT:
 			try
 			{
 				time_range_cfg = database_time_range.get_source_type_time_range(finance_source_type_index);
-				FinanceRecorderDataHandler finance_recorder_data_handler = new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index), dst_folderpath);
+				FinanceRecorderDataHandler finance_recorder_data_handler = new FinanceRecorderDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index), src_folderpath);
 				FinanceRecorderCmnDef.format_debug("Try to restore data [%s %s] into MySQL......", finance_recorder_data_handler.get_description(), time_range_cfg.toString());
 	// Write the data into MySQL
 				ret = finance_recorder_data_handler.write_to_sql(time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single, FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_No);
@@ -639,21 +640,21 @@ OUT:
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short restore_latest()
+	public short restore_latest(String restore_folderpath)
 	{
 // Write the data into MySQL one by one
-		List<String> sorted_backup_list = new LinkedList<String>();
-		short ret = get_sorted_backup_list(sorted_backup_list);
+		List<String> sorted_restore_list = new LinkedList<String>();
+		short ret = get_sorted_backup_list(sorted_restore_list);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
-		if (sorted_backup_list.isEmpty())
+		if (sorted_restore_list.isEmpty())
 		{
-			FinanceRecorderCmnDef.error("The backup files are NOT found");
+			FinanceRecorderCmnDef.error("The restore files are NOT found");
 			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
 		}
-		String backup_foldername = sorted_backup_list.get(sorted_backup_list.size() - 1);
+		String restore_foldername = sorted_restore_list.get(sorted_restore_list.size() - 1);
 
-		return restore(backup_foldername);
+		return restore(restore_folderpath, restore_foldername);
 	}
 
 	private short get_time_range_slice(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, int slice_size, ArrayList<FinanceRecorderCmnClass.TimeRangeCfg> time_range_slice_cfg_list)
@@ -1465,7 +1466,7 @@ OUT:
 			FinanceRecorderCmnDef.format_error("The database time range config file[%s] does NOT exist", FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
 			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;	
 		}
-		ret = FinanceRecorderCmnDef.copy_file(workday_canlendar_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME));
+		ret = FinanceRecorderCmnDef.copy_file(database_time_range_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME));
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
