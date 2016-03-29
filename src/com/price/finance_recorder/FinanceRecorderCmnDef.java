@@ -93,6 +93,7 @@ public class FinanceRecorderCmnDef
 	}
 
 	public static final String DATA_FOLDERPATH = "/var/tmp/finance";
+	public static final String COPY_BACKUP_FOLDERPATH = "/var/www/finance";
 	public static final String DATA_SPLIT = ",";
 	public static final String DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%02d%02d";
 	public static final String DAILY_FINANCE_EMAIL_TITLE_FORMAT = "daily_finance%04d%02d%02d";
@@ -1025,6 +1026,68 @@ public class FinanceRecorderCmnDef
 			return RET_FAILURE_NOT_FOUND;
 		}
 		return delete_dir(dir) ? RET_SUCCESS : RET_FAILURE_UNKNOWN;
+	}
+
+	public static short copy_dir(File src, File dest)
+	{
+		if(src.isDirectory())
+		{
+//if directory not exists, create it
+			if(!dest.exists())
+			{
+				dest.mkdir();
+				format_debug("The destination directory[%s] does NOT exist, create one", dest);
+			}
+//list all the directory contents
+			String files[] = src.list();
+			for (String file : files) 
+			{
+//construct the src and dest file structure
+				File srcFile = new File(src, file);
+				File destFile = new File(dest, file);
+//recursive copy
+				copy_dir(srcFile, destFile);
+			}
+		}
+		else
+		{
+//if file, then copy it. Use bytes stream to support all file types
+			try
+			{
+				InputStream in = new FileInputStream(src);
+				OutputStream out = new FileOutputStream(dest); 
+				byte[] buffer = new byte[1024];
+				int length;
+//copy the file content in bytes 
+				while ((length = in.read(buffer)) > 0) out.write(buffer, 0, length);
+				in.close();
+				out.close();
+//				System.out.println("File copied from " + src + " to " + dest);
+			}
+			catch (FileNotFoundException e)
+			{
+				format_error("File Not Found, due to: %s", e.toString());
+				return RET_FAILURE_NOT_FOUND;
+			}
+			catch (IOException e)
+			{
+				format_error("Error occurs while Operating IO, due to: %s", e.toString());
+				return RET_FAILURE_IO_OPERATION;
+			}
+		}
+		return RET_SUCCESS;
+	}
+
+	public static short copy_folder(String src_folderpath, String dest_folderpath)
+	{
+		File src = new File(src_folderpath);
+		if (!src.exists())
+		{
+			format_error("Source Folder[%s] Not Found", src_folderpath);
+			return RET_FAILURE_NOT_FOUND;
+		}
+		File dest = new File(dest_folderpath);
+		return copy_dir(src, dest);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

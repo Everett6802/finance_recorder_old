@@ -25,6 +25,7 @@ public class FinanceRecorder
 		boolean list_database_folder = false;
 		boolean cleanup_database_folder = false;
 		boolean restore_database = false;
+		boolean copy_backup_folder = false;
 		String restore_folderpath = null;
 		String restore_foldername = null;
 		LinkedList<Integer> remove_database_list = null;
@@ -178,6 +179,11 @@ public class FinanceRecorder
 				cleanup_database_folder = true;
 				index_offset = 1;
 			}
+			else if (option.equals("--copy_backup"))
+			{
+				copy_backup_folder = true;
+				index_offset = 1;
+			}
 			else if (option.equals("--multi_thread"))
 			{
 				use_multithread = true;
@@ -288,7 +294,7 @@ public class FinanceRecorder
 		}
 		if (backup_database)
 		{
-			backup_sql();
+			backup_sql(copy_backup_folder);
 		}
 		if (list_database_folder)
 		{
@@ -349,6 +355,7 @@ public class FinanceRecorder
 		System.out.println("--backup\nDescription: Backup the current databases");
 		System.out.println("--backup_list\nDescription: List database backup folder");
 		System.out.println("--backup_cleanup\nDescription: CleanUp all database backup sub-folders");
+		System.out.println("--copy_backup\nDescription: Copy the backup folder to the designated path\nCaution: Enabled if --backup set");
 		System.out.println("--multi_thread\nDescription: Write into MySQL database by using multiple threads");
 		System.out.println("--check_error\nDescription: Check if the data in the MySQL database is correct");
 		System.out.println("--run_daily\nDescription: Run daily data\nCaution: Executed after writing MySQL data if set");
@@ -432,13 +439,13 @@ public class FinanceRecorder
 		return ret;
 	}
 
-	private static short backup_sql()
+	private static short backup_sql(boolean copy_backup_folder)
 	{
 		if(FinanceRecorderCmnDef.is_show_console())
 			System.out.println("Backup current MySQL data......");
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		ret = finance_recorder_mgr.backup_by_multithread();
+		ret = finance_recorder_mgr.backup_by_multithread(copy_backup_folder);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to backup the MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 

@@ -1357,7 +1357,7 @@ OUT:
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short backup_by_multithread()
+	public short backup_by_multithread(boolean copy_backup_folder)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		String backup_folderpath = String.format("%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.BACKUP_FOLDERNAME);
@@ -1469,6 +1469,15 @@ OUT:
 		ret = FinanceRecorderCmnDef.copy_file(database_time_range_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME));
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
+
+		if (copy_backup_folder)
+		{
+			FinanceRecorderCmnDef.delete_subfolder(FinanceRecorderCmnDef.COPY_BACKUP_FOLDERPATH);
+			FinanceRecorderCmnDef.format_debug("Copy backup folder[%s] to %s", csv_backup_foldername, FinanceRecorderCmnDef.COPY_BACKUP_FOLDERPATH);
+			ret = FinanceRecorderCmnDef.copy_folder(dst_folderpath, FinanceRecorderCmnDef.COPY_BACKUP_FOLDERPATH);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				return ret;
+		}
 
 		return ret;
 	}
