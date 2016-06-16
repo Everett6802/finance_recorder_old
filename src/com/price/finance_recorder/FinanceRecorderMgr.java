@@ -466,7 +466,7 @@ OUT:
 
 	private short check_time_month_range_from_csv(int finance_source_type_index, StringBuilder csv_time_month_start_str_builder, StringBuilder csv_time_month_end_str_builder)
 	{
-		String command = String.format("ls %s | grep %s", FinanceRecorderCmnDef.DATA_FOLDERPATH, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index]);
+		String command = String.format("ls %s | grep %s", FinanceRecorderCmnDef.DATA_ROOT_FOLDERPATH, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index]);
 		FinanceRecorderCmnDef.format_debug("Find CSV time range by command: %s", finance_source_type_index, command);
 		StringBuilder result_str_builder = new StringBuilder();
 		short ret = FinanceRecorderCmnDef.execute_shell_command(command, result_str_builder);
@@ -860,7 +860,7 @@ OUT:
 		return ret;
 	}
 
-	public short read_all(	FinanceRecorderCmnClass.ResultSet result_set)
+	public short read_all(FinanceRecorderCmnClass.ResultSet result_set)
 	{
 // Read all the data from MySQL one by one
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;

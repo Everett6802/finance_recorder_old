@@ -13,14 +13,15 @@ import com.price.finance_recorder.FinanceRecorderCmnClass.TimeCfg;
 
 public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implements FinanceRecorderCmnDef.FinanceObserverInf
 {
-	private static final String CSV_FILE_FOLDER = "/var/tmp/finance";
+	// private static final String CSV_FILE_FOLDER = "/var/tmp/finance";
 	private static final boolean IgnoreErrorIfCSVNotExist = true;
 
 	private int finance_source_type_index;
 	private String data_folderpath = null;
 //	private FinanceRecorderCSVHandler csv_reader = null;
 	private FinanceRecorderSQLClient sql_client = null;
-	private HashMap<Integer, LinkedList<Integer>> finance_source_time_range_table = new HashMap<Integer, LinkedList<Integer>>();
+	private HashMap<Integer, LinkedList<Integer>> finance_source_month_time_range_dict = null;
+	private ArrayList<Integer> finance_source_year_time_range_list = null;
 
 	private FinanceRecorderCmnClass.TimeRangeCfg database_time_range_cfg = null;
 
@@ -35,11 +36,11 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 		data_folderpath = csv_folderpath;
 	}
 
-
-	private short set_mapping_time_range(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg)
+	private short set_month_mapping_time_range(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg)
 	{
 		int[] time_list = FinanceRecorderCmnClass.TimeRangeCfg.get_start_and_end_month_value_range(time_range_cfg);
 		assert time_list != null : "time_list should NOT be NULL";
+		finance_source_month_time_range_dict = new HashMap<Integer, LinkedList<Integer>>();
 		int year_start = time_list[0]; 
 		int month_start = time_list[1];
 		int year_end = time_list[2];
@@ -48,9 +49,9 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 		int month_cur = month_start;
 		do 
 		{
-			if (!finance_source_time_range_table.containsKey(year_cur))
-				finance_source_time_range_table.put(year_cur, new LinkedList<Integer>());
-			LinkedList<Integer> entry = (LinkedList<Integer>)finance_source_time_range_table.get(year_cur);
+			if (!finance_source_month_time_range_dict.containsKey(year_cur))
+				finance_source_month_time_range_dict.put(year_cur, new LinkedList<Integer>());
+			LinkedList<Integer> entry = (LinkedList<Integer>)finance_source_month_time_range_dict.get(year_cur);
 			entry.addLast(month_cur);
 			if (year_cur == year_end && month_cur == month_end)
 				break;
@@ -66,12 +67,30 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
+	private short set_year_mapping_time_range(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg)
+	{
+		int[] time_list = FinanceRecorderCmnClass.TimeRangeCfg.get_start_and_end_month_value_range(time_range_cfg);
+		assert time_list != null : "time_list should NOT be NULL";
+		finance_source_year_time_range_list = new ArrayList<Integer>();
+		int year_start = time_list[0]; 
+//		int month_start = time_list[1];
+		int year_end = time_list[2];
+//		int month_end = time_list[3];
+//		int year_cur = year_start;
+//		int month_cur = month_start;
+		for (int year_cur = year_start ; year_cur <= year_end ; year_cur++)
+			finance_source_year_time_range_list.add(year_cur);
+
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
 	final String get_description(){return FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finance_source_type_index];}
 
 	short write_to_sql(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type, FinanceRecorderCmnDef.DatabaseEnableBatchType database_enable_batch_type)
 	{
 // Set the mapping table of reading the specific CSV files and writing correct SQL database
-		short ret = set_mapping_time_range(time_range_cfg);
+//		short ret = set_month_mapping_time_range(time_range_cfg);
+		short ret = set_year_mapping_time_range(time_range_cfg);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
@@ -86,7 +105,7 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 			return ret;
 
 		if (data_folderpath == null)
-			data_folderpath = FinanceRecorderCmnDef.DATA_FOLDERPATH;
+			data_folderpath = FinanceRecorderCmnDef.DATA_ROOT_FOLDERPATH;
 		File data_folderpath_folder = new File(data_folderpath);
 		if (!data_folderpath_folder.exists())
 		{
@@ -96,7 +115,7 @@ public class FinanceRecorderDataHandler extends FinanceRecorderCmnBase implement
 
 		FinanceRecorderCSVHandler csv_reader = new FinanceRecorderCSVHandler(this);
 OUT:
-		for (Map.Entry<Integer, LinkedList<Integer>> entry : finance_source_time_range_table.entrySet())
+		for (Map.Entry<Integer, LinkedList<Integer>> entry : finance_source_month_time_range_dict.entrySet())
 		{
 			LinkedList<String> data_list = new LinkedList<String>();
 			int year = entry.getKey();
