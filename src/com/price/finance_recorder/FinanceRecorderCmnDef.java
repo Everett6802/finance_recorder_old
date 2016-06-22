@@ -104,9 +104,10 @@ public class FinanceRecorderCmnDef
 	public static final String RESULT_FOLDERNAME = "result";
 	public static final String CONF_FOLDERNAME = "conf";
 	public static final String BACKUP_FOLDERNAME = ".backup";
-	public static final String WORKDAY_CANLENDAR_FILENAME = ".workday_canlendar.conf";
-	public static final String DATABASE_TIME_RANGE_FILENAME = ".database_time_range.conf";
-	public static final String COMPANY_PROFILE_FILENAME = ".company_profile.conf";
+	public static final String WORKDAY_CANLENDAR_CONF_FILENAME = ".workday_canlendar.conf";
+	public static final String DATABASE_TIME_RANGE_CONF_FILENAME = ".database_time_range.conf";
+	public static final String COMPANY_PROFILE_CONF_FILENAME = ".company_profile.conf";
+	public static final String COMPANY_GROUP_CONF_FILENAME = ".company_group.conf";
 	public static final String MARKET_STOCK_SWITCH_FILENAME = "market_stock_switch.conf";
 	public static final String FINANCE_RECORDER_CONF_FILENAME = "finance_recorder.conf";
 	public static final String BACKUP_FILENAME = "backup.conf";

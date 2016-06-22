@@ -11,4 +11,4 @@ data/
 publish/
 result/
 .backup/
-
+*.log
