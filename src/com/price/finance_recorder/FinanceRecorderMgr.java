@@ -449,6 +449,11 @@ OUT:
 		}
 		catch (IOException ex)
 		{
+			FinanceRecorderCmnDef.format_error("IO Error occur due to %s", ex.toString());
+			ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
+		}
+		catch (Exception ex)
+		{
 			FinanceRecorderCmnDef.format_error("Error occur due to %s", ex.toString());
 			ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 		}
@@ -590,29 +595,29 @@ OUT:
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		String current_path = FinanceRecorderCmnDef.get_current_path();
 		String src_folderpath = String.format("%s/%s/%s", (restore_folderpath != null ? restore_folderpath : current_path), FinanceRecorderCmnDef.BACKUP_FOLDERNAME, restore_foldername);
-		String workday_canlendar_src_filepath = String.format("%s/%s", src_folderpath, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME);
-		String database_time_range_src_filepath = String.format("%s/%s", src_folderpath,FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+		String workday_canlendar_src_filepath = String.format("%s/%s", src_folderpath, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
+		String database_time_range_src_filepath = String.format("%s/%s", src_folderpath,FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
 		String dst_folderpath = String.format("%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME);
 // Copy the workday calendar config file
-		FinanceRecorderCmnDef.format_debug("Copy workday calendar config file[%s] from bakcup folder[%s]", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME, restore_foldername);
+		FinanceRecorderCmnDef.format_debug("Copy workday calendar config file[%s] from bakcup folder[%s]", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, restore_foldername);
 		File workday_calendar_file_handle = new File(workday_canlendar_src_filepath);
 		if (!workday_calendar_file_handle.exists())
 		{
-			FinanceRecorderCmnDef.format_error("The workday calendar config file[%s] does NOT exist", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME);
+			FinanceRecorderCmnDef.format_error("The workday calendar config file[%s] does NOT exist", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
 			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;	
 		}
-		ret = FinanceRecorderCmnDef.copy_file(workday_canlendar_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME));
+		ret = FinanceRecorderCmnDef.copy_file(workday_canlendar_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME));
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 // Copy the database time range config file
-		FinanceRecorderCmnDef.format_debug("Copy database time range config file[%s] from bakcup folder[%s]", FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME, restore_foldername);
+		FinanceRecorderCmnDef.format_debug("Copy database time range config file[%s] from bakcup folder[%s]", FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME, restore_foldername);
 		File database_time_range_file_handle = new File(database_time_range_src_filepath);
 		if (!database_time_range_file_handle.exists())
 		{
-			FinanceRecorderCmnDef.format_error("The database time range config file[%s] does NOT exist", FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+			FinanceRecorderCmnDef.format_error("The database time range config file[%s] does NOT exist", FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
 			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;	
 		}
-		ret = FinanceRecorderCmnDef.copy_file(database_time_range_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME));
+		ret = FinanceRecorderCmnDef.copy_file(database_time_range_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME));
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 // We assume the process stops after restore so that the databse time range singleton can be initialized here !!!
@@ -971,7 +976,7 @@ OUT:
 			FinanceRecorderCmnDef.format_debug("Database[%s] start date: %s", finance_recorder_data_handler.get_description(), database_start_date_builder.toString());
 		}
 // Write the time range into the config file
-		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
 		ret = FinanceRecorderCmnDef.direct_string_to_output_stream(total_time_range_str, conf_filepath);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
@@ -985,8 +990,8 @@ OUT:
 		File f = new File(dst_folderpath);
 		if (f.exists())
 		{
-			String src_filepath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
-			String dst_filepath = String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+			String src_filepath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
+			String dst_filepath = String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
 			ret = FinanceRecorderCmnDef.copy_file(src_filepath, dst_filepath);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;	
@@ -1443,30 +1448,30 @@ OUT:
 
 // Backup the workday calendar/database time range config files
 		String current_path = FinanceRecorderCmnDef.get_current_path();
-		String workday_canlendar_src_filepath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME);
-		String database_time_range_src_filepath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+		String workday_canlendar_src_filepath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
+		String database_time_range_src_filepath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
 
 		String dst_folderpath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.BACKUP_FOLDERNAME, csv_backup_foldername);
 // Copy the workday calendar config file
-		FinanceRecorderCmnDef.format_debug("Copy workday calendar config file[%s] to %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME, csv_backup_foldername);
+		FinanceRecorderCmnDef.format_debug("Copy workday calendar config file[%s] to %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, csv_backup_foldername);
 		File workday_calendar_file_handle = new File(workday_canlendar_src_filepath);
 		if (!workday_calendar_file_handle.exists())
 		{
-			FinanceRecorderCmnDef.format_error("The workday calendar config file[%s] does NOT exist", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME);
+			FinanceRecorderCmnDef.format_error("The workday calendar config file[%s] does NOT exist", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
 			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;	
 		}
-		ret = FinanceRecorderCmnDef.copy_file(workday_canlendar_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME));
+		ret = FinanceRecorderCmnDef.copy_file(workday_canlendar_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME));
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 // Copy the database time range config file
-		FinanceRecorderCmnDef.format_debug("Copy database time range config file[%s] to %s", FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME, csv_backup_foldername);
+		FinanceRecorderCmnDef.format_debug("Copy database time range config file[%s] to %s", FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME, csv_backup_foldername);
 		File database_time_range_file_handle = new File(database_time_range_src_filepath);
 		if (!database_time_range_file_handle.exists())
 		{
-			FinanceRecorderCmnDef.format_error("The database time range config file[%s] does NOT exist", FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+			FinanceRecorderCmnDef.format_error("The database time range config file[%s] does NOT exist", FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
 			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;	
 		}
-		ret = FinanceRecorderCmnDef.copy_file(database_time_range_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME));
+		ret = FinanceRecorderCmnDef.copy_file(database_time_range_src_filepath, String.format("%s/%s", dst_folderpath, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME));
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 

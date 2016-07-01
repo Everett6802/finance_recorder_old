@@ -49,7 +49,7 @@ public class FinanceRecorderDatabaseTimeRange
 // Open the file
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		BufferedReader reader = null;
-		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
 		FinanceRecorderCmnDef.format_debug("Try to parse the configuration in %s", conf_filepath);
 // Check the file exists or not
 		File fp = new File(conf_filepath);
@@ -80,7 +80,7 @@ public class FinanceRecorderDatabaseTimeRange
 				String finance_database_description = data_array[0];
 				if (!finance_database_description.equals(FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index_count]))
 				{
-					String errmsg = String.format("The source type[%s] is NOT identical to %s in %s", finance_database_description, FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index_count], FinanceRecorderCmnDef.DATABASE_TIME_RANGE_FILENAME);
+					String errmsg = String.format("The source type[%s] is NOT identical to %s in %s", finance_database_description, FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index_count], FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
 					throw new RuntimeException(errmsg);
 				}
 				source_type_index_count++;

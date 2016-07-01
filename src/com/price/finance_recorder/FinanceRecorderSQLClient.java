@@ -56,6 +56,25 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		finance_observer = observer;
 	}
 
+	private static String field_array_to_string(String[] field_array)
+	{
+		String field_string = null;
+		for (String field : field_array)
+		{
+			if (field_string == null)
+				field_string = field;
+			else
+				field_string += (FinanceRecorderCmnDef.COMMA_DATA_SPLIT + field);
+		}
+
+		return field_string;
+	}
+
+	private static String[] field_string_to_array(String field_string)
+	{
+		return field_string.split(FinanceRecorderCmnDef.COMMA_DATA_SPLIT);
+	}
+
 	private static java.sql.Date transform_java_sql_date_format(String date_str) throws ParseException
 	{
 //		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
@@ -314,7 +333,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 // Create the SQL command list and then execute
 		for (String data : data_list)
 		{
-			String[] element_list = FinanceRecorderCmnDef.field_string_to_array(data);
+			String[] element_list = field_string_to_array(data);
 			String cmd_data = "?";
 // Transform the date field into SQL Date format
 			java.sql.Date sql_date = null;
@@ -390,7 +409,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 OUT:
 		for (String data : data_list)
 		{
-			String[] element_list = FinanceRecorderCmnDef.field_string_to_array(data);
+			String[] element_list = field_string_to_array(data);
 			if (pstmt == null)
 			{
 				// Assemble all the element in the data

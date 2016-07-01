@@ -12,6 +12,21 @@ public class FinanceRecorder
 
 	public static void main(String args[])
 	{
+		FinanceRecorderCompanyProfileLookup lookup = FinanceRecorderCompanyProfileLookup.get_instance();
+//		for (ArrayList<String> data : lookup.entry())
+//		{
+//			System.out.printf("%s\n", data.get(FinanceRecorderCompanyProfileLookup.COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER));
+//		}
+//		for (int i = 0 ; i < lookup.get_company_group_size() ; i++)
+//		{
+//			System.out.printf("======================== Group: %d, %s ========================\n", i, lookup.get_company_group_description(i));
+//			for (ArrayList<String> data : lookup.group_entry(i))
+//			{
+//				System.out.printf("%s\n", data.get(FinanceRecorderCompanyProfileLookup.COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER));
+//			}
+//		}
+//		System.exit(0);
+		
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		ret = finance_recorder_mgr.initialize();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))

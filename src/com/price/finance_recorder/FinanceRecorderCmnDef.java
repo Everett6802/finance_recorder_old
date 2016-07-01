@@ -13,6 +13,7 @@ import java.text.*;
 
 public class FinanceRecorderCmnDef
 {
+	private static FinanceRecorderLogger finance_recorder_logger = FinanceRecorderLogger.get_instance();
 	public static final boolean IS_FINANCE_MARKET_MODE = is_market_mode();
 	public static final boolean IS_FINANCE_STOCK_MODE = !IS_FINANCE_MARKET_MODE;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,12 +109,13 @@ public class FinanceRecorderCmnDef
 	public static final String DATABASE_TIME_RANGE_CONF_FILENAME = ".database_time_range.conf";
 	public static final String COMPANY_PROFILE_CONF_FILENAME = ".company_profile.conf";
 	public static final String COMPANY_GROUP_CONF_FILENAME = ".company_group.conf";
-	public static final String MARKET_STOCK_SWITCH_FILENAME = "market_stock_switch.conf";
+	public static final String MARKET_STOCK_SWITCH_CONF_FILENAME = "market_stock_switch.conf";
 	public static final String FINANCE_RECORDER_CONF_FILENAME = "finance_recorder.conf";
 	public static final String BACKUP_FILENAME = "backup.conf";
 
 	// public static final String CSV_FILE_ROOT_FOLDERPATH = "/var/tmp/finance"
-	public static final String DATA_SPLIT = ",";
+	public static final String COMMA_DATA_SPLIT = ",";
+	public static final String SPACE_DATA_SPLIT = " ";
 	public static final String DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%02d%02d";
 	public static final String DAILY_FINANCE_EMAIL_TITLE_FORMAT = "daily_finance%04d%02d%02d";
 	public static final String CONF_ENTRY_IGNORE_FLAG = "#";
@@ -311,7 +313,6 @@ public class FinanceRecorderCmnDef
 	}
 	public static boolean is_show_console(){return show_console;}
 
-	private static FinanceRecorderLogger finance_recorder_logger = FinanceRecorderLogger.get_instance();
 	public static void wait_for_logging(){finance_recorder_logger.deinitialize();}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -323,7 +324,7 @@ public class FinanceRecorderCmnDef
 // Open the file
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		BufferedReader reader = null;
-		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.MARKET_STOCK_SWITCH_FILENAME);
+		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.MARKET_STOCK_SWITCH_CONF_FILENAME);
 		FinanceRecorderCmnDef.format_debug("Try to parse the configuration in %s", conf_filepath);
 // Check the file exists or not
 		File fp = new File(conf_filepath);
@@ -392,24 +393,24 @@ public class FinanceRecorderCmnDef
 
 	private static final String get_code_position(){return String.format("%s:%d", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__());}
 
-	public static String field_array_to_string(String[] field_array)
-	{
-		String field_string = null;
-		for (String field : field_array)
-		{
-			if (field_string == null)
-				field_string = field;
-			else
-				field_string += (FinanceRecorderCmnDef.DATA_SPLIT + field);
-		}
+//	public static String field_array_to_string(String[] field_array)
+//	{
+//		String field_string = null;
+//		for (String field : field_array)
+//		{
+//			if (field_string == null)
+//				field_string = field;
+//			else
+//				field_string += (FinanceRecorderCmnDef.COMMA_DATA_SPLIT + field);
+//		}
+//
+//		return field_string;
+//	}
 
-		return field_string;
-	}
-
-	public static String[] field_string_to_array(String field_string)
-	{
-		return field_string.split(DATA_SPLIT);
-	}
+//	public static String[] field_string_to_array(String field_string)
+//	{
+//		return field_string.split(DATA_SPLIT);
+//	}
 
 	public static void debug(String msg) 
 	{

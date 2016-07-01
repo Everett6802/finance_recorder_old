@@ -11,17 +11,17 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class FinanceRecorderCompanyProfileLookup
+public class FinanceRecorderCompanyProfileLookup// implements Iterable<ArrayList<String>>
 {
 // Some constants related to the company profile entry
-	static final private int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER = 0;
-	static final private int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_NAME = 1;
-	static final private int COMPANY_PROFILE_ENTRY_FIELD_INDEX_LISTING_DATE = 3;
-	static final private int COMPANY_PROFILE_ENTRY_FIELD_INDEX_MARKET = 4;
-	static final private int COMPANY_PROFILE_ENTRY_FIELD_INDEX_INDUSTRY = 5;
-	static final private int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NAME = 7;
-	static final private int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER = 8;
-	static final private int COMPANY_PROFILE_ENTRY_FIELD_SIZE = 9;
+	static final public int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER = 0;
+	static final public int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_NAME = 1;
+	static final public int COMPANY_PROFILE_ENTRY_FIELD_INDEX_LISTING_DATE = 3;
+	static final public int COMPANY_PROFILE_ENTRY_FIELD_INDEX_MARKET = 4;
+	static final public int COMPANY_PROFILE_ENTRY_FIELD_INDEX_INDUSTRY = 5;
+	static final public int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NAME = 7;
+	static final public int COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER = 8;
+	static final public int COMPANY_PROFILE_ENTRY_FIELD_SIZE = 9;
 
 	static final private int COMPANY_GROUP_ENTRY_FIELD_SIZE = 2;
 
@@ -56,6 +56,38 @@ public class FinanceRecorderCompanyProfileLookup
 				res += String.format("%s ", iter.next());
 			}
 			return res;
+		}
+	};
+
+	public static class TraverseEntry implements Iterable<ArrayList<String>>
+	{
+		private ArrayList<CompanyProfileEntry> company_profile_sorted_array = null;
+
+		public TraverseEntry(ArrayList<CompanyProfileEntry> new_array)
+		{
+			company_profile_sorted_array = new_array;
+		}
+		@Override
+		public Iterator<ArrayList<String>> iterator()
+		{
+			Iterator<ArrayList<String>> it = new Iterator<ArrayList<String>>()
+			{
+				private int array_size = company_profile_sorted_array.size();
+				private int cur_index = 0;
+				@Override
+				public boolean hasNext()
+				{
+					return cur_index < array_size;
+				}
+				@Override
+				public ArrayList<String> next()
+				{
+					return company_profile_sorted_array.get(cur_index++).profile_element_array;
+				}
+				@Override
+				public void remove() {throw new UnsupportedOperationException();}
+			};
+			return it;
 		}
 	};
 
@@ -103,12 +135,12 @@ public class FinanceRecorderCompanyProfileLookup
 		ret = parse_company_group_conf();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
-		ret = generate_company_profile_sorted_array();
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			return ret;
-		ret = generate_company_group_profile_sorted_array();
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			return ret;
+//		ret = generate_company_profile_sorted_array();
+//		if (FinanceRecorderCmnDef.CheckFailure(ret))
+//			return ret;
+//		ret = generate_company_group_profile_sorted_array();
+//		if (FinanceRecorderCmnDef.CheckFailure(ret))
+//			return ret;
 
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
@@ -141,7 +173,7 @@ public class FinanceRecorderCompanyProfileLookup
 				if (buf.length() == 0)
 					continue;
 // Check if the source type in the config file is in order
-				String data_array[] = buf.split(FinanceRecorderCmnDef.DATA_SPLIT);
+				String data_array[] = buf.split(FinanceRecorderCmnDef.COMMA_DATA_SPLIT);
 				if (data_array.length != COMPANY_PROFILE_ENTRY_FIELD_SIZE)
 				{
 					FinanceRecorderCmnDef.format_error("Incorrect config format: %s", buf);
@@ -201,7 +233,7 @@ public class FinanceRecorderCompanyProfileLookup
 				if (buf.length() == 0)
 					continue;
 // Check if the source type in the config file is in order
-				String data_array[] = buf.split(FinanceRecorderCmnDef.DATA_SPLIT);
+				String data_array[] = buf.split(FinanceRecorderCmnDef.SPACE_DATA_SPLIT);
 				if (data_array.length != COMPANY_GROUP_ENTRY_FIELD_SIZE)
 				{
 					FinanceRecorderCmnDef.format_error("Incorrect config format: %s", buf);
@@ -221,8 +253,8 @@ public class FinanceRecorderCompanyProfileLookup
 
 				assert(company_group_description_array.size() == line_cnt) : "The company_group_description_array size is NOT correct";
 				company_group_size = line_cnt;
-				FinanceRecorderCmnDef.format_debug("There are totally %d company group", company_group_size);
 			}
+			
 		}
 		catch (IOException ex)
 		{
@@ -253,10 +285,10 @@ public class FinanceRecorderCompanyProfileLookup
 			company_profile_sorted_array.add(company_profile_entry);
 		}
 
-		System.out.printf("size: %d\n", company_profile_sorted_array.size());
-		Collections.sort(company_profile_sorted_array);
-		for (CompanyProfileEntry company_profile_entry : company_profile_sorted_array)
-			System.out.println(company_profile_entry.toString());
+//		System.out.printf("size: %d\n", company_profile_sorted_array.size());
+//		Collections.sort(company_profile_sorted_array);
+//		for (CompanyProfileEntry company_profile_entry : company_profile_sorted_array)
+//			System.out.println(company_profile_entry.toString());
 
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
@@ -283,12 +315,67 @@ public class FinanceRecorderCompanyProfileLookup
 		{
 			ArrayList<CompanyProfileEntry> company_profile_array = company_group_profile_sorted_array.get(i);
 			Collections.sort(company_profile_array);
-			System.out.printf("++++++++++++++++ group [%d] member count: %d\n", i, company_profile_array.size());
-			for (CompanyProfileEntry company_profile_entry : company_profile_array)
-				System.out.println(company_profile_entry.toString());
+//			System.out.printf("++++++++++++++++ group [%d] member count: %d\n", i, company_profile_array.size());
+//			for (CompanyProfileEntry company_profile_entry : company_profile_array)
+//				System.out.println(company_profile_entry.toString());
 		}
 
 		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	private static synchronized void init_company_profile_sorted_deque()
+	{
+		if (instance.company_profile_sorted_array == null)
+		{
+			short ret = instance.generate_company_profile_sorted_array();
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				throw new RuntimeException(String.format("%s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		}
+	}
+
+	private static synchronized void init_company_group_profile_sorted_deque()
+	{
+		if (instance.company_group_profile_sorted_array == null)
+		{
+			short ret = instance.generate_company_group_profile_sorted_array();
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				throw new RuntimeException(String.format("%s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		}
+	}
+
+//	@Override
+//	public Iterator<ArrayList<String>> iterator()
+//	{
+//		Iterator<ArrayList<String>> it = new Iterator<ArrayList<String>>()
+//		{
+//			private int array_size = company_profile_sorted_array.size();
+//			private int cur_index = 0;
+//			@Override
+//			public boolean hasNext()
+//			{
+//				return cur_index < array_size;
+//			}
+//			@Override
+//			public ArrayList<String> next()
+//			{
+//				return company_profile_sorted_array.get(cur_index++).profile_element_array;
+//			}
+//			@Override
+//			public void remove() {throw new UnsupportedOperationException();}
+//		};
+//		return it;
+//	}
+
+	public TraverseEntry entry()
+	{
+		if (company_profile_sorted_array == null) init_company_profile_sorted_deque();
+		return new TraverseEntry(company_profile_sorted_array);
+	}
+
+	public TraverseEntry group_entry(int index)
+	{
+		if (company_group_profile_sorted_array == null) init_company_group_profile_sorted_deque();
+		return new TraverseEntry(company_group_profile_sorted_array.get(index));
 	}
 
 	public int get_company_group_size(){return company_group_size;}

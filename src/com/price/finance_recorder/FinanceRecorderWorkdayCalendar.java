@@ -42,7 +42,7 @@ public class FinanceRecorderWorkdayCalendar
 // Open the file
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		BufferedReader reader = null;
-		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME);
+		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
 		FinanceRecorderCmnDef.format_debug("Try to parse the configuration in %s", conf_filepath);
 // Check the file exists or not
 		File fp = new File(conf_filepath);
@@ -67,20 +67,20 @@ public class FinanceRecorderWorkdayCalendar
 					int index = buf.indexOf(' ');
 					if (index == -1)
 					{
-						FinanceRecorderCmnDef.format_error("Incorrect time format in %s: %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME, buf);
+						FinanceRecorderCmnDef.format_error("Incorrect time format in %s: %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, buf);
 						return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 					}
 					String start_time_str = buf.substring(0, index);
 					String end_time_str = buf.substring(index + 1);
 					time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(start_time_str, end_time_str);
-					FinanceRecorderCmnDef.format_debug("Find the time range [%s %s] in %s", start_time_str, end_time_str, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME);
+					FinanceRecorderCmnDef.format_debug("Find the time range [%s %s] in %s", start_time_str, end_time_str, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
 				}
 				else
 				{
 					int year_end_index = buf.indexOf(']');
 					if (year_end_index == -1)
 					{
-						FinanceRecorderCmnDef.format_error("Incorrect data format in %s: %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_FILENAME, buf);
+						FinanceRecorderCmnDef.format_error("Incorrect data format in %s: %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, buf);
 						return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 					}
 					int year = Integer.valueOf(buf.substring(1, year_end_index));
