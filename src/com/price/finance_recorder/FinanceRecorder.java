@@ -3,6 +3,9 @@ package com.price.finance_recorder;
 import java.io.*;
 import java.util.*;
 
+import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
+import com.price.finance_recorder_cmn.FinanceRecorderCmnClassCompanyProfile;
+
 
 public class FinanceRecorder 
 {
@@ -12,7 +15,7 @@ public class FinanceRecorder
 
 	public static void main(String args[])
 	{
-		FinanceRecorderCompanyProfileLookup lookup = FinanceRecorderCompanyProfileLookup.get_instance();
+		FinanceRecorderCmnClassCompanyProfile lookup = FinanceRecorderCmnClassCompanyProfile.get_instance();
 //		for (ArrayList<String> data : lookup.entry())
 //		{
 //			System.out.printf("%s\n", data.get(FinanceRecorderCompanyProfileLookup.COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER));

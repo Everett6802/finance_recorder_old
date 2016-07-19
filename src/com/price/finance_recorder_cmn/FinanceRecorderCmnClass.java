@@ -1,4 +1,4 @@
-package com.price.finance_recorder;
+package com.price.finance_recorder_cmn;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -428,7 +428,7 @@ public class FinanceRecorderCmnClass
 
 		public boolean is_add_query_done() {return add_done;}
 
-		final LinkedList<Integer> get_index(int index)
+		public final LinkedList<Integer> get_index(int index)
 		{
 			if (index < 0 || index >= FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE)
 			{
@@ -446,6 +446,153 @@ public class FinanceRecorderCmnClass
 		source_type_index_set.add(source_type.value());
 		return add_query(query_set, source_type, field_index);
 	}
+
+	public static class CompanyGroupSet
+	{
+		private static TreeMap<Integer, ArrayList<String>> whole_company_number_in_group_map;
+		private TreeMap<Integer, ArrayList<String>> company_number_in_group_map = null;
+
+		static void init_whole_company_number_in_group_map()
+		{
+			if (whole_company_number_in_group_map == null)
+			{
+				FinanceRecorderCmnClassCompanyProfile company_profile = FinanceRecorderCmnClassCompanyProfile.get_instance();
+				whole_company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
+				int company_group_size = company_profile.get_company_group_size();
+				for (int i = 0 ; i < company_group_size ; i++)
+				{
+					FinanceRecorderCmnClassCompanyProfile.TraverseEntry traverse_entry = company_profile.group_entry(i);
+					ArrayList<String> company_number_array = new ArrayList<String>();
+					for (ArrayList<String> entry : traverse_entry)
+					{
+						company_number_array.add(entry.get(FinanceRecorderCmnClassCompanyProfile.COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER));
+					}
+					whole_company_number_in_group_map.put(i, company_number_array);
+				}
+			}
+		}
+
+		public static class TraverseEntry implements Iterable<String>
+		{
+			private ArrayList<String> company_group_array = null;
+
+			public TraverseEntry(ArrayList<String> new_array)
+			{
+				company_group_array = new_array;
+			}
+			@Override
+			public Iterator<String> iterator()
+			{
+				Iterator<String> it = new Iterator<String>()
+				{
+					private int array_size = company_group_array.size();
+					private int cur_index = 0;
+					@Override
+					public boolean hasNext()
+					{
+						return cur_index < array_size;
+					}
+					@Override
+					public String next()
+					{
+						return company_group_array.get(cur_index++);
+					}
+					@Override
+					public void remove() {throw new UnsupportedOperationException();}
+				};
+				return it;
+			}
+		};
+
+		public CompanyGroupSet()
+		{
+		}
+
+		public short add_company_list(int company_group_number, ArrayList<String> company_code_number_in_group_array)
+		{
+			if (company_number_in_group_map == null)
+				company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
+			if (!company_number_in_group_map.containsKey(company_group_number))
+			{
+				ArrayList<String> company_number_deque = new ArrayList<String>();
+				company_number_in_group_map.put(company_group_number, company_number_deque);
+			}
+			else
+			{
+				if (company_number_in_group_map.get(company_group_number) == null)
+				{
+					FinanceRecorderCmnDef.format_error("The company group[%d] has already been set to NULL", company_group_number);
+					return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+				}
+			}
+			for (String company_code_number : company_code_number_in_group_array)
+			{
+				if (company_number_in_group_map.get(company_group_number).indexOf(company_code_number) != -1)
+				{
+					FinanceRecorderCmnDef.format_warn("The company code number[%s] has already been added to the group[%d]", company_code_number, company_group_number);
+					continue;
+				}
+				company_number_in_group_map.get(company_group_number).add(company_code_number);
+			}
+			return FinanceRecorderCmnDef.RET_SUCCESS;
+		}
+
+		public short add_company(int company_group_number, String company_code_number)
+		{
+			ArrayList<String> company_code_number_in_group_array = new ArrayList<String>();
+			company_code_number_in_group_array.add(company_code_number);
+			return add_company_list(company_group_number, company_code_number_in_group_array);
+		}
+
+		public short add_company_group(int company_group_number)
+		{
+			if (company_number_in_group_map == null)
+				company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
+
+			if (company_number_in_group_map.containsKey(company_group_number))
+			{
+				if (company_number_in_group_map.get(company_group_number) != null)
+					FinanceRecorderCmnDef.format_warn("Select all company group[%d], ignore the original settings......", company_group_number);
+			}
+			company_number_in_group_map.put(company_group_number, null);
+			return FinanceRecorderCmnDef.RET_SUCCESS;
+		}
+	};
+
+	public class StockQuerySet extends QuerySet
+	{
+		protected CompanyGroupSet company_group_set;
+
+		public StockQuerySet()
+		{
+			company_group_set = new CompanyGroupSet();
+		}
+
+		public short add_company_list(int company_group_number, final ArrayList<String> company_code_number_in_group_array)
+		{
+			return company_group_set.add_company_list(company_group_number, company_code_number_in_group_array);
+		}
+
+		public short add_company(int company_group_number, String company_code_number)
+		{
+			return company_group_set.add_company(company_group_number, company_code_number);
+		}
+
+		public short add_company_group(int company_group_number)
+		{
+			return company_group_set.add_company_group(company_group_number);
+		}
+
+		public final CompanyGroupSet get_company_group_set()
+		{
+			return company_group_set;
+		}
+
+//		public CompanyGroupSet get_company_group_set()
+//		{
+//			return company_group_set;
+//		}
+	};
 
 	public static class ResultSet
 	{

@@ -1,6 +1,6 @@
-package com.price.finance_recorder;
+package com.price.finance_recorder_cmn;
 
-public class FinanceRecorderMarketDatabaseCmnDef
+public class FinanceRecorderCmnDefMarketDatabase
 {
 	static final String[] STOCK_EXCHANGE_AND_VALUE_FIELD_DEFINITION = new String[]
 	{

@@ -11,6 +11,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 
+import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
+import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
+
 public class FinanceRecorderDatabaseTimeRange 
 {
 	private FinanceRecorderDatabaseTimeRange(){}

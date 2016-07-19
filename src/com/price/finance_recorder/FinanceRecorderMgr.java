@@ -10,6 +10,9 @@ import java.util.concurrent.atomic.*;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.*;
 
+import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
+import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
+
 
 public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserverInf
 {

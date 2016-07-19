@@ -1,4 +1,4 @@
-package com.price.finance_recorder;
+package com.price.finance_recorder_cmn;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -7,11 +7,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.ListIterator;
+//import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class FinanceRecorderCompanyProfileLookup// implements Iterable<ArrayList<String>>
+
+
+public class FinanceRecorderCmnClassCompanyProfile
 {
 // Some constants related to the company profile entry
 	static final public int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER = 0;
@@ -91,11 +93,11 @@ public class FinanceRecorderCompanyProfileLookup// implements Iterable<ArrayList
 		}
 	};
 
-	private FinanceRecorderCompanyProfileLookup(){}
+	private FinanceRecorderCmnClassCompanyProfile(){}
 	public Object clone() throws CloneNotSupportedException {throw new CloneNotSupportedException();}
 
-	private static FinanceRecorderCompanyProfileLookup instance = null;
-	public static FinanceRecorderCompanyProfileLookup get_instance()
+	private static FinanceRecorderCmnClassCompanyProfile instance = null;
+	public static FinanceRecorderCmnClassCompanyProfile get_instance()
 	{
 		if (instance == null)
 			allocate();
@@ -105,11 +107,11 @@ public class FinanceRecorderCompanyProfileLookup// implements Iterable<ArrayList
 	{
 		if (instance == null)
 		{
-			instance = new FinanceRecorderCompanyProfileLookup();
+			instance = new FinanceRecorderCmnClassCompanyProfile();
 			short ret = instance.initialize();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 			{
-				String errmsg = String.format("Fail to initialize the FinanceRecorderCompanyProfileLookup object , due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret));
+				String errmsg = String.format("Fail to initialize the FinanceRecorderCompanyProfile object , due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret));
 				throw new RuntimeException(errmsg);
 			}
 		} 

@@ -2,6 +2,9 @@ package com.price.finance_recorder;
 
 import java.util.concurrent.Callable;
 
+import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
+import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
+
 
 public class FinanceRecorderWriteSQLTask implements Callable<Integer>
 {
