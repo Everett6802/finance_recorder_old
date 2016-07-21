@@ -1,11 +1,9 @@
 package com.price.finance_recorder_cmn;
 
 import java.util.*;
-import java.util.Map.Entry;
+//import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.price.finance_recorder_cmn.FinanceRecorderCmnClassCompanyProfile.TraverseEntry;
 
 
 public class FinanceRecorderCmnClass 
@@ -1103,8 +1101,8 @@ public class FinanceRecorderCmnClass
 			int data_pos = 0;
 			for (int index = start_index ; index < end_index ; index++)
 				data_array_str[data_pos++] = date_data.get_index(index);
-			short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-OUT:
+//			short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+//OUT:
 			for (int field_index = 1 ; field_index < FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index] ; field_index++)
 			{
 				switch(FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index])
@@ -1134,9 +1132,11 @@ OUT:
 				}
 				break;
 				default:
-					FinanceRecorderCmnDef.format_error("The unsupported field type: %d", FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index]);
-					ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
-					break OUT;
+				{
+					String errmsg = String.format("The unsupported field type: %d", FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index]);
+					FinanceRecorderCmnDef.format_error(errmsg);
+					throw new IllegalArgumentException(errmsg);
+				}
 				}
 			}
 			return data_array_str;
