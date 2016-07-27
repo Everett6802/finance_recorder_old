@@ -7,7 +7,7 @@ import java.util.*;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnDef.FinanceFieldType;
+//import com.price.finance_recorder_cmn.FinanceRecorderCmnDef.FinanceFieldType;
 
 
 public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
@@ -41,23 +41,43 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 // Delete Database command format
 	private static final String FORMAT_CMD_DELETE_DATABASE = "DROP DATABASE IF EXISTS %s";
 
-	private Connection connection = null; //Database objects, 連接object
-	private String server = null;
-	private String username = null;
-	private String password = null;
-	private String database_name = null;
-//	private String table_name = null;
-	private FinanceRecorderCmnDef.FinanceObserverInf finance_observer = null;
-	private int finace_data_type_index;
-
-	FinanceRecorderSQLClient(FinanceRecorderCmnDef.FinanceSourceType finance_data_type, FinanceRecorderCmnDef.FinanceObserverInf observer)
-	{
-		finace_data_type_index = finance_data_type.ordinal();
-		server = DEF_SERVER;
-		username = DEF_USERNAME;
-		password = DEF_PASSWORD;
-		finance_observer = observer;
-	}
+//	public static FinanceRecorderSQLClient get_def_market_connected_sql_client(
+//		FinanceRecorderCmnDef.DatabaseNotExistIngoreType database_not_exist_ignore_type, 
+//		FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type
+//		)
+//	{
+//		FinanceRecorderSQLClient sql_client = new FinanceRecorderSQLClient();
+//		sql_client.database_not_exist_ignore_type = database_not_exist_ignore_type;
+//		sql_client.database_create_thread_type = database_create_thread_type;
+//		short ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+//		if (FinanceRecorderCmnDef.CheckFailure(ret))
+//		{
+//			String errmsg = String.format("Fail to connect %s database, due to: %s", FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.GetErrorDescription(ret));
+//			FinanceRecorderCmnDef.error(errmsg);
+//			throw new IllegalStateException(errmsg);
+//		}
+//		return sql_client;
+//	}
+//
+//	public static FinanceRecorderSQLClient get_def_stock_connected_sql_client(
+//		int company_group,
+//		FinanceRecorderCmnDef.DatabaseNotExistIngoreType database_not_exist_ignore_type, 
+//		FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type
+//		)
+//	{
+//		FinanceRecorderSQLClient sql_client = new FinanceRecorderSQLClient();
+//		sql_client.database_not_exist_ignore_type = database_not_exist_ignore_type;
+//		sql_client.database_create_thread_type = database_create_thread_type;
+////		String database_name = String.format("%s%02d", FinanceRecorderCmnDef.SQL_STCOK_DATABASE_NAME, company_group);
+////		short ret = sql_client.try_connect_mysql(database_name, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+////		if (FinanceRecorderCmnDef.CheckFailure(ret))
+////		{
+////			String errmsg = String.format("Fail to connect %s database, due to: %s", database_name, FinanceRecorderCmnDef.GetErrorDescription(ret));
+////			FinanceRecorderCmnDef.error(errmsg);
+////			throw new IllegalStateException(errmsg);
+////		}
+//		return sql_client;
+//	}
 
 	private static String field_array_to_string(String[] field_array)
 	{
@@ -69,7 +89,6 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 			else
 				field_string += (FinanceRecorderCmnDef.COMMA_DATA_SPLIT + field);
 		}
-
 		return field_string;
 	}
 
@@ -113,6 +132,38 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		}
 
 		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	public static String get_stock_table_name(int source_type_index, String company_code_number)
+	{
+		if (!FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
+		{
+			String errmsg = "It's NOT Stock mode";
+			throw new IllegalStateException(errmsg);
+		}
+		String table_name = String.format("%s%s", company_code_number, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]);
+		return table_name;
+	}
+	
+	private Connection connection = null; //Database objects, 連接object
+	private String server = null;
+	private String username = null;
+	private String password = null;
+	private String database_name = null;
+//	private String table_name = null;
+//	private FinanceRecorderCmnDef.FinanceObserverInf finance_observer = null;
+	private int finace_data_type_index;
+	private FinanceRecorderCmnDef.DatabaseNotExistIngoreType database_not_exist_ignore_type = null; 
+	private FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type = null;
+	private FinanceRecorderCmnDef.DatabaseEnableBatchType batch_operation = FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_No;
+
+	FinanceRecorderSQLClient()
+	{
+		// finace_data_type_index = finance_data_type.ordinal();
+		server = DEF_SERVER;
+		username = DEF_USERNAME;
+		password = DEF_PASSWORD;
+//		finance_observer = observer;
 	}
 
 	short try_connect_mysql(
@@ -232,9 +283,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 			FinanceRecorderCmnDef.error("The connection is NOT established");
 			return  FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
-
 //		table_name = table;
-
 		FinanceRecorderCmnDef.format_debug("Try to open the MySQL table[%s]...... ", table_name);
 		String format_cmd_create_table_head = String.format(FORMAT_CMD_CREATE_TABLE_HEAD_FORMAT, table_name);
 // Create table
@@ -251,7 +300,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		catch(SQLException ex) //有可能會產生sql exception
 		{
 			if (ex.getErrorCode() == 1050)
-				FinanceRecorderCmnDef.format_debug("The table[%s] has already existed", table_name);
+				FinanceRecorderCmnDef.format_info("The table[%s] has already existed", table_name);
 			else
 			{
 				FinanceRecorderCmnDef.format_error("Fails to create table[%s], due to: %s", table_name, ex.getMessage());
@@ -261,6 +310,17 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 
 		FinanceRecorderCmnDef.format_debug("Try to open the MySQL table[%s]...... Successfully", table_name);
 		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	short create_market_table(int source_type_index)
+	{
+		return create_table(FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index], FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_LIST[source_type_index]);
+	}
+
+	short create_stock_table(int source_type_index, String company_code_number)
+	{
+		String table_name = get_stock_table_name(source_type_index, company_code_number);
+		return create_table(table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_LIST[source_type_index]);
 	}
 
 	short delete_database()
@@ -322,7 +382,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	short insert_data(String table_name, List<String> data_list)
+	short insert_data(String table_name, final FinanceRecorderCSVHandler csv_reader)
 	{
 // Check if the connection is established
 		if (connection == null)
@@ -331,101 +391,70 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 			return  FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 
-		String format_cmd_insert_data_head = String.format(FORMAT_CMD_INSERT_DATA_HEAD_FORMAT, table_name);
-
-// Create the SQL command list and then execute
-		for (String data : data_list)
+		if (is_batch_operation())
 		{
-			String[] element_list = field_string_to_array(data);
-			String cmd_data = "?";
-// Transform the date field into SQL Date format
-			java.sql.Date sql_date = null;
+			// Disable Auto Commit
 			try
 			{
-//				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
-//				java.util.Date dateStr = formatter.parse(element_list[0]);
-				java.util.Date dateStr = FinanceRecorderCmnDef.get_date(element_list[0]);
-				sql_date = new java.sql.Date(dateStr.getTime());
-			}
-			catch (ParseException e)
-			{
-				FinanceRecorderCmnDef.format_debug("Fail to transform the MySQL time format, due to: %s", e.toString());
-				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
-			}
-// Assemble all the element in the data
-			int element_list_len = element_list.length;
-			for (int index = 1 ; index < element_list_len ; index++)
-			{
-				cmd_data += String.format(",%s", element_list[index]);
-			}
-// Generate the SQL command
-			String cmd_insert_data = format_cmd_insert_data_head + cmd_data + FORMAT_CMD_INSERT_DATA_TAIL;
-			PreparedStatement pstmt = null;
-			try
-			{
-				pstmt = connection.prepareStatement(cmd_insert_data);
-				pstmt.setDate(1, sql_date);
+				connection.setAutoCommit(false);
 			}
 			catch (SQLException e)
 			{
-				FinanceRecorderCmnDef.format_debug("Fail to prepare MySQL command, due to: %s", e.toString());
+				FinanceRecorderCmnDef.format_debug("Fail to enable MySQL auto-comomit, due to: %s", e.toString());
 				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 			}
-// Write the message into the MySQL
-			try
-			{
-//				FinanceRecorderCmnDef.format_debug("Insert into data by command: %s", pstmt);
-				pstmt.executeUpdate();
-			}
-			catch(SQLException ex) //有可能會產生sql exception
-			{
-				FinanceRecorderCmnDef.format_error("Fail to insert into data by command[%s], due to: %s", pstmt, ex.getMessage());
-				return  FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
-			}
-		}
-
-		return  FinanceRecorderCmnDef.RET_SUCCESS;
-	}
-
-	short insert_data_batch(String table_name, List<String> data_list)
-	{
-// Check if the connection is established
-		if (connection == null)
-		{
-			FinanceRecorderCmnDef.error("The connection is NOT established");
-			return  FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
-		}
-// Disable Auto Commit
-		try
-		{
-			connection.setAutoCommit(false);
-		}
-		catch (SQLException e)
-		{
-			FinanceRecorderCmnDef.format_debug("Fail to enable MySQL auto-comomit, due to: %s", e.toString());
-			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
-		}
 // Create the SQL command list and then execute
-		PreparedStatement pstmt = null;
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		int element_list_len = 0;
-OUT:
-		for (String data : data_list)
-		{
-			String[] element_list = field_string_to_array(data);
-			if (pstmt == null)
+			PreparedStatement pstmt = null;
+			short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+			int element_list_len = 0;
+	OUT:
+			for (String data : csv_reader)
 			{
-				// Assemble all the element in the data
-				element_list_len = element_list.length;
-				String cmd_data = "?";
-				for (int index = 1 ; index < element_list_len ; index++)
-					cmd_data += ",?";
+				String[] element_list = field_string_to_array(data);
+				if (pstmt == null)
+				{
+					// Assemble all the element in the data
+					element_list_len = element_list.length;
+					String cmd_data = "?";
+					for (int index = 1 ; index < element_list_len ; index++)
+						cmd_data += ",?";
 // Generate the SQL prepared batch command
-				String format_cmd_insert_data_head = String.format(FORMAT_CMD_INSERT_DATA_HEAD_FORMAT, table_name);
-				String cmd_insert_data = format_cmd_insert_data_head + cmd_data + FORMAT_CMD_INSERT_DATA_TAIL;
+					String format_cmd_insert_data_head = String.format(FORMAT_CMD_INSERT_DATA_HEAD_FORMAT, table_name);
+					String cmd_insert_data = format_cmd_insert_data_head + cmd_data + FORMAT_CMD_INSERT_DATA_TAIL;
+					try
+					{
+						pstmt = connection.prepareStatement(cmd_insert_data);
+					}
+					catch (SQLException e)
+					{
+						FinanceRecorderCmnDef.format_debug("Fail to prepare MySQL batch command, due to: %s", e.toString());
+						ret = FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+						break OUT;
+					}
+				}
+				
+// Transform the date field into SQL Date format
+				java.sql.Date sql_date = null;
 				try
 				{
-					pstmt = connection.prepareStatement(cmd_insert_data);
+//					SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
+//					java.util.Date dateStr = formatter.parse(element_list[0]);
+					java.util.Date dateStr = FinanceRecorderCmnDef.get_date(element_list[0]);
+					sql_date = new java.sql.Date(dateStr.getTime());
+				}
+				catch (ParseException e)
+				{
+					FinanceRecorderCmnDef.format_debug("Fail to transform the MySQL time format, due to: %s", e.toString());
+					ret = FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+					break OUT;
+				}
+// Generate the SQL batch command
+				try
+				{
+					pstmt.setDate(1, sql_date);
+					for (int index = 1 ; index < element_list_len ; index++)
+						pstmt.setString(index + 1, element_list[index]);
+					pstmt.addBatch();
 				}
 				catch (SQLException e)
 				{
@@ -434,65 +463,206 @@ OUT:
 					break OUT;
 				}
 			}
-			
-// Transform the date field into SQL Date format
-			java.sql.Date sql_date = null;
+			if (FinanceRecorderCmnDef.CheckSuccess(ret))
+			{
+// Execute the command to write the batch messages into the MySQL
+				try
+				{
+//					FinanceRecorderCmnDef.format_debug("Insert into data by command: %s", pstmt);
+					pstmt.executeBatch();
+					connection.commit();
+				}
+				catch(SQLException ex) //有可能會產生sql exception
+				{
+					FinanceRecorderCmnDef.format_error("Fail to insert into data by batch command[%s], due to: %s", pstmt, ex.getMessage());
+					return  FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+				}
+			}
+// Enable Auto Commit
 			try
 			{
-//				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
-//				java.util.Date dateStr = formatter.parse(element_list[0]);
-				java.util.Date dateStr = FinanceRecorderCmnDef.get_date(element_list[0]);
-				sql_date = new java.sql.Date(dateStr.getTime());
-			}
-			catch (ParseException e)
-			{
-				FinanceRecorderCmnDef.format_debug("Fail to transform the MySQL time format, due to: %s", e.toString());
-				ret = FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
-				break OUT;
-			}
-
-// Generate the SQL batch command
-			try
-			{
-				pstmt.setDate(1, sql_date);
-				for (int index = 1 ; index < element_list_len ; index++)
-					pstmt.setString(index + 1, element_list[index]);
-				pstmt.addBatch();
+				connection.setAutoCommit(true);
 			}
 			catch (SQLException e)
 			{
-				FinanceRecorderCmnDef.format_debug("Fail to prepare MySQL batch command, due to: %s", e.toString());
-				ret = FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
-				break OUT;
+				FinanceRecorderCmnDef.format_debug("Fail to enable MySQL auto-comomit, due to: %s", e.toString());
+				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 			}
 		}
-		if (FinanceRecorderCmnDef.CheckSuccess(ret))
+		else
 		{
-// Execute the command to write the batch messages into the MySQL
-			try
+			String format_cmd_insert_data_head = String.format(FORMAT_CMD_INSERT_DATA_HEAD_FORMAT, table_name);
+// Create the SQL command list and then execute
+			for (String data : csv_reader)
 			{
-//				FinanceRecorderCmnDef.format_debug("Insert into data by command: %s", pstmt);
-				pstmt.executeBatch();
-				connection.commit();
+				String[] element_list = field_string_to_array(data);
+				String cmd_data = "?";
+// Transform the date field into SQL Date format
+				java.sql.Date sql_date = null;
+				try
+				{
+//					SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
+//					java.util.Date dateStr = formatter.parse(element_list[0]);
+					java.util.Date dateStr = FinanceRecorderCmnDef.get_date(element_list[0]);
+					sql_date = new java.sql.Date(dateStr.getTime());
+				}
+				catch (ParseException e)
+				{
+					FinanceRecorderCmnDef.format_debug("Fail to transform the MySQL time format, due to: %s", e.toString());
+					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+				}
+// Assemble all the element in the data
+				int element_list_len = element_list.length;
+				for (int index = 1 ; index < element_list_len ; index++)
+				{
+					cmd_data += String.format(",%s", element_list[index]);
+				}
+// Generate the SQL command
+				String cmd_insert_data = format_cmd_insert_data_head + cmd_data + FORMAT_CMD_INSERT_DATA_TAIL;
+				PreparedStatement pstmt = null;
+				try
+				{
+					pstmt = connection.prepareStatement(cmd_insert_data);
+					pstmt.setDate(1, sql_date);
+				}
+				catch (SQLException e)
+				{
+					FinanceRecorderCmnDef.format_debug("Fail to prepare MySQL command, due to: %s", e.toString());
+					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+				}
+// Write the message into the MySQL
+				try
+				{
+//					FinanceRecorderCmnDef.format_debug("Insert into data by command: %s", pstmt);
+					pstmt.executeUpdate();
+				}
+				catch(SQLException ex) //有可能會產生sql exception
+				{
+					FinanceRecorderCmnDef.format_error("Fail to insert into data by command[%s], due to: %s", pstmt, ex.getMessage());
+					return  FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+				}
 			}
-			catch(SQLException ex) //有可能會產生sql exception
-			{
-				FinanceRecorderCmnDef.format_error("Fail to insert into data by batch command[%s], due to: %s", pstmt, ex.getMessage());
-				return  FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
-			}
-		}
-// Enable Auto Commit
-		try
-		{
-			connection.setAutoCommit(true);
-		}
-		catch (SQLException e)
-		{
-			FinanceRecorderCmnDef.format_debug("Fail to enable MySQL auto-comomit, due to: %s", e.toString());
-			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 		}
 		return  FinanceRecorderCmnDef.RET_SUCCESS;
 	}
+
+	short insert_market_data(int source_type_index, final FinanceRecorderCSVHandler csv_reader)
+	{
+		return insert_data(FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index], csv_reader);
+	}
+
+	short insert_stock_data(int source_type_index, String company_code_number, final FinanceRecorderCSVHandler csv_reader)
+	{
+		String table_name = get_stock_table_name(source_type_index, company_code_number);
+		return insert_data(table_name, csv_reader);
+	}
+
+//	short insert_data_batch(String table_name, List<String> data_list)
+//	{
+//// Check if the connection is established
+//		if (connection == null)
+//		{
+//			FinanceRecorderCmnDef.error("The connection is NOT established");
+//			return  FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+//		}
+//// Disable Auto Commit
+//		try
+//		{
+//			connection.setAutoCommit(false);
+//		}
+//		catch (SQLException e)
+//		{
+//			FinanceRecorderCmnDef.format_debug("Fail to enable MySQL auto-comomit, due to: %s", e.toString());
+//			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+//		}
+//// Create the SQL command list and then execute
+//		PreparedStatement pstmt = null;
+//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+//		int element_list_len = 0;
+//OUT:
+//		for (String data : data_list)
+//		{
+//			String[] element_list = field_string_to_array(data);
+//			if (pstmt == null)
+//			{
+//				// Assemble all the element in the data
+//				element_list_len = element_list.length;
+//				String cmd_data = "?";
+//				for (int index = 1 ; index < element_list_len ; index++)
+//					cmd_data += ",?";
+//// Generate the SQL prepared batch command
+//				String format_cmd_insert_data_head = String.format(FORMAT_CMD_INSERT_DATA_HEAD_FORMAT, table_name);
+//				String cmd_insert_data = format_cmd_insert_data_head + cmd_data + FORMAT_CMD_INSERT_DATA_TAIL;
+//				try
+//				{
+//					pstmt = connection.prepareStatement(cmd_insert_data);
+//				}
+//				catch (SQLException e)
+//				{
+//					FinanceRecorderCmnDef.format_debug("Fail to prepare MySQL batch command, due to: %s", e.toString());
+//					ret = FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+//					break OUT;
+//				}
+//			}
+//			
+//// Transform the date field into SQL Date format
+//			java.sql.Date sql_date = null;
+//			try
+//			{
+////				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
+////				java.util.Date dateStr = formatter.parse(element_list[0]);
+//				java.util.Date dateStr = FinanceRecorderCmnDef.get_date(element_list[0]);
+//				sql_date = new java.sql.Date(dateStr.getTime());
+//			}
+//			catch (ParseException e)
+//			{
+//				FinanceRecorderCmnDef.format_debug("Fail to transform the MySQL time format, due to: %s", e.toString());
+//				ret = FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+//				break OUT;
+//			}
+//
+//// Generate the SQL batch command
+//			try
+//			{
+//				pstmt.setDate(1, sql_date);
+//				for (int index = 1 ; index < element_list_len ; index++)
+//					pstmt.setString(index + 1, element_list[index]);
+//				pstmt.addBatch();
+//			}
+//			catch (SQLException e)
+//			{
+//				FinanceRecorderCmnDef.format_debug("Fail to prepare MySQL batch command, due to: %s", e.toString());
+//				ret = FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+//				break OUT;
+//			}
+//		}
+//		if (FinanceRecorderCmnDef.CheckSuccess(ret))
+//		{
+//// Execute the command to write the batch messages into the MySQL
+//			try
+//			{
+////				FinanceRecorderCmnDef.format_debug("Insert into data by command: %s", pstmt);
+//				pstmt.executeBatch();
+//				connection.commit();
+//			}
+//			catch(SQLException ex) //有可能會產生sql exception
+//			{
+//				FinanceRecorderCmnDef.format_error("Fail to insert into data by batch command[%s], due to: %s", pstmt, ex.getMessage());
+//				return  FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+//			}
+//		}
+//// Enable Auto Commit
+//		try
+//		{
+//			connection.setAutoCommit(true);
+//		}
+//		catch (SQLException e)
+//		{
+//			FinanceRecorderCmnDef.format_debug("Fail to enable MySQL auto-comomit, due to: %s", e.toString());
+//			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+//		}
+//		return  FinanceRecorderCmnDef.RET_SUCCESS;
+//	}
 
 //	short select_data(String table_name, String cmd_table_field, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, List<String> data_list)
 	short select_data(String table_name, String cmd_table_field, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnClass.ResultSet result_set)
@@ -629,7 +799,7 @@ OUT:
 				index = Arrays.asList(finance_data_sql_field_definition).indexOf(table_field_list[i]);
 				if (index == -1)
 				{
-					FinanceRecorderCmnDef.format_error("Unknown field: %s in %s", table_field_list[i], FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index]);
+					FinanceRecorderCmnDef.format_error("Unknown field: %s in %s", table_field_list[i], FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index]);
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				}
 				field_index_list.add(index);
@@ -637,7 +807,7 @@ OUT:
 		}
 		if (field_index_list.isEmpty())
 		{
-			FinanceRecorderCmnDef.format_error("No fields are selected in %s", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[finace_data_type_index]);
+			FinanceRecorderCmnDef.format_error("No fields are selected in %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finace_data_type_index]);
 			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 		}
 		int field_index_list_len = field_index_list.size();
@@ -728,4 +898,12 @@ OUT:
 	short select_data(String table_name, String cmd_table_field, FinanceRecorderCmnClass.ResultSet result_set){return select_data(table_name, cmd_table_field, null, result_set);}
 	short select_data(String table_name, FinanceRecorderCmnClass.ResultSet result_set){return select_data(table_name, "*", null, result_set);}
 
+	void enable_batch_operation(boolean enable)
+	{
+		if (enable)
+			batch_operation = FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_Yes;
+		else
+			batch_operation = FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_No;
+	}
+	boolean is_batch_operation(){return (batch_operation == FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_Yes ? true : false);}
 }

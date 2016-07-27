@@ -6,9 +6,31 @@ import java.util.*;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 
-public class FinanceRecorderCSVHandler
+public class FinanceRecorderCSVHandler implements Iterable<String>
 {
 	public enum HandlerMode{HandlerMode_Read, HandlerMode_Write};
+
+	public static FinanceRecorderCSVHandler get_csv_reader(String csv_filepath)
+	{
+		FinanceRecorderCSVHandler csv_reader = new FinanceRecorderCSVHandler();
+		csv_reader.handler_mode = HandlerMode.HandlerMode_Read;
+		csv_reader.csv_filepath = csv_filepath;
+		short ret = csv_reader.intialize_read_stream();
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			throw new RuntimeException(String.format("Fail to initialize the CSV reader, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		return csv_reader;
+	}
+
+	public static FinanceRecorderCSVHandler get_csv_writer(String csv_filepath)
+	{
+		FinanceRecorderCSVHandler csv_writer = new FinanceRecorderCSVHandler();
+		csv_writer.handler_mode = HandlerMode.HandlerMode_Write;
+		csv_writer.csv_filepath = csv_filepath;
+		short ret = csv_writer.intialize_write_stream();
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			throw new RuntimeException(String.format("Fail to initialize the CSV writer, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		return csv_writer;
+	}
 
 	private final String NEW_LINE = "\n";
 	private String csv_filepath;
@@ -16,12 +38,13 @@ public class FinanceRecorderCSVHandler
 	private BufferedWriter bw = null;
 	private FinanceRecorderCmnDef.FinanceObserverInf parent_observer = null;
 	private HandlerMode handler_mode;
+	private ArrayList<String> csv_data_list = null;
 //	private boolean IgnoreErrorIfFileNotExist = true;
 
-	public FinanceRecorderCSVHandler(FinanceRecorderCmnDef.FinanceObserverInf observer)
+	private FinanceRecorderCSVHandler()
 	{
-		handler_mode = HandlerMode.HandlerMode_Read;
-		FinanceRecorderCmnDef.FinanceObserverInf parent_observer = observer;
+//		handler_mode = HandlerMode.HandlerMode_Read;
+//		FinanceRecorderCmnDef.FinanceObserverInf parent_observer = observer;
 	}
 
 	private short intialize_read_stream()
@@ -66,13 +89,13 @@ public class FinanceRecorderCSVHandler
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short initialize(String data_filepath, HandlerMode mode)
-	{
-		csv_filepath = data_filepath;
-		handler_mode = mode;
-//		FinanceRecorderCmnDef.format_debug("Open the CSV file: %s", csv_filepath);
-		return ((mode == HandlerMode.HandlerMode_Read) ? intialize_read_stream() : intialize_write_stream());
-	}
+//	public short initialize(String data_filepath, HandlerMode mode)
+//	{
+//		csv_filepath = data_filepath;
+//		handler_mode = mode;
+////		FinanceRecorderCmnDef.format_debug("Open the CSV file: %s", csv_filepath);
+//		return ((mode == HandlerMode.HandlerMode_Read) ? intialize_read_stream() : intialize_write_stream());
+//	}
 
 	public short deinitialize()
 	{
@@ -98,13 +121,19 @@ public class FinanceRecorderCSVHandler
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short read(List<String> data_list)
+	public short read()
 	{
 		if (handler_mode != HandlerMode.HandlerMode_Read)
 		{
-			FinanceRecorderCmnDef.error("CSV Handler is NOT in REAM mode");
+			FinanceRecorderCmnDef.error("CSV Handler is NOT in READ mode");
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
+		if (csv_data_list != null)
+		{
+			FinanceRecorderCmnDef.error("CSV data already exist in the list");
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
+		csv_data_list = new ArrayList<String>();
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		String line = null;
@@ -116,7 +145,7 @@ public class FinanceRecorderCSVHandler
 			{
 //				String[] field_array = line.split(FinanceRecorderCmnDef.DATA_SPLIT);
 //				data_list.add(format_data_to_string(field_array));
-				data_list.add(line);
+				csv_data_list.add(line);
 //				FinanceRecorderCmnDef.format_debug("New Data: %s", ((LinkedList<String>)data_list).peekLast());
 				count++;
 			}
@@ -131,7 +160,22 @@ public class FinanceRecorderCSVHandler
 		return ret;
 	}
 
-	public short write(final List<String> data_list)
+	public final ArrayList<String> get_read_data()
+	{
+		if (handler_mode != HandlerMode.HandlerMode_Read)
+		{
+			FinanceRecorderCmnDef.error("CSV Handler is NOT in READ mode");
+			throw new IllegalStateException("CSV Handler is NOT in READ mode");
+		}
+		if (csv_data_list == null)
+		{
+			FinanceRecorderCmnDef.error("No CSV data to read");
+			throw new IllegalStateException("No CSV data to read");
+		}
+		return csv_data_list;
+	}
+
+	public short write()
 	{
 		if (handler_mode != HandlerMode.HandlerMode_Write)
 		{
@@ -145,7 +189,7 @@ public class FinanceRecorderCSVHandler
 		String field_string = null;
 		try
 		{
-			for (String data : data_list)
+			for (String data : csv_data_list)
 			{ 
 				bw.write(data);
 				bw.write(NEW_LINE);
@@ -159,5 +203,48 @@ public class FinanceRecorderCSVHandler
 		FinanceRecorderCmnDef.format_debug("Write %d data in: %s", count, csv_filepath);
 
 		return ret;
+	}
+
+	public void set_write_data(final ArrayList<String> data_list)
+	{
+		if (handler_mode != HandlerMode.HandlerMode_Write)
+		{
+			FinanceRecorderCmnDef.error("CSV Handler is NOT in WRITE mode");
+			throw new IllegalStateException("CSV Handler is NOT in WRITE mode");
+		}
+		if (csv_data_list != null)
+		{
+			FinanceRecorderCmnDef.error("CSV data has already been set");
+			throw new IllegalStateException("CSV data has already been set");
+		}
+		csv_data_list = data_list;
+	}
+
+	@Override
+	public Iterator<String> iterator()
+	{
+		if (handler_mode != HandlerMode.HandlerMode_Read)
+		{
+			FinanceRecorderCmnDef.error("CSV Handler is NOT in READ mode");
+			throw new IllegalStateException("CSV Handler is NOT in READ mode");
+		}
+		Iterator<String> it = new Iterator<String>()
+		{
+			int csv_data_list_len = csv_data_list.size();
+			int cur_index = 0;
+			@Override
+			public boolean hasNext()
+			{
+				return cur_index < csv_data_list_len;
+			}
+			@Override
+			public String next()
+			{
+				return csv_data_list.get(cur_index++);
+			}
+			@Override
+			public void remove() {throw new UnsupportedOperationException();}
+		};
+		return it;
 	}
 }

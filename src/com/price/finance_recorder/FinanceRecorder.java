@@ -356,8 +356,8 @@ public class FinanceRecorder
 		System.out.println("-s|--source\nDescription: Type of CSV date file\nCaution: Ignored if -f|--file set");
 		System.out.println("  Format: 1,2,3 (Start from 0)");
 		System.out.println("  all: All types");
-		for (int index = 0 ; index < FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST.length ; index++)
-			System.out.printf("  %d: %s\n", index, FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[index]);
+		for (int index = 0 ; index < FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST.length ; index++)
+			System.out.printf("  %d: %s\n", index, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[index]);
 		System.out.println("-t|--time\nTime: The time range of the CSV data file\nDefault: Current month\nCaution1: Ignored if -f|--file set\nCaution2: -s|--source SHOULD be set if set");
 		System.out.println("  Format 1 (start_time): 2015-09");
 		System.out.println("  Format 2 (start_time;end_time): 2015-01,2015-09");

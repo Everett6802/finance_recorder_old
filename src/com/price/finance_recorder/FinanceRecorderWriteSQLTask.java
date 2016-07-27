@@ -8,10 +8,10 @@ import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 public class FinanceRecorderWriteSQLTask implements Callable<Integer>
 {
-	private FinanceRecorderDataHandler finance_recorder_writer = null;
+	private FinanceRecorderDataHandlerOld finance_recorder_writer = null;
 	private FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
 
-	public FinanceRecorderWriteSQLTask(FinanceRecorderDataHandler finance_recorder_writer_obj, FinanceRecorderCmnClass.TimeRangeCfg cfg)
+	public FinanceRecorderWriteSQLTask(FinanceRecorderDataHandlerOld finance_recorder_writer_obj, FinanceRecorderCmnClass.TimeRangeCfg cfg)
 	{
 		finance_recorder_writer = finance_recorder_writer_obj;
 		time_range_cfg = cfg;

@@ -386,13 +386,13 @@ public class FinanceRecorderCmnClass
 // Check the index is duplicate
 			if (query_array.get(source_index).indexOf(field_index) != -1)
 			{
-				FinanceRecorderCmnDef.format_warn("Duplicate index: %d in %s", field_index, FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[source_index]);
+				FinanceRecorderCmnDef.format_warn("Duplicate index: %d in %s", field_index, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_index]);
 				return FinanceRecorderCmnDef.RET_WARN_INDEX_DUPLICATE;
 			}
 // If all fields are selected, it's no need to add extra index
 			if (!query_array.get(source_index).isEmpty() && query_array.get(source_index).get(0) == -1)
 			{
-				FinanceRecorderCmnDef.format_warn("Ignore index: %d in %s", field_index, FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[source_index]);
+				FinanceRecorderCmnDef.format_warn("Ignore index: %d in %s", field_index, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_index]);
 				return FinanceRecorderCmnDef.RET_WARN_INDEX_IGNORE;
 			}
 
@@ -457,7 +457,7 @@ public class FinanceRecorderCmnClass
 
 		static void init_whole_company_number_in_group_map()
 		{
-			assert whole_company_number_in_group_map != null : "whole_company_number_in_group_map is NOT null";
+			assert whole_company_number_in_group_map == null : "whole_company_number_in_group_map is NOT null";
 
 			FinanceRecorderCmnClassCompanyProfile company_profile = FinanceRecorderCmnClassCompanyProfile.get_instance();
 			whole_company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
@@ -949,7 +949,7 @@ public class FinanceRecorderCmnClass
 				key = entry.getKey().shortValue();
 				source_index = get_upper_subindex(key);
 				field_index = get_lower_subindex(key);
-				System.out.printf(" %s:%s%d |", FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[source_index], FinanceRecorderCmnDef.MYSQL_FILED_NAME_BASE, field_index);
+				System.out.printf(" %s:%s%d |", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_index], FinanceRecorderCmnDef.MYSQL_FILED_NAME_BASE, field_index);
 			}
 
 			System.out.printf("\n");

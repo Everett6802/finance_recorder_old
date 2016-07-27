@@ -81,9 +81,9 @@ public class FinanceRecorderDatabaseTimeRange
 					break OUT;
 				}
 				String finance_database_description = data_array[0];
-				if (!finance_database_description.equals(FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index_count]))
+				if (!finance_database_description.equals(FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index_count]))
 				{
-					String errmsg = String.format("The source type[%s] is NOT identical to %s in %s", finance_database_description, FinanceRecorderCmnDef.FINANCE_DATABASE_DESCRIPTION_LIST[source_type_index_count], FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
+					String errmsg = String.format("The source type[%s] is NOT identical to %s in %s", finance_database_description, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index_count], FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
 					throw new RuntimeException(errmsg);
 				}
 				source_type_index_count++;

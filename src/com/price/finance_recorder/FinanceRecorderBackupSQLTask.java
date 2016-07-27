@@ -9,13 +9,13 @@ import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 public class FinanceRecorderBackupSQLTask implements Callable<Integer>
 {
-	private FinanceRecorderDataHandler finance_recorder_backuper = null;
+	private FinanceRecorderMarketDataHandler finance_recorder_backuper = null;
 	private FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
 	String backup_csv_foldername = null;
 	LinkedList<Integer> finance_backup_source_field_list = null;
 //	FinanceRecorderCmnClass.ResultSet backup_result_set = null;
 
-	public FinanceRecorderBackupSQLTask(FinanceRecorderDataHandler finance_recorder_backuper_obj, FinanceRecorderCmnClass.TimeRangeCfg cfg, String csv_foldername, LinkedList<Integer> field_list)
+	public FinanceRecorderBackupSQLTask(FinanceRecorderMarketDataHandler finance_recorder_backuper_obj, FinanceRecorderCmnClass.TimeRangeCfg cfg, String csv_foldername, LinkedList<Integer> field_list)
 	{
 		finance_recorder_backuper = finance_recorder_backuper_obj;
 		time_range_cfg = cfg;

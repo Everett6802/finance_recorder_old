@@ -98,11 +98,13 @@ public class FinanceRecorderCmnDef
 			return "Success";
 	}
 
-	public static final String DATA_ROOT_FOLDERPATH = "/var/tmp/finance";
+	public static final String CSV_ROOT_FOLDERPATH = "/var/tmp/finance";
 	public static final String COPY_BACKUP_FOLDERPATH = "/var/www/finance";
-	public static final String DATA_MARKET_FOLDERNAME = "market";
-	public static final String DATA_STOCK_FOLDERNAME = "stock";
-	public static final String DATA_FOLDERPATH = String.format("%s/%s", DATA_ROOT_FOLDERPATH, (IS_FINANCE_MARKET_MODE ? DATA_MARKET_FOLDERNAME : DATA_STOCK_FOLDERNAME));
+	public static final String CSV_MARKET_FOLDERNAME = "market";
+	public static final String CSV_STOCK_FOLDERNAME = "stock";
+	public static final String CSV_FOLDERPATH = String.format("%s/%s", CSV_ROOT_FOLDERPATH, (IS_FINANCE_MARKET_MODE ? CSV_MARKET_FOLDERNAME : CSV_STOCK_FOLDERNAME));
+	public static final String SQL_MARKET_DATABASE_NAME = "market";
+	public static final String SQL_STOCK_DATABASE_NAME = "stock";
 	public static final String RESULT_FOLDERNAME = "result";
 	public static final String CONF_FOLDERNAME = "conf";
 	public static final String BACKUP_FOLDERNAME = ".backup";
@@ -153,6 +155,10 @@ public class FinanceRecorderCmnDef
 	};
 	public static enum FinanceSourceType
 	{
+		FinanceSource_Unknown(-1),
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Market data source
+		FinanceSource_MarketStart(0), // Keep in mind to update the value at the right time
 		FinanceSource_StockExchangeAndVolume(0),
 		FinanceSource_StockTop3LegalPersonsNetBuyOrSell(1),
 		FinanceSource_StockMarginTradingAndShortSelling(2),
@@ -160,7 +166,12 @@ public class FinanceRecorderCmnDef
 		FinanceSource_FutureOrOptionTop3LegalPersonsOpenInterest(4),
 		FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest(5),
 		FinanceSource_OptionPutCallRatio(6),
-		FinanceSource_FutureTop10DealersAndLegalPersons(7);
+		FinanceSource_FutureTop10DealersAndLegalPersons(7),
+		FinanceSource_MarketEnd(8), // Keep in mind to update the value at the right time
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Stock data source
+		FinanceSource_StockStart(8), // Keep in mind to update the value at the right time
+		FinanceSource_StockEnd(8); // Keep in mind to update the value at the right time
 
 		private int value = 0;
 		private FinanceSourceType(int value){this.value = value;}
@@ -180,6 +191,14 @@ public class FinanceRecorderCmnDef
 			}
 		}
 		public int value(){return this.value;}
+		public static boolean is_market_source_type(int source_type_index)
+		{
+			return (source_type_index >= FinanceSource_MarketStart.value && source_type_index < FinanceSource_MarketEnd.value);
+		}
+		public static boolean is_stock_source_type(int source_type_index)
+		{
+			return (source_type_index >= FinanceSource_StockStart.value && source_type_index < FinanceSource_StockEnd.value);
+		}
 	};
 	public static enum FinanceFieldType
 	{
@@ -231,7 +250,7 @@ public class FinanceRecorderCmnDef
 		"option_put_call_ratio",
 		"future_top10_dealers_and_legal_persons"
 	};
-	public static final String[] FINANCE_DATABASE_DESCRIPTION_LIST = new String[]
+	public static final String[] FINANCE_DATA_DESCRIPTION_LIST = new String[]
 	{
 		"臺股指數及成交量",
 		"三大法人現貨買賣超",

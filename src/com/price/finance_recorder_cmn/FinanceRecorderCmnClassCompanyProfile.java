@@ -399,5 +399,5 @@ public class FinanceRecorderCmnClassCompanyProfile
 
 	public String lookup_company_listing_date(String company_number){return lookup_company_profile(company_number).get(COMPANY_PROFILE_ENTRY_FIELD_INDEX_LISTING_DATE);}
 	public String lookup_company_group_name(String company_number){return lookup_company_profile(company_number).get(COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NAME);}
-	public String lookup_company_group_number(String company_number){return lookup_company_profile(company_number).get(COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER);}
+	public Integer lookup_company_group_number(String company_number){return Integer.valueOf(lookup_company_profile(company_number).get(COMPANY_PROFILE_ENTRY_FIELD_INDEX_GROUP_NUMBER));}
 }
