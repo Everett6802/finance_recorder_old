@@ -80,7 +80,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 					ret = csv_reader.read();
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						return ret;
-					csv_data_map.put(FinanceRecorderCSVHandlerMap.get_source_key(source_type_index, company_code_number), csv_reader);
+					csv_data_map.put(FinanceRecorderCmnDef.get_source_key(source_type_index, company_code_number), csv_reader);
 				}
 			}
 		}
@@ -95,7 +95,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 		{
 			int company_group_number = company_code_entry.getKey();
 // Establish the connection to the MySQL and create the database if not exist
-			FinanceRecorderSQLClient sql_client = new FinanceRecorderSQLClient();
+			FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
 			String database_name = String.format("%s%02d", FinanceRecorderCmnDef.SQL_STOCK_DATABASE_NAME, company_group_number);
 			ret = sql_client.try_connect_mysql(database_name, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, database_create_thread_type);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -105,7 +105,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 				for (int source_type_index : source_type_list)
 				{
 // Check data exist
-					Integer source_key = FinanceRecorderCSVHandlerMap.get_source_key(source_type_index, company_code_number);
+					Integer source_key = FinanceRecorderCmnDef.get_source_key(source_type_index, company_code_number);
 					if (!csv_data_map.containsKey(source_key))
 					{
 						FinanceRecorderCmnDef.format_error("The CSV data of source key[%d] (source_type: %d, company_code_number: %s)", source_key, source_type_index, company_code_number);
@@ -113,12 +113,12 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 						break OUT;
 					}
 // Create MySQL table
-					ret = sql_client.create_stock_table(source_type_index, company_code_number);
+					ret = sql_client.create_table(source_type_index, company_code_number);
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						break OUT;
 // Write the data into MySQL database
 					FinanceRecorderCSVHandler csv_reader = csv_data_map.get(source_key);
-					ret = sql_client.insert_stock_data(source_type_index, company_code_number, csv_reader);
+					ret = sql_client.insert_data(source_type_index, company_code_number, csv_reader);
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						break OUT;
 				}
@@ -143,7 +143,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 //// Connect to MySQL based on company group
 //			Integer company_group_number = entry.getKey();
 //// Establish the connection to the MySQL and create the database if not exist
-//			FinanceRecorderSQLClient sql_client = new FinanceRecorderSQLClient();
+//			FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
 //			String database_name = String.format("%s%02d", FinanceRecorderCmnDef.SQL_STOCK_DATABASE_NAME, company_group_number);
 //			ret = sql_client.try_connect_mysql(database_name, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, database_create_thread_type);
 //			if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -178,7 +178,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 		{
 			int company_group_number = company_code_entry.getKey();
 // Establish the connection to the MySQL and create the database if not exist
-			FinanceRecorderSQLClient sql_client = new FinanceRecorderSQLClient();
+			FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
 			String database_name = String.format("%s%02d", FinanceRecorderCmnDef.SQL_STOCK_DATABASE_NAME, company_group_number);
 			ret = sql_client.try_connect_mysql(database_name, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, database_create_thread_type);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -195,11 +195,11 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						return ret;
 // Create MySQL table
-					ret = sql_client.create_stock_table(source_type_index, company_code_number);
+					ret = sql_client.create_table(source_type_index, company_code_number);
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						break OUT;
 // Write the data into MySQL database
-					ret = sql_client.insert_stock_data(source_type_index, company_code_number, csv_reader);
+					ret = sql_client.insert_data(source_type_index, company_code_number, csv_reader);
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						break OUT;
 				}

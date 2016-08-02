@@ -1149,4 +1149,30 @@ public class FinanceRecorderCmnClass
 			return date_data_size;
 		}
 	};
+
+	public static class ResultSetMap
+	{
+		private TreeMap<Integer, ResultSet> result_set_map = new TreeMap<Integer, ResultSet>();
+		private FinanceRecorderCmnDef.ResultSetDataUnit result_set_data_unit = FinanceRecorderCmnDef.ResultSetDataUnit.ResultSetDataUnit_NoSourceType;
+
+		public ResultSetMap(){}
+		public ResultSetMap(FinanceRecorderCmnDef.ResultSetDataUnit data_unit){result_set_data_unit = data_unit;}
+
+		public FinanceRecorderCmnDef.ResultSetDataUnit get_data_unit(){return result_set_data_unit;}
+
+		public short register_result_set(int source_key, final ResultSet result_set)
+		{
+			if (result_set_map.containsKey(source_key))
+				throw new IllegalArgumentException(String.format("The source key[%d] of result set already exist", source_key));
+			result_set_map.put(source_key, result_set);
+			return FinanceRecorderCmnDef.RET_SUCCESS;
+		}
+
+		public final ResultSet lookup_result_set(int source_key)
+		{
+			if (!result_set_map.containsKey(source_key)) 
+				throw new IllegalArgumentException(String.format("Fail to find the source key of result set: %d", source_key));
+			return result_set_map.get(source_key);
+		}
+	};
 }

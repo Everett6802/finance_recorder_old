@@ -11,12 +11,12 @@ import java.util.regex.*;
 import java.text.*;
 
 
-
 public class FinanceRecorderCmnDef
 {
 	private static FinanceRecorderLogger finance_recorder_logger = FinanceRecorderLogger.get_instance();
 	public static final boolean IS_FINANCE_MARKET_MODE = is_market_mode();
 	public static final boolean IS_FINANCE_STOCK_MODE = !IS_FINANCE_MARKET_MODE;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Return values
 	public static final short RET_SUCCESS = 0;
@@ -129,6 +129,8 @@ public class FinanceRecorderCmnDef
 	public static final String DATABASE_TIME_RANGE_FILE_DST_PROJECT_NAME = "finance_analyzer";
 	public static final int FINANCE_SOURCE_SIZE = FinanceRecorderCmnDef.FinanceSourceType.values().length;
 
+	public static final int SOURCE_KEY_FIELD_MASK = 0xFF << 8;
+
 	public static final String MYSQL_TABLE_NAME_BASE = "year";
 	public static final String MYSQL_DATE_FILED_NAME = "date";
 	public static final String MYSQL_FILED_NAME_BASE = "value";
@@ -237,6 +239,12 @@ public class FinanceRecorderCmnDef
 	{
 		DatabaseEnableBatch_Yes,
 		DatabaseEnableBatch_No,
+	};
+
+	public static enum ResultSetDataUnit
+	{
+		ResultSetDataUnit_NoSourceType,
+		ResultSetDataUnit_SourceType
 	};
 
 	public static final String[] FINANCE_DATA_NAME_LIST = new String[]
@@ -383,7 +391,41 @@ public class FinanceRecorderCmnDef
 		return mode;
 	}
 	private static boolean is_market_mode(){return get_finance_analysis_mode() == FinanceAnalysisMode.FinanceAnalysis_Market;}
+	private static boolean is_stock_mode(){return get_finance_analysis_mode() == FinanceAnalysisMode.FinanceAnalysis_Stock;}
 
+	public static int get_source_key(int source_type_index)
+	{
+		if (!FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE)
+		{
+			String errmsg = "It's NOT Market mode";
+			throw new IllegalStateException(errmsg);
+		}
+		return source_type_index;
+	}
+	public static int get_source_key(int source_type_index, String company_code_number)
+	{
+		if (!FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
+		{
+			String errmsg = "It's NOT Stock mode";
+			throw new IllegalStateException(errmsg);
+		}
+		int company_code_number_int = Integer.valueOf(company_code_number);
+		return (company_code_number_int << 8 | source_type_index);
+	}
+	public static int get_source_type(int source_key)
+	{
+		return (source_key & ~SOURCE_KEY_FIELD_MASK);
+	}
+	public static String get_company_code_number(int source_key)
+	{
+		if (!FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
+		{
+			String errmsg = "It's NOT Stock mode";
+			throw new IllegalStateException(errmsg);
+		}
+		return String.format("%04d", (source_key & source_key) >> 8);
+	}
+	
 	private static FinanceFieldType[] TransformFieldTypeString2Enum(String[] field_type_string_list)
 	{
 		FinanceFieldType[] file_type_int_list = new FinanceFieldType[field_type_string_list.length];
