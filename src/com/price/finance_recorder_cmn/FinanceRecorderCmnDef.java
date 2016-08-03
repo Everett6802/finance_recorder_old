@@ -130,6 +130,7 @@ public class FinanceRecorderCmnDef
 	public static final int FINANCE_SOURCE_SIZE = FinanceRecorderCmnDef.FinanceSourceType.values().length;
 
 	public static final int SOURCE_KEY_FIELD_MASK = 0xFF << 8;
+	public static final int NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE = 0;
 
 	public static final String MYSQL_TABLE_NAME_BASE = "year";
 	public static final String MYSQL_DATE_FILED_NAME = "date";

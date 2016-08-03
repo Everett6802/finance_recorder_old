@@ -67,7 +67,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		return new java.sql.Date(dateStr.getTime());
 	}
 
-	protected static short get_sql_field_command(int source_type_index, LinkedList<Integer> field_index_list, StringBuilder field_cmd_builder)
+	public static short get_sql_field_command(int source_type_index, LinkedList<Integer> field_index_list, StringBuilder field_cmd_builder)
 	{
 		if (field_index_list.isEmpty())
 			throw new IllegalArgumentException("The query should NOT be empty");
@@ -95,7 +95,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	private static short get_sql_field_index_list(int source_type_index, String field_cmd, LinkedList<Integer> field_index_list)
+	public static short get_sql_field_index_list(int source_type_index, String field_cmd, LinkedList<Integer> field_index_list)
 	{
 		if (field_cmd.equals(""))
 			throw new IllegalArgumentException("The field_cmd should NOT be empty");

@@ -359,7 +359,7 @@ public class FinanceRecorderCmnClass
 				query_array.add(new LinkedList<Integer>());
 		}
 
-		public short add_query(int source_index, int field_index)
+		public short add_query(int source_type_index, int field_index)
 		{
 			if (add_done)
 			{
@@ -368,13 +368,13 @@ public class FinanceRecorderCmnClass
 			}
 
 // Check if the index is out of range
-			if(source_index < 0 && source_index >= FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE)
+			if(source_type_index < 0 && source_type_index >= FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE)
 			{
-				FinanceRecorderCmnDef.error("source_index is out of range in QuerySet");
+				FinanceRecorderCmnDef.error("source_type_index is out of range in QuerySet");
 				return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 			}
 
-			if(field_index < 0 && field_index >= FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index])
+			if(field_index < 0 && field_index >= FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index])
 			{
 // If field_index == -1, it means select all field in the table
 				if (field_index != -1)
@@ -384,25 +384,25 @@ public class FinanceRecorderCmnClass
 				}
 			}
 // Check the index is duplicate
-			if (query_array.get(source_index).indexOf(field_index) != -1)
+			if (query_array.get(source_type_index).indexOf(field_index) != -1)
 			{
-				FinanceRecorderCmnDef.format_warn("Duplicate index: %d in %s", field_index, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_index]);
+				FinanceRecorderCmnDef.format_warn("Duplicate index: %d in %s", field_index, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index]);
 				return FinanceRecorderCmnDef.RET_WARN_INDEX_DUPLICATE;
 			}
 // If all fields are selected, it's no need to add extra index
-			if (!query_array.get(source_index).isEmpty() && query_array.get(source_index).get(0) == -1)
+			if (!query_array.get(source_type_index).isEmpty() && query_array.get(source_type_index).get(0) == -1)
 			{
-				FinanceRecorderCmnDef.format_warn("Ignore index: %d in %s", field_index, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_index]);
+				FinanceRecorderCmnDef.format_warn("Ignore index: %d in %s", field_index, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index]);
 				return FinanceRecorderCmnDef.RET_WARN_INDEX_IGNORE;
 			}
 
 // Add the index
 			if (field_index == -1)
-				query_array.get(source_index).clear();
-			query_array.get(source_index).add(field_index);
+				query_array.get(source_type_index).clear();
+			query_array.get(source_type_index).add(field_index);
 			return FinanceRecorderCmnDef.RET_SUCCESS;
 		}
-		public short add_query(int source_index){return add_query(source_index, -1);}
+		public short add_query(int source_type_index){return add_query(source_type_index, -1);}
 
 		public short add_query_done()
 		{
@@ -415,7 +415,7 @@ public class FinanceRecorderCmnClass
 			{
 				if (query_array.get(i).isEmpty())
 					continue;
-//				WRITE_FORMAT_DEBUG("Transform the query data[source_index: %d]", i);
+//				WRITE_FORMAT_DEBUG("Transform the query data[source_type_index: %d]", i);
 				if (query_array.get(i).get(0) == -1)
 				{
 					query_array.get(i).clear();
@@ -682,14 +682,14 @@ public class FinanceRecorderCmnClass
 			float_data_set_size = 0;
 		}
 
-		public short add_set(int source_index, int field_index)
+		public short add_set(int source_type_index, int field_index)
 		{
-			if(source_index < 0 && source_index >= FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE)
+			if(source_type_index < 0 && source_type_index >= FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE)
 			{
-				FinanceRecorderCmnDef.error("source_index is out of range in ResultSet");
+				FinanceRecorderCmnDef.error("source_type_index is out of range in ResultSet");
 				return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 			}
-			if(field_index < 0 && field_index >= FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index])
+			if(field_index < 0 && field_index >= FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index])
 			{
 // If field_index == -1, it means select all field in the table
 //				if (field_index != -1)
@@ -704,21 +704,21 @@ public class FinanceRecorderCmnClass
 				field_array.add(field_index);
 //			else
 //			{
-//				for(int i = 1 ; i < FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index] ; i++)
+//				for(int i = 1 ; i < FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index] ; i++)
 //					field_array.add(i);
 //			}
 			for(Integer index : field_array)
 			{
 // Check if the source_type:field_type has been set
-				short key = get_combined_index(source_index, index);
+				short key = get_combined_index(source_type_index, index);
 				if (data_set_mapping.get(key) != null)
 				{
-					FinanceRecorderCmnDef.format_error("The key[%d] from (%d, %d) is duplicate", key, source_index, index);
+					FinanceRecorderCmnDef.format_error("The key[%d] from (%d, %d) is duplicate", key, source_type_index, index);
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				}
 // Check the lookup table to find the date type of the specific field
 				short value;
-				switch(FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index])
+				switch(FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index])
 				{
 				case FinanceField_INT:
 					value = get_combined_index(FinanceRecorderCmnDef.FinanceFieldType.FinanceField_INT.value(), int_data_set.size());
@@ -739,7 +739,7 @@ public class FinanceRecorderCmnClass
 					FinanceRecorderCmnDef.error("The DATE field type is NOT supported");
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				default:
-					FinanceRecorderCmnDef.format_error("The unsupported field type: %d", FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index]);
+					FinanceRecorderCmnDef.format_error("The unsupported field type: %d", FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index]);
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				}
 				FinanceRecorderCmnDef.format_debug("ResultSet Map: %d, %d", key, value);
@@ -748,14 +748,14 @@ public class FinanceRecorderCmnClass
 			return FinanceRecorderCmnDef.RET_SUCCESS;
 		}
 
-		public short add_set(int source_index, final LinkedList<Integer> field_list)
+		public short add_set(int source_type_index, final LinkedList<Integer> field_list)
 		{
 			short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 			ListIterator<Integer> iter = field_list.listIterator(0);
 			while (iter.hasNext())
 			{
 				Integer field_index = iter.next();
-				ret = add_set(source_index, field_index);
+				ret = add_set(source_type_index, field_index);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					return ret;
 			}
@@ -811,7 +811,7 @@ public class FinanceRecorderCmnClass
 //				throw new IndexOutOfBoundsException(String.format("The Index [%d] is out of range [0, %d)", index, date_data_size));
 			return date_data.get_index(index);
 		}
-		public String[] get_date_array_elements(int source_index, int field_index, int start_index, int end_index) 
+		public String[] get_date_array_elements(int source_type_index, int field_index, int start_index, int end_index) 
 		{
 			if (start_index < 0)
 				start_index = FinanceRecorderCmnDef.get_start_index_ex(start_index, date_data_size);
@@ -831,12 +831,12 @@ public class FinanceRecorderCmnClass
 			return data_array;
 		}
 
-		private short find_data_pos(int source_index, int field_index, short[] field_type_array)
+		private short find_data_pos(int source_type_index, int field_index, short[] field_type_array)
 		{
-			short key = get_combined_index(source_index, field_index);
+			short key = get_combined_index(source_type_index, field_index);
 			if (data_set_mapping.get(Integer.valueOf(key)) == null)
 			{
-				FinanceRecorderCmnDef.format_error("The key[%d] from (%d, %d) is NOT FOUND", key, source_index, field_index);
+				FinanceRecorderCmnDef.format_error("The key[%d] from (%d, %d) is NOT FOUND", key, source_type_index, field_index);
 				return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 			}
 			short value = data_set_mapping.get(Integer.valueOf(key)).shortValue();
@@ -845,16 +845,16 @@ public class FinanceRecorderCmnClass
 			return FinanceRecorderCmnDef.RET_SUCCESS;
 		}
 
-		private void find_and_check_data_pos(int source_index, int field_index, short[] field_type_array)
+		private void find_and_check_data_pos(int source_type_index, int field_index, short[] field_type_array)
 		{
-			if (FinanceRecorderCmnDef.CheckFailure(find_data_pos(source_index, field_index, field_type_array)))
-				throw new IllegalArgumentException(String.format("The key[%d] from (%d, %d) is NOT FOUND", source_index, field_index));
+			if (FinanceRecorderCmnDef.CheckFailure(find_data_pos(source_type_index, field_index, field_type_array)))
+				throw new IllegalArgumentException(String.format("The key[%d] from (%d, %d) is NOT FOUND", source_type_index, field_index));
 		}
 
-		public short set_data(int source_index, int field_index, Object data_obj)
+		public short set_data(int source_type_index, int field_index, Object data_obj)
 		{
 			short[] field_type_array = new short[2];
-			short ret = find_data_pos(source_index, field_index, field_type_array);
+			short ret = find_data_pos(source_type_index, field_index, field_type_array);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 
@@ -916,9 +916,9 @@ public class FinanceRecorderCmnClass
 				if (date_data_size != data_size)
 				{
 					key = entry.getKey().shortValue();
-					short source_index = get_upper_subindex(key);
+					short source_type_index = get_upper_subindex(key);
 					short field_index = get_lower_subindex(key);
-					FinanceRecorderCmnDef.format_error("Incorrect data size in %d, %d, expected: %d, actual: %d", source_index, field_index, date_data_size, data_size);
+					FinanceRecorderCmnDef.format_error("Incorrect data size in %d, %d, expected: %d, actual: %d", source_type_index, field_index, date_data_size, data_size);
 					return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 				}
 			}
@@ -933,7 +933,7 @@ public class FinanceRecorderCmnClass
 			final int STAR_LEN = 120;
 			short key;
 			short value;
-			short source_index;
+			short source_type_index;
 			short field_index;
 			short field_type_index;
 			short field_type_pos;
@@ -947,9 +947,9 @@ public class FinanceRecorderCmnClass
 			for(Map.Entry<Integer, Integer> entry : data_set_mapping.entrySet())
 			{
 				key = entry.getKey().shortValue();
-				source_index = get_upper_subindex(key);
+				source_type_index = get_upper_subindex(key);
 				field_index = get_lower_subindex(key);
-				System.out.printf(" %s:%s%d |", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_index], FinanceRecorderCmnDef.MYSQL_FILED_NAME_BASE, field_index);
+				System.out.printf(" %s:%s%d |", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index], FinanceRecorderCmnDef.MYSQL_FILED_NAME_BASE, field_index);
 			}
 
 			System.out.printf("\n");
@@ -1005,45 +1005,45 @@ public class FinanceRecorderCmnClass
 			}
 		}
 
-		public final FinanceIntDataArray get_int_array(int source_index, int field_index)
+		public final FinanceIntDataArray get_int_array(int source_type_index, int field_index)
 		{
 			short[] field_type_array = new short[2];
-			find_and_check_data_pos(source_index, field_index, field_type_array);
+			find_and_check_data_pos(source_type_index, field_index, field_type_array);
 			check_data_pos_boundary(field_type_array[0], field_type_array[1], FinanceRecorderCmnDef.FinanceFieldType.FinanceField_INT.value(), int_data_set_size);
 			assert field_type_array[0] == FinanceRecorderCmnDef.FinanceFieldType.FinanceField_INT.value() : String.format("The type[%d] is NOT INT", FinanceRecorderCmnDef.FinanceFieldType.FinanceField_FLOAT.value());
 			return int_data_set.get(field_type_array[1]);
 		}
-		public final FinanceLongDataArray get_long_array(int source_index, int field_index)
+		public final FinanceLongDataArray get_long_array(int source_type_index, int field_index)
 		{
 			short[] field_type_array = new short[2];
-			find_and_check_data_pos(source_index, field_index, field_type_array);
+			find_and_check_data_pos(source_type_index, field_index, field_type_array);
 			check_data_pos_boundary(field_type_array[0], field_type_array[1], FinanceRecorderCmnDef.FinanceFieldType.FinanceField_LONG.value(), long_data_set_size);
 			assert field_type_array[0] == FinanceRecorderCmnDef.FinanceFieldType.FinanceField_LONG.value() : String.format("The type[%d] is NOT LONG", FinanceRecorderCmnDef.FinanceFieldType.FinanceField_FLOAT.value());
 			return long_data_set.get(field_type_array[1]);
 		}
-		public final FinanceFloatDataArray get_float_array(int source_index, int field_index)
+		public final FinanceFloatDataArray get_float_array(int source_type_index, int field_index)
 		{
 			short[] field_type_array = new short[2];
-			find_and_check_data_pos(source_index, field_index, field_type_array);
+			find_and_check_data_pos(source_type_index, field_index, field_type_array);
 			check_data_pos_boundary(field_type_array[0], field_type_array[1], FinanceRecorderCmnDef.FinanceFieldType.FinanceField_FLOAT.value(), float_data_set_size);
 			assert field_type_array[0] == FinanceRecorderCmnDef.FinanceFieldType.FinanceField_FLOAT.value() : String.format("The type[%d] is NOT FLOAT", FinanceRecorderCmnDef.FinanceFieldType.FinanceField_FLOAT.value());
 			return float_data_set.get(field_type_array[1]);
 		}
-		public int get_int_array_element(int source_index, int field_index, int index) 
+		public int get_int_array_element(int source_type_index, int field_index, int index) 
 		{
 			if (index < 0 || index >= date_data_size)
 				throw new IndexOutOfBoundsException(String.format("The Index [%d] is out of range [0, %d)", index, date_data_size));
-			return get_int_array(source_index, field_index).get_index(index);
+			return get_int_array(source_type_index, field_index).get_index(index);
 		}
-		public long get_long_array_element(int source_index, int field_index, int index) 
+		public long get_long_array_element(int source_type_index, int field_index, int index) 
 		{
 			if (index < 0 || index >= date_data_size)
 				throw new IndexOutOfBoundsException(String.format("The Index [%d] is out of range [0, %d)", index, date_data_size));
-			return get_long_array(source_index, field_index).get_index(index);
+			return get_long_array(source_type_index, field_index).get_index(index);
 		}
-		public float get_float_array_element(int source_index, int field_index, int index) {return get_float_array(source_index, field_index).get_index(index);}
+		public float get_float_array_element(int source_type_index, int field_index, int index) {return get_float_array(source_type_index, field_index).get_index(index);}
 
-		public int[] get_int_array_elements(int source_index, int field_index, int start_index, int end_index) 
+		public int[] get_int_array_elements(int source_type_index, int field_index, int start_index, int end_index) 
 		{
 			if (start_index < 0 || start_index >= date_data_size)
 				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
@@ -1052,13 +1052,13 @@ public class FinanceRecorderCmnClass
 			int data_len = end_index - start_index;
 			assert data_len > 0 : String.format("End Index[%d] SHOULD be larger than Start Index[%d]", end_index, start_index);
 			int data_array[] = new int[data_len];
-			FinanceIntDataArray int_data_array = get_int_array(source_index, field_index);
+			FinanceIntDataArray int_data_array = get_int_array(source_type_index, field_index);
 			int data_pos = 0;
 			for (int index = start_index ; index < end_index ; index++)
 				data_array[data_pos++] = int_data_array.get_index(index);
 			return data_array;
 		}
-		public long[] get_long_array_elements(int source_index, int field_index, int start_index, int end_index) 
+		public long[] get_long_array_elements(int source_type_index, int field_index, int start_index, int end_index) 
 		{
 			if (start_index < 0 || start_index >= date_data_size)
 				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
@@ -1067,13 +1067,13 @@ public class FinanceRecorderCmnClass
 			int data_len = end_index - start_index;
 			assert data_len > 0 : String.format("End Index[%d] SHOULD be larger than Start Index[%d]", end_index, start_index);
 			long data_array[] = new long[data_len];
-			FinanceLongDataArray long_data_array = get_long_array(source_index, field_index);
+			FinanceLongDataArray long_data_array = get_long_array(source_type_index, field_index);
 			int data_pos = 0;
 			for (int index = start_index ; index < end_index ; index++)
 				data_array[data_pos++] = long_data_array.get_index(index);
 			return data_array;
 		}
-		public float[] get_float_array_elements(int source_index, int field_index, int start_index, int end_index) 
+		public float[] get_float_array_elements(int source_type_index, int field_index, int start_index, int end_index) 
 		{
 			if (start_index < 0 || start_index >= date_data_size)
 				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
@@ -1082,14 +1082,14 @@ public class FinanceRecorderCmnClass
 			int data_len = end_index - start_index;
 			assert data_len > 0 : String.format("End Index[%d] SHOULD be larger than Start Index[%d]", end_index, start_index);
 			float data_array[] = new float[data_len];
-			FinanceFloatDataArray float_data_array = get_float_array(source_index, field_index);
+			FinanceFloatDataArray float_data_array = get_float_array(source_type_index, field_index);
 			int data_pos = 0;
 			for (int index = start_index ; index < end_index ; index++)
 				data_array[data_pos++] = float_data_array.get_index(index);
 			return data_array;
 		}
 
-		public String[] get_array_all_elements_string_list(int source_index, int start_index, int end_index)
+		public String[] get_array_all_elements_string_list(int source_type_index, int start_index, int end_index)
 		{
 			if (start_index < 0 || start_index >= date_data_size)
 				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
@@ -1103,13 +1103,13 @@ public class FinanceRecorderCmnClass
 				data_array_str[data_pos++] = date_data.get_index(index);
 //			short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 //OUT:
-			for (int field_index = 1 ; field_index < FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_index] ; field_index++)
+			for (int field_index = 1 ; field_index < FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index] ; field_index++)
 			{
-				switch(FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index])
+				switch(FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index])
 				{
 				case FinanceField_INT:
 				{
-					int[] data_array = get_int_array_elements(source_index, field_index, start_index, end_index);
+					int[] data_array = get_int_array_elements(source_type_index, field_index, start_index, end_index);
 					data_pos = 0;
 					for (int index = start_index ; index < end_index ; index++, data_pos++)
 						data_array_str[data_pos] += String.format(",%d", data_array[data_pos]);
@@ -1117,7 +1117,7 @@ public class FinanceRecorderCmnClass
 				break;
 				case FinanceField_LONG:
 				{
-					long[] data_array = get_long_array_elements(source_index, field_index, start_index, end_index);
+					long[] data_array = get_long_array_elements(source_type_index, field_index, start_index, end_index);
 					data_pos = 0;
 					for (int index = start_index ; index < end_index ; index++, data_pos++)
 						data_array_str[data_pos] += String.format(",%d", data_array[data_pos]);
@@ -1125,7 +1125,7 @@ public class FinanceRecorderCmnClass
 				break;
 				case FinanceField_FLOAT:
 				{
-					float[] data_array = get_float_array_elements(source_index, field_index, start_index, end_index);
+					float[] data_array = get_float_array_elements(source_type_index, field_index, start_index, end_index);
 					data_pos = 0;
 					for (int index = start_index ; index < end_index ; index++, data_pos++)
 						data_array_str[data_pos] += String.format(",%.2f", data_array[data_pos]);
@@ -1133,7 +1133,7 @@ public class FinanceRecorderCmnClass
 				break;
 				default:
 				{
-					String errmsg = String.format("The unsupported field type: %d", FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_index][field_index]);
+					String errmsg = String.format("The unsupported field type: %d", FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index]);
 					FinanceRecorderCmnDef.format_error(errmsg);
 					throw new IllegalArgumentException(errmsg);
 				}

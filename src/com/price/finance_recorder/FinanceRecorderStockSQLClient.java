@@ -70,4 +70,9 @@ public class FinanceRecorderStockSQLClient extends FinanceRecorderSQLClient
 		String table_name = get_table_name(source_type_index, company_code_number);
 		return select_data(table_name, source_type_index, field_index_list, time_range_cfg, result_set);
 	}
+	short select_data(int source_type_index, String company_code_number, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnClass.ResultSet result_set)
+	{
+		String table_name = get_table_name(source_type_index, company_code_number);
+		return select_data(table_name, source_type_index, time_range_cfg, result_set);
+	}
 }

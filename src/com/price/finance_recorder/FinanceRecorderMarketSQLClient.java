@@ -43,4 +43,8 @@ public class FinanceRecorderMarketSQLClient extends FinanceRecorderSQLClient
 	{
 		return select_data(FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index], source_type_index, field_index_list, time_range_cfg, result_set);
 	}
+	short select_data(int source_type_index, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnClass.ResultSet result_set)
+	{
+		return select_data(FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index], source_type_index, time_range_cfg, result_set);
+	}
 }

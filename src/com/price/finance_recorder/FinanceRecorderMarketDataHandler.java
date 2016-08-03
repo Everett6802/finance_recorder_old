@@ -1,34 +1,30 @@
 package com.price.finance_recorder;
 
-//import java.io.File;
-//import java.io.File;
-//import java.sql.*;
-//import java.text.*;
 import java.util.*;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
-//import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.*;
 
 
 public class FinanceRecorderMarketDataHandler extends FinanceRecorderCmnBase implements FinanceRecorderDataHandlerInf
 {
+	private static FinanceRecorderCmnClass.QuerySet whole_field_query_set = null;
 	private static String get_csv_filepath(int source_type_index)
 	{
 		return String.format("%s/%s", FinanceRecorderCmnDef.CSV_FOLDERPATH, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]);
 	}
 
-	private static String get_sql_database_name()
-	{
-		return FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME;
-	}
+//	private static String get_sql_database_name()
+//	{
+//		return FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME;
+//	}
+//
+//	private static String get_sql_table_name(int source_type_index)
+//	{
+//		return FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index];
+//	}
 
-	private static String get_sql_table_name(int source_type_index)
-	{
-		return FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index];
-	}
-
-	public static FinanceRecorderDataHandlerInf get_data_handler(final ArrayList<Integer> source_type_list)
+	public static FinanceRecorderDataHandlerInf get_data_handler(final LinkedList<Integer> source_type_list)
 	{
 		if (!FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE)
 		{
@@ -49,7 +45,7 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderCmnBase imp
 	}
 	public static FinanceRecorderDataHandlerInf get_data_handler_whole()
 	{
-		ArrayList<Integer> source_type_list = new ArrayList<Integer>();
+		LinkedList<Integer> source_type_list = new LinkedList<Integer>();
 		int start_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_MarketStart.value();
 		int end_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_MarketEnd.value();
 		for (int source_type_index = start_index ; source_type_index < end_index ; source_type_index++)
@@ -57,9 +53,20 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderCmnBase imp
 		return get_data_handler(source_type_list);
 	}
 
-	private ArrayList<Integer> source_type_list = null;
+	private LinkedList<Integer> source_type_list = null;
 
-	private FinanceRecorderMarketDataHandler(){}
+	private FinanceRecorderMarketDataHandler()
+	{
+		if (whole_field_query_set == null)
+		{
+			whole_field_query_set = new FinanceRecorderCmnClass.QuerySet();
+			int source_type_start_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_MarketStart.ordinal();
+			int source_type_end_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_MarketEnd.ordinal();
+			for (int source_type_index = source_type_start_index ; source_type_index < source_type_end_index ; source_type_index++)
+				whole_field_query_set.add_query(source_type_index);
+			whole_field_query_set.add_query_done();
+		}
+	}
 
 	public short read_from_csv(FinanceRecorderCSVHandlerMap csv_data_map)
 	{
@@ -154,25 +161,76 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderCmnBase imp
 		return ret;
 	}
 
-	short read_from_sql(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String cmd_table_field, FinanceRecorderCmnClass.ResultSetMap result_set_map)
+	public short read_from_sql(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnClass.ResultSetMap result_set_map)
 	{
 // CAUTION: The data set in the reslt_set variable should be added before calling this function 
 // Set the mapping table of reading the specific CSV files and writing correct SQL database
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-
-// Establish the connection to the MySQL and create the database if not exist
+		FinanceRecorderCmnDef.ResultSetDataUnit data_unit = result_set_map.get_data_unit();
+// Establish the connection to the MySQL
 		FinanceRecorderMarketSQLClient sql_client = new FinanceRecorderMarketSQLClient();
-		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
+		FinanceRecorderCmnClass.ResultSet result_set = null;
 OUT:
-		ret = sql_client.select_data(table_name, cmd_table_field, time_range_cfg, result_set);
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			break OUT;
-
+		switch (data_unit)
+		{
+		case ResultSetDataUnit_NoSourceType:
+		{
+			result_set = new FinanceRecorderCmnClass.ResultSet();
+// Add query set
+			for (int source_type_index : source_type_list)
+			{
+				ret = result_set.add_set(source_type_index, query_set.get_index(source_type_index));
+				if (FinanceRecorderCmnDef.CheckFailure(ret))
+					break OUT;
+			}
+// Query data from each source type
+			for (int source_type_index : source_type_list)
+			{
+				ret = sql_client.select_data(source_type_index, time_range_cfg, result_set);
+				if (FinanceRecorderCmnDef.CheckFailure(ret))
+					break OUT;
+			}
+// Keep track of the data in the designated data structure
+			ret = result_set_map.register_result_set(FinanceRecorderCmnDef.NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE, result_set);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				break OUT;
+		}
+		break;
+		case ResultSetDataUnit_SourceType:
+		{
+			for (int source_type_index : source_type_list)
+			{
+				result_set = new FinanceRecorderCmnClass.ResultSet();
+// Add query set
+				ret = result_set.add_set(source_type_index, query_set.get_index(source_type_index));
+				if (FinanceRecorderCmnDef.CheckFailure(ret))
+					break OUT;
+// Query data from each source type
+				ret = sql_client.select_data(source_type_index, time_range_cfg, result_set);
+				if (FinanceRecorderCmnDef.CheckFailure(ret))
+					break OUT;
+// Keep track of the data in the designated data structure
+				ret = result_set_map.register_result_set(FinanceRecorderCmnDef.get_source_key(source_type_index), result_set);
+				if (FinanceRecorderCmnDef.CheckFailure(ret))
+					break OUT;
+			}
+		}
+		break;
+		default:
+		{
+			String errmsg = String.format("Unsupported data unit: %d", data_unit.ordinal());
+			throw new IllegalArgumentException(errmsg);
+		}
+		}
 // Destroy the connection to the MySQL
 		sql_client.disconnect_mysql();
-
 		return ret;
+	}
+	public short read_from_sql(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnClass.ResultSetMap result_set_map)
+	{
+		return read_from_sql(whole_field_query_set, time_range_cfg, result_set_map);
 	}
 }
