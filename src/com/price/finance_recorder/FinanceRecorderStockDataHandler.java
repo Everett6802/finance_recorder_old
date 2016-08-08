@@ -1,6 +1,7 @@
 package com.price.finance_recorder;
 
 import java.util.*;
+
 import com.price.finance_recorder_cmn.FinanceRecorderCmnBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClassCompanyProfile;
@@ -12,9 +13,9 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 {
 	private static FinanceRecorderCmnClassCompanyProfile company_profile = FinanceRecorderCmnClassCompanyProfile.get_instance();
 	private static FinanceRecorderCmnClass.QuerySet whole_field_query_set = null;
-	private static String get_csv_filepath(int source_type_index, int company_group_number, String company_code_number)
+	private static String get_csv_filepath(String csv_folderpath, int source_type_index, int company_group_number, String company_code_number)
 	{
-		return String.format("%s%02d/%s%s", FinanceRecorderCmnDef.CSV_FOLDERPATH, company_group_number, company_code_number, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]);
+		return String.format("%s%02d/%s%s", csv_folderpath, company_group_number, company_code_number, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]);
 	}
 
 //	private static String get_sql_database_name(int company_group_number)
@@ -61,6 +62,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 	private ArrayList<Integer> source_type_list = null;
 	private CompanyGroupSet company_group_set = null;
 	private FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type = FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single;
+	private String csv_backup_foldername = FinanceRecorderCmnDef.COPY_BACKUP_FOLDERPATH;
 
 	private FinanceRecorderStockDataHandler()
 	{
@@ -85,7 +87,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 			{
 				for (int source_type_index : source_type_list)
 				{
-					FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderStockDataHandler.get_csv_filepath(source_type_index, company_group_number, company_code_number));
+					FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderStockDataHandler.get_csv_filepath(FinanceRecorderCmnDef.CSV_FILE_ROOT_FOLDERPATH, source_type_index, company_group_number, company_code_number));
 					ret = csv_reader.read();
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						return ret;
@@ -199,7 +201,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 				for (int source_type_index : source_type_list)
 				{
 // Read data from CSV
-					FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderStockDataHandler.get_csv_filepath(source_type_index, company_group_number, company_code_number));
+					FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderStockDataHandler.get_csv_filepath(csv_backup_foldername, source_type_index, company_group_number, company_code_number));
 					ret = csv_reader.read();
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						return ret;
@@ -298,6 +300,56 @@ OUT:
 	public short read_from_sql(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnClass.ResultSetMap result_set_map)
 	{
 		return read_from_sql(whole_field_query_set, time_range_cfg, result_set_map);
+	}
+
+	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String csv_backup_foldername)
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
+		FinanceRecorderCmnClass.ResultSet result_set = new FinanceRecorderCmnClass.ResultSet();
+// Add query set
+		for (int source_type_index : source_type_list)
+		{
+			ret = result_set.add_set(source_type_index, query_set.get_index(source_type_index));
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				return ret;
+		}
+		for (Map.Entry<Integer, ArrayList<String>> company_code_entry : company_group_set)
+		{
+			int company_group_number = company_code_entry.getKey();
+// Establish the connection to the MySQL
+			ret = sql_client.try_connect_mysql(company_group_number, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				return ret;
+			
+OUT:
+			for(String company_code_number : company_code_entry.getValue())
+			{
+// Query data from each source type
+				for (int source_type_index : source_type_list)
+				{
+					ret = sql_client.select_data(source_type_index, company_code_number, time_range_cfg, result_set);
+					if (FinanceRecorderCmnDef.CheckFailure(ret))
+						break OUT;
+					FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderStockDataHandler.get_csv_filepath(csv_backup_foldername, source_type_index, company_group_number, company_code_number));
+//Assemble the data and write into CSV
+					ArrayList<String> csv_data_list = result_set.to_string_array(source_type_index);
+					csv_writer.set_write_data(csv_data_list);
+					ret = csv_writer.write();
+					if (FinanceRecorderCmnDef.CheckFailure(ret))
+						break OUT;
+				}
+// Cleanup the result data
+				result_set.reset_result();
+			}
+// Destroy the connection to the MySQL
+			sql_client.disconnect_mysql();
+		}
+		return ret;
+	}
+	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String backup_foldername)
+	{
+		return transfrom_sql_to_csv(whole_field_query_set, time_range_cfg, csv_backup_foldername);
 	}
 
 	public void enable_multi_thread_type(boolean enable)

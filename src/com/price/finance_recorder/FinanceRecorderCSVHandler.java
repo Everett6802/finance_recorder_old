@@ -38,7 +38,7 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 	private BufferedWriter bw = null;
 	private FinanceRecorderCmnDef.FinanceObserverInf parent_observer = null;
 	private HandlerMode handler_mode;
-	private ArrayList<String> csv_data_list = null;
+	private ArrayList<String> data_list = null;
 //	private boolean IgnoreErrorIfFileNotExist = true;
 
 	private FinanceRecorderCSVHandler()
@@ -128,12 +128,12 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 			FinanceRecorderCmnDef.error("CSV Handler is NOT in READ mode");
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
-		if (csv_data_list != null)
+		if (data_list != null)
 		{
 			FinanceRecorderCmnDef.error("CSV data already exist in the list");
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
-		csv_data_list = new ArrayList<String>();
+		data_list = new ArrayList<String>();
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		String line = null;
@@ -145,7 +145,7 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 			{
 //				String[] field_array = line.split(FinanceRecorderCmnDef.DATA_SPLIT);
 //				data_list.add(format_data_to_string(field_array));
-				csv_data_list.add(line);
+				data_list.add(line);
 //				FinanceRecorderCmnDef.format_debug("New Data: %s", ((LinkedList<String>)data_list).peekLast());
 				count++;
 			}
@@ -167,12 +167,12 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 			FinanceRecorderCmnDef.error("CSV Handler is NOT in READ mode");
 			throw new IllegalStateException("CSV Handler is NOT in READ mode");
 		}
-		if (csv_data_list == null)
+		if (data_list == null)
 		{
 			FinanceRecorderCmnDef.error("No CSV data to read");
 			throw new IllegalStateException("No CSV data to read");
 		}
-		return csv_data_list;
+		return data_list;
 	}
 
 	public short write()
@@ -189,7 +189,7 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 		String field_string = null;
 		try
 		{
-			for (String data : csv_data_list)
+			for (String data : data_list)
 			{ 
 				bw.write(data);
 				bw.write(NEW_LINE);
@@ -205,19 +205,19 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 		return ret;
 	}
 
-	public void set_write_data(final ArrayList<String> data_list)
+	public void set_write_data(final ArrayList<String> intput_data_list)
 	{
 		if (handler_mode != HandlerMode.HandlerMode_Write)
 		{
 			FinanceRecorderCmnDef.error("CSV Handler is NOT in WRITE mode");
 			throw new IllegalStateException("CSV Handler is NOT in WRITE mode");
 		}
-		if (csv_data_list != null)
+		if (data_list != null)
 		{
 			FinanceRecorderCmnDef.error("CSV data has already been set");
 			throw new IllegalStateException("CSV data has already been set");
 		}
-		csv_data_list = data_list;
+		data_list = intput_data_list;
 	}
 
 	@Override
@@ -230,17 +230,17 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 		}
 		Iterator<String> it = new Iterator<String>()
 		{
-			int csv_data_list_len = csv_data_list.size();
+			int data_list_len = data_list.size();
 			int cur_index = 0;
 			@Override
 			public boolean hasNext()
 			{
-				return cur_index < csv_data_list_len;
+				return cur_index < data_list_len;
 			}
 			@Override
 			public String next()
 			{
-				return csv_data_list.get(cur_index++);
+				return data_list.get(cur_index++);
 			}
 			@Override
 			public void remove() {throw new UnsupportedOperationException();}

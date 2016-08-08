@@ -116,7 +116,7 @@ public class FinanceRecorderCmnDef
 	public static final String FINANCE_RECORDER_CONF_FILENAME = "finance_recorder.conf";
 	public static final String BACKUP_FILENAME = "backup.conf";
 
-	// public static final String CSV_FILE_ROOT_FOLDERPATH = "/var/tmp/finance"
+	public static final String CSV_FILE_ROOT_FOLDERPATH = "/var/tmp/finance";
 	public static final String COMMA_DATA_SPLIT = ",";
 	public static final String SPACE_DATA_SPLIT = " ";
 	public static final String DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%02d%02d";

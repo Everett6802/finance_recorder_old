@@ -670,6 +670,21 @@ public class FinanceRecorderCmnClass
 		public ResultSet()
 		{
 			data_set_mapping = new HashMap<Integer, Integer>();
+//			date_data = new FinanceStringDataArray();
+//			int_data_set = new ArrayList<FinanceIntDataArray>();
+//			long_data_set = new ArrayList<FinanceLongDataArray>();
+//			float_data_set = new ArrayList<FinanceFloatDataArray>();
+//			check_date_data_mode = false;
+//			date_data_size = 0;
+//			date_data_cur_pos = 0;
+//			int_data_set_size = 0;
+//			long_data_set_size = 0;
+//			float_data_set_size = 0;
+			reset_result();
+		}
+
+		public void reset_result()
+		{
 			date_data = new FinanceStringDataArray();
 			int_data_set = new ArrayList<FinanceIntDataArray>();
 			long_data_set = new ArrayList<FinanceLongDataArray>();
@@ -1089,7 +1104,7 @@ public class FinanceRecorderCmnClass
 			return data_array;
 		}
 
-		public String[] get_array_all_elements_string_list(int source_type_index, int start_index, int end_index)
+		public ArrayList<String> to_string_array(int source_type_index, int start_index, int end_index)
 		{
 			if (start_index < 0 || start_index >= date_data_size)
 				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
@@ -1097,12 +1112,11 @@ public class FinanceRecorderCmnClass
 				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range (1, %d]", start_index, date_data_size));
 			int data_len = end_index - start_index;
 			assert data_len > 0 : String.format("End Index[%d] SHOULD be larger than Start Index[%d]", end_index, start_index);
-			String data_array_str[] = new String[data_len];
+// Keep track of the data string into array
+			String data_string_array[] = new String[data_len];
 			int data_pos = 0;
 			for (int index = start_index ; index < end_index ; index++)
-				data_array_str[data_pos++] = date_data.get_index(index);
-//			short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-//OUT:
+				data_string_array[data_pos++] = date_data.get_index(index);
 			for (int field_index = 1 ; field_index < FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index] ; field_index++)
 			{
 				switch(FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index])
@@ -1112,7 +1126,7 @@ public class FinanceRecorderCmnClass
 					int[] data_array = get_int_array_elements(source_type_index, field_index, start_index, end_index);
 					data_pos = 0;
 					for (int index = start_index ; index < end_index ; index++, data_pos++)
-						data_array_str[data_pos] += String.format(",%d", data_array[data_pos]);
+						data_string_array[data_pos] += String.format(",%d", data_array[data_pos]);
 				}
 				break;
 				case FinanceField_LONG:
@@ -1120,7 +1134,7 @@ public class FinanceRecorderCmnClass
 					long[] data_array = get_long_array_elements(source_type_index, field_index, start_index, end_index);
 					data_pos = 0;
 					for (int index = start_index ; index < end_index ; index++, data_pos++)
-						data_array_str[data_pos] += String.format(",%d", data_array[data_pos]);
+						data_string_array[data_pos] += String.format(",%d", data_array[data_pos]);
 				}
 				break;
 				case FinanceField_FLOAT:
@@ -1128,7 +1142,7 @@ public class FinanceRecorderCmnClass
 					float[] data_array = get_float_array_elements(source_type_index, field_index, start_index, end_index);
 					data_pos = 0;
 					for (int index = start_index ; index < end_index ; index++, data_pos++)
-						data_array_str[data_pos] += String.format(",%.2f", data_array[data_pos]);
+						data_string_array[data_pos] += String.format(",%.2f", data_array[data_pos]);
 				}
 				break;
 				default:
@@ -1139,8 +1153,69 @@ public class FinanceRecorderCmnClass
 				}
 				}
 			}
-			return data_array_str;
+
+			ArrayList<String> string_array = new ArrayList<String>();
+			for (String data_str : data_string_array)
+				string_array.add(data_str);
+			return string_array;
 		}
+		public ArrayList<String> to_string_array(int source_type_index)
+		{
+			return to_string_array(source_type_index, 0, date_data_size);
+		}
+
+//		public String[] get_array_all_elements_string_list(int source_type_index, int start_index, int end_index)
+//		{
+//			if (start_index < 0 || start_index >= date_data_size)
+//				throw new IndexOutOfBoundsException(String.format("The Start Index [%d] is out of range [0, %d)", start_index, date_data_size));
+//			if (end_index < 1 || end_index > date_data_size)
+//				throw new IndexOutOfBoundsException(String.format("The End Index [%d] is out of range (1, %d]", start_index, date_data_size));
+//			int data_len = end_index - start_index;
+//			assert data_len > 0 : String.format("End Index[%d] SHOULD be larger than Start Index[%d]", end_index, start_index);
+//			String data_string_array[] = new String[data_len];
+//			int data_pos = 0;
+//			for (int index = start_index ; index < end_index ; index++)
+//				data_string_array[data_pos++] = date_data.get_index(index);
+////			short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+////OUT:
+//			for (int field_index = 1 ; field_index < FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index] ; field_index++)
+//			{
+//				switch(FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index])
+//				{
+//				case FinanceField_INT:
+//				{
+//					int[] data_array = get_int_array_elements(source_type_index, field_index, start_index, end_index);
+//					data_pos = 0;
+//					for (int index = start_index ; index < end_index ; index++, data_pos++)
+//						data_string_array[data_pos] += String.format(",%d", data_array[data_pos]);
+//				}
+//				break;
+//				case FinanceField_LONG:
+//				{
+//					long[] data_array = get_long_array_elements(source_type_index, field_index, start_index, end_index);
+//					data_pos = 0;
+//					for (int index = start_index ; index < end_index ; index++, data_pos++)
+//						data_string_array[data_pos] += String.format(",%d", data_array[data_pos]);
+//				}
+//				break;
+//				case FinanceField_FLOAT:
+//				{
+//					float[] data_array = get_float_array_elements(source_type_index, field_index, start_index, end_index);
+//					data_pos = 0;
+//					for (int index = start_index ; index < end_index ; index++, data_pos++)
+//						data_string_array[data_pos] += String.format(",%.2f", data_array[data_pos]);
+//				}
+//				break;
+//				default:
+//				{
+//					String errmsg = String.format("The unsupported field type: %d", FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_TYPE_LIST[source_type_index][field_index]);
+//					FinanceRecorderCmnDef.format_error(errmsg);
+//					throw new IllegalArgumentException(errmsg);
+//				}
+//				}
+//			}
+//			return data_string_array;
+//		}
 
 		public boolean is_empty(){return date_data.is_empty();}
 		public int get_size()
@@ -1150,7 +1225,7 @@ public class FinanceRecorderCmnClass
 		}
 	};
 
-	public static class ResultSetMap
+	public static class ResultSetMap implements Iterable<Map.Entry<Integer, ResultSet>>
 	{
 		private TreeMap<Integer, ResultSet> result_set_map = new TreeMap<Integer, ResultSet>();
 		private FinanceRecorderCmnDef.ResultSetDataUnit result_set_data_unit = FinanceRecorderCmnDef.ResultSetDataUnit.ResultSetDataUnit_NoSourceType;
@@ -1173,6 +1248,28 @@ public class FinanceRecorderCmnClass
 			if (!result_set_map.containsKey(source_key)) 
 				throw new IllegalArgumentException(String.format("Fail to find the source key of result set: %d", source_key));
 			return result_set_map.get(source_key);
+		}
+
+		@Override
+		public Iterator<Map.Entry<Integer, ResultSet>> iterator()
+		{
+			Iterator<Map.Entry<Integer, ResultSet>> it = new Iterator<Map.Entry<Integer, ResultSet>>()
+			{
+				private Iterator<Map.Entry<Integer, ResultSet>> iter = result_set_map.entrySet().iterator();
+				@Override
+				public boolean hasNext()
+				{
+					return iter.hasNext();
+				}
+				@Override
+				public Map.Entry<Integer, ResultSet> next()
+				{
+					return (Map.Entry<Integer, ResultSet>)iter.next();
+				}
+				@Override
+				public void remove() {throw new UnsupportedOperationException();}
+			};
+			return it;
 		}
 	};
 }
