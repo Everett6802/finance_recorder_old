@@ -129,7 +129,12 @@ public class FinanceRecorderCmnDef
 	public static final String DATABASE_TIME_RANGE_FILE_DST_PROJECT_NAME = "finance_analyzer";
 	public static final int FINANCE_SOURCE_SIZE = FinanceRecorderCmnDef.FinanceSourceType.values().length;
 
-	public static final int SOURCE_KEY_FIELD_MASK = 0xFF << 8;
+	public static final int SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET = 0;
+	public static final int SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET = 8;
+	public static final int SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET = 24;
+	public static final int SOURCE_KEY_SOURCE_TYPE_INDEX_MASK = 0xFF << SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET;
+	public static final int SOURCE_KEY_COMPANY_CODE_NUMBER_MASK = 0xFF << SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET;
+	public static final int SOURCE_KEY_COMPANY_GROUP_NUMBER_MASK = 0xFFFF << SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET;
 	public static final int NO_SOURCE_TYPE_MARKET_SOURCE_KEY_VALUE = 0;
 
 	public static final String MYSQL_TABLE_NAME_BASE = "year";
@@ -403,7 +408,7 @@ public class FinanceRecorderCmnDef
 		}
 		return source_type_index;
 	}
-	public static int get_source_key(int source_type_index, String company_code_number)
+	public static int get_source_key(int source_type_index, int company_group_number, String company_code_number)
 	{
 		if (!FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
 		{
@@ -411,11 +416,11 @@ public class FinanceRecorderCmnDef
 			throw new IllegalStateException(errmsg);
 		}
 		int company_code_number_int = Integer.valueOf(company_code_number);
-		return (company_code_number_int << 8 | source_type_index);
+		return (company_group_number << SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET | company_code_number_int << SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET | source_type_index << SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET);
 	}
 	public static int get_source_type(int source_key)
 	{
-		return (source_key & ~SOURCE_KEY_FIELD_MASK);
+		return ((source_key & SOURCE_KEY_SOURCE_TYPE_INDEX_MASK) >> SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET);
 	}
 	public static String get_company_code_number(int source_key)
 	{
@@ -424,9 +429,18 @@ public class FinanceRecorderCmnDef
 			String errmsg = "It's NOT Stock mode";
 			throw new IllegalStateException(errmsg);
 		}
-		return String.format("%04d", (source_key & source_key) >> 8);
+		return String.format("%04d", (source_key & SOURCE_KEY_COMPANY_GROUP_NUMBER_MASK) >> SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET);
 	}
-	
+	public static int get_company_group_number(int source_key)
+	{
+		if (!FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
+		{
+			String errmsg = "It's NOT Stock mode";
+			throw new IllegalStateException(errmsg);
+		}
+		return ((source_key & SOURCE_KEY_COMPANY_CODE_NUMBER_MASK) >> SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET);
+	}
+
 	private static FinanceFieldType[] TransformFieldTypeString2Enum(String[] field_type_string_list)
 	{
 		FinanceFieldType[] file_type_int_list = new FinanceFieldType[field_type_string_list.length];

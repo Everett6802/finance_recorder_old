@@ -91,7 +91,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 					ret = csv_reader.read();
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						return ret;
-					csv_data_map.put(FinanceRecorderCmnDef.get_source_key(source_type_index, company_code_number), csv_reader);
+					csv_data_map.put(FinanceRecorderCmnDef.get_source_key(source_type_index, company_group_number, company_code_number), csv_reader);
 				}
 			}
 		}
@@ -116,7 +116,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 				for (int source_type_index : source_type_list)
 				{
 // Check data exist
-					Integer source_key = FinanceRecorderCmnDef.get_source_key(source_type_index, company_code_number);
+					Integer source_key = FinanceRecorderCmnDef.get_source_key(source_type_index, company_group_number, company_code_number);
 					if (!csv_data_map.containsKey(source_key))
 					{
 						FinanceRecorderCmnDef.format_error("The CSV data of source key[%d] (source_type: %d, company_code_number: %s)", source_key, source_type_index, company_code_number);
@@ -278,7 +278,7 @@ OUT:
 						if (FinanceRecorderCmnDef.CheckFailure(ret))
 							break OUT;
 // Keep track of the data in the designated data structure
-						ret = result_set_map.register_result_set(FinanceRecorderCmnDef.get_source_key(source_type_index, company_code_number), result_set);
+						ret = result_set_map.register_result_set(FinanceRecorderCmnDef.get_source_key(source_type_index, company_group_number, company_code_number), result_set);
 						if (FinanceRecorderCmnDef.CheckFailure(ret))
 							break OUT;
 					}
@@ -302,6 +302,66 @@ OUT:
 		return read_from_sql(whole_field_query_set, time_range_cfg, result_set_map);
 	}
 
+	public short write_into_csv(FinanceRecorderCmnClass.ResultSetMap result_set_map)
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		FinanceRecorderCmnDef.ResultSetDataUnit data_unit = result_set_map.get_data_unit();
+		FinanceRecorderCmnClass.ResultSet result_set = null;
+OUT:
+		switch (data_unit)
+		{
+		case ResultSetDataUnit_NoSourceType:
+		{
+			for (Map.Entry<Integer, FinanceRecorderCmnClass.ResultSet> entry : result_set_map)
+			{
+				int source_key = entry.getKey();
+				String company_code_number = FinanceRecorderCmnDef.get_company_code_number(source_key);
+				int company_group_number = FinanceRecorderCmnDef.get_company_group_number(source_key);
+				result_set = entry.getValue();
+				for (int source_type_index : source_type_list)
+				{
+					FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderStockDataHandler.get_csv_filepath(FinanceRecorderCmnDef.CSV_FILE_ROOT_FOLDERPATH, source_type_index, company_group_number, company_code_number));
+	//Assemble the data and write into CSV
+					ArrayList<String> csv_data_list = result_set.to_string_array(source_type_index);
+					csv_writer.set_write_data(csv_data_list);
+					ret = csv_writer.write();
+					if (FinanceRecorderCmnDef.CheckFailure(ret))
+						break OUT;
+				}
+			}
+		}
+		break;
+		case ResultSetDataUnit_SourceType:
+		{
+			for (Map.Entry<Integer, FinanceRecorderCmnClass.ResultSet> entry : result_set_map)
+			{
+				int source_key = entry.getKey();
+				int source_type_index = FinanceRecorderCmnDef.get_source_type(source_key);
+				String company_code_number = FinanceRecorderCmnDef.get_company_code_number(source_key);
+				int company_group_number = FinanceRecorderCmnDef.get_company_group_number(source_key);
+				result_set = entry.getValue();
+// Ignore the data which is NOT in the list
+				if (source_type_list.indexOf(source_type_index) == -1)
+					continue;
+				FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderStockDataHandler.get_csv_filepath(FinanceRecorderCmnDef.CSV_FILE_ROOT_FOLDERPATH, source_type_index, company_group_number, company_code_number));
+// Assemble the data and write into CSV
+				ArrayList<String> csv_data_list = result_set.to_string_array(source_type_index);
+				csv_writer.set_write_data(csv_data_list);
+				ret = csv_writer.write();
+				if (FinanceRecorderCmnDef.CheckFailure(ret))
+					break OUT;
+			}
+		}
+		break;
+		default:
+		{
+			String errmsg = String.format("Unsupported data unit: %d", data_unit.ordinal());
+			throw new IllegalArgumentException(errmsg);
+		}
+		}
+		return ret;
+	}
+
 	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String csv_backup_foldername)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
@@ -321,7 +381,6 @@ OUT:
 			ret = sql_client.try_connect_mysql(company_group_number, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
-			
 OUT:
 			for(String company_code_number : company_code_entry.getValue())
 			{
