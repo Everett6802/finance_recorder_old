@@ -740,7 +740,7 @@ OUT:
 // Activate the task of writing data into SQL
 					FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index));
 //					FinanceRecorderCmnDef.format_debug("Try to write data [%s %04d%02d:%04d%02d] into MySQL......", finance_recorder_data_handler.get_description(), time_range_slice_cfg.get_start_time().get_year(), time_range_slice_cfg.get_start_time().get_month(), time_range_slice_cfg.get_end_time().get_year(), time_range_slice_cfg.get_end_time().get_month());
-					FinanceRecorderWriteSQLTask task = new FinanceRecorderWriteSQLTask(new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index)), time_range_slice_cfg);
+					FinanceRecorderStockWriteSQLTask task = new FinanceRecorderStockWriteSQLTask(new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index)), time_range_slice_cfg);
 					Future<Integer> res = executor.submit(task);
 //					try{Thread.sleep(5);}
 //					catch (InterruptedException e){}
