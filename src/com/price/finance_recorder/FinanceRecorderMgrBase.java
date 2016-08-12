@@ -10,11 +10,12 @@ import java.util.concurrent.atomic.*;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.*;
 
+import com.price.finance_recorder.FinanceRecorderMgrOld.ConfigFieldType;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 
-public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserverInf
+public class FinanceRecorderMgrBase 
 {
 	private static FinanceRecorderWorkdayCalendar workday_calendar = null;// FinanceRecorderWorkdayCalendar.get_instance();
 	private static FinanceRecorderDatabaseTimeRange database_time_range = null; //FinanceRecorderDatabaseTimeRange.get_instance();
@@ -42,22 +43,7 @@ public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserver
 	private static final int SHOW_RESULT_EMAIL = 0x4;
 	private static final String CONFIG_ALL_FIELD_STRING = "all";
 
-	private HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg> finance_source_time_range_table = null;
-	private HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg> finance_backup_source_time_range_table = null;
-	private HashMap<Integer, LinkedList<Integer>> finance_backup_source_field_table = null;
-	private LinkedList<String> email_address_list = new LinkedList<String>();
-
-	public short initialize()
-	{
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		ret = parse_config();
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			return ret;
-
-		return FinanceRecorderCmnDef.RET_SUCCESS;
-	}
-
-	private short get_config_file_lines(String filename, LinkedList<String> config_line_list)
+	private static short get_config_file_lines(String filename, LinkedList<String> config_line_list)
 	{
 		String current_path = FinanceRecorderCmnDef.get_current_path();
 		String conf_filepath = String.format("%s/%s/%s", current_path, FinanceRecorderCmnDef.CONF_FOLDERNAME, filename);
@@ -112,8 +98,23 @@ public class FinanceRecorderMgr implements FinanceRecorderCmnDef.FinanceObserver
 				br = null;
 			}
 		}
-
 		return ret;
+	}
+
+	
+	private HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg> finance_source_time_range_table = null;
+	private HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg> finance_backup_source_time_range_table = null;
+	private HashMap<Integer, LinkedList<Integer>> finance_backup_source_field_table = null;
+	private LinkedList<String> email_address_list = new LinkedList<String>();
+
+	public short initialize()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		ret = parse_config();
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	private short update_time_range_table_by_config_file(String filename, HashMap<Integer,FinanceRecorderCmnClass.TimeRangeCfg> time_range_table)
@@ -146,8 +147,8 @@ OUT:
 
 //Get the type of data source
 			data_source = entry_arr[0];
-			int finance_source_type_index = Arrays.asList(FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST).indexOf(data_source);
-			if (finance_source_type_index == -1)
+			int source_type_index = Arrays.asList(FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST).indexOf(data_source);
+			if (source_type_index == -1)
 			{
 				FinanceRecorderCmnDef.format_error("Unknown data source type[%s] in config file", data_source);
 				ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
@@ -187,13 +188,13 @@ OUT:
 			FinanceRecorderCmnDef.format_debug("New entry in config [%s %s:%s]", data_source, time_month_start, time_month_end);
 //			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(time_month_start, time_month_end);
 //Adjust the time range 
-			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = get_time_range_cfg_object_after_adjustment(finance_source_type_index, time_month_start, time_month_end);
+			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = get_time_range_cfg_object_after_adjustment(source_type_index, time_month_start, time_month_end);
 			if (time_range_cfg == null)
 			{
 				ret = FinanceRecorderCmnDef.RET_FAILURE_UNEXPECTED_VALUE;
 				break OUT;
 			}
-			time_range_table.put(finance_source_type_index, time_range_cfg);
+			time_range_table.put(source_type_index, time_range_cfg);
 		}
 		return ret;
 	}
@@ -228,8 +229,8 @@ OUT:
 			}
 //Get the type of data source
 			data_source = entry_arr[0];
-			int finance_source_type_index = Arrays.asList(FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST).indexOf(data_source);
-			if (finance_source_type_index == -1)
+			int source_type_index = Arrays.asList(FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST).indexOf(data_source);
+			if (source_type_index == -1)
 			{
 				FinanceRecorderCmnDef.format_error("Unknown data source type[%s] in config file", data_source);
 				ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
@@ -241,7 +242,7 @@ OUT:
 			if (field_list_str.equals(CONFIG_ALL_FIELD_STRING))
 			{
 // Start from 1; the date field should be ignored
-				for (int i = 1 ; i < FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[finance_source_type_index] ; i++)
+				for (int i = 1 ; i < FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index] ; i++)
 					field_list.add(i);
 			}
 			else
@@ -290,22 +291,22 @@ OUT:
 			}
 
 			FinanceRecorderCmnDef.format_debug("New entry for backup in config [%s %s %s:%s]", data_source, field_list_str, time_month_start, time_month_end);
-			source_field_table.put(finance_source_type_index, field_list);
+			source_field_table.put(source_type_index, field_list);
 //			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(time_month_start, time_month_end);
 ////Adjust the time range 
-//			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = get_time_range_cfg_object_after_adjustment(finance_source_type_index, time_month_start, time_month_end);
+//			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = get_time_range_cfg_object_after_adjustment(source_type_index, time_month_start, time_month_end);
 //			if (time_range_cfg == null)
 //			{
 //				ret = FinanceRecorderCmnDef.RET_FAILURE_UNEXPECTED_VALUE;
 //				break OUT;
 //			}
-			time_range_table.put(finance_source_type_index, new FinanceRecorderCmnClass.TimeRangeCfg(time_month_start, time_month_end));
+			time_range_table.put(source_type_index, new FinanceRecorderCmnClass.TimeRangeCfg(time_month_start, time_month_end));
 
 		}
 		return ret;
 	}
 
-	private short update_time_range_table_by_parameter(LinkedList<Integer> finance_source_type_index_list, String time_month_start, String time_month_end, HashMap<Integer,FinanceRecorderCmnClass.TimeRangeCfg> time_range_table)
+	private short update_time_range_table_by_parameter(LinkedList<Integer> source_type_index_list, String time_month_start, String time_month_end, HashMap<Integer,FinanceRecorderCmnClass.TimeRangeCfg> time_range_table)
 	{
 // Check the time of start time
 		if (FinanceRecorderCmnClass.TimeCfg.get_month_value_matcher(time_month_start) == null)
@@ -320,14 +321,14 @@ OUT:
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 		}
 
-		for (Integer finance_source_type_index : finance_source_type_index_list)
+		for (Integer source_type_index : source_type_index_list)
 		{
-			FinanceRecorderCmnDef.format_debug("New entry in config [%s %s:%s]", finance_source_type_index, time_month_start, time_month_end);
+			FinanceRecorderCmnDef.format_debug("New entry in config [%s %s:%s]", source_type_index, time_month_start, time_month_end);
 //			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(time_month_start, time_month_end);
-			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = get_time_range_cfg_object_after_adjustment(finance_source_type_index, time_month_start, time_month_end);
+			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = get_time_range_cfg_object_after_adjustment(source_type_index, time_month_start, time_month_end);
 			if (time_range_cfg == null)
 				return FinanceRecorderCmnDef.RET_FAILURE_UNEXPECTED_VALUE;
-			time_range_table.put(finance_source_type_index, time_range_cfg);
+			time_range_table.put(source_type_index, time_range_cfg);
 		}
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
@@ -353,7 +354,7 @@ OUT:
 		return update_time_range_table_by_config_file(filename, finance_source_time_range_table);
 	}
 
-	public short setup_time_range_table_by_parameter(LinkedList<Integer> finance_source_type_index_list, String time_month_start, String time_month_end)
+	public short setup_time_range_table_by_parameter(LinkedList<Integer> source_type_index_list, String time_month_start, String time_month_end)
 	{
 		if (finance_source_time_range_table != null)
 		{
@@ -361,7 +362,7 @@ OUT:
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 		finance_source_time_range_table = new HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg>();
-		return update_time_range_table_by_parameter(finance_source_type_index_list, time_month_start, time_month_end, finance_source_time_range_table);
+		return update_time_range_table_by_parameter(source_type_index_list, time_month_start, time_month_end, finance_source_time_range_table);
 	}
 
 	public short setup_backup_time_range_table_by_config_file(String filename)
@@ -375,7 +376,7 @@ OUT:
 		return update_time_range_table_by_config_file(filename, finance_backup_source_time_range_table);
 	}
 
-	public short setup_backup_time_range_table_by_parameter(LinkedList<Integer> finance_source_type_index_list, String time_month_start, String time_month_end)
+	public short setup_backup_time_range_table_by_parameter(LinkedList<Integer> source_type_index_list, String time_month_start, String time_month_end)
 	{
 		if (finance_backup_source_time_range_table != null)
 		{
@@ -383,7 +384,7 @@ OUT:
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 		finance_backup_source_time_range_table = new HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg>();
-		return update_time_range_table_by_parameter(finance_source_type_index_list, time_month_start, time_month_end, finance_backup_source_time_range_table);
+		return update_time_range_table_by_parameter(source_type_index_list, time_month_start, time_month_end, finance_backup_source_time_range_table);
 	}
 
 	private short parse_config()
@@ -472,106 +473,91 @@ OUT:
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	private short check_time_month_range_from_csv(int finance_source_type_index, StringBuilder csv_time_month_start_str_builder, StringBuilder csv_time_month_end_str_builder)
-	{
-		String command = String.format("ls %s | grep %s", FinanceRecorderCmnDef.DATA_ROOT_FOLDERPATH, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index]);
-		FinanceRecorderCmnDef.format_debug("Find CSV time range by command: %s", finance_source_type_index, command);
-		StringBuilder result_str_builder = new StringBuilder();
-		short ret = FinanceRecorderCmnDef.execute_shell_command(command, result_str_builder);
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			return ret;
-// Check the search result
-		String result_list_str = result_str_builder.toString();
-		if (result_list_str.isEmpty())
-		{
-			FinanceRecorderCmnDef.format_error("No %s CSV files are found", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finance_source_type_index]);
-			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
-		}
-// Find the csv time range from the result of shell command
-		String[] result_list = result_list_str.split("\n");
-		int result_list_len = result_list.length;
-//		Pattern csv_filename_pattern = Pattern.compile(String.format("%s([\\d]{6}).csv", FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[finance_source_type_index]));
-		Pattern csv_filename_pattern = Pattern.compile("([\\d]{6})");
-		Matcher csv_filename_start_matcher = csv_filename_pattern.matcher(result_list[0]);
-		if (!csv_filename_start_matcher.find())
-		{
-			FinanceRecorderCmnDef.format_error("Incorrect start time filename format: %s", result_list[0]);
-			return FinanceRecorderCmnDef.RET_FAILURE_UNEXPECTED_VALUE;
-		}
-		Matcher csv_filename_end_matcher = csv_filename_pattern.matcher(result_list[result_list_len - 1]);
-		if (!csv_filename_end_matcher.find())
-		{
-			FinanceRecorderCmnDef.format_error("Incorrect end time filename format: %s", result_list[result_list_len - 1]);
-			return FinanceRecorderCmnDef.RET_FAILURE_UNEXPECTED_VALUE;
-		}
-		String start_time_str = csv_filename_start_matcher.group(1);
-		String end_time_str = csv_filename_end_matcher.group(1);
-		int start_year = Integer.parseInt(start_time_str.substring(0, 4));
-		int start_month = Integer.parseInt(start_time_str.substring(4));
-		int end_year = Integer.parseInt(end_time_str.substring(0, 4));
-		int end_month = Integer.parseInt(end_time_str.substring(4));
-
-		csv_time_month_start_str_builder.append(String.format("%04d-%02d", start_year, start_month));
-		csv_time_month_end_str_builder.append(String.format("%04d-%02d", end_year, end_month));
-		FinanceRecorderCmnDef.format_debug("Time range from CSV: %s %s", csv_time_month_start_str_builder.toString(), csv_time_month_end_str_builder.toString());
-
-		return FinanceRecorderCmnDef.RET_SUCCESS;
-	}
-
-	private FinanceRecorderCmnClass.TimeRangeCfg get_time_range_cfg_object_after_adjustment(int finance_source_type_index, String time_month_start, String time_month_end)
-	{
-		StringBuilder csv_time_month_start_str_builder = new StringBuilder();
-		StringBuilder csv_time_month_end_str_builder = new StringBuilder();
-		short ret = check_time_month_range_from_csv(finance_source_type_index, csv_time_month_start_str_builder, csv_time_month_end_str_builder);
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			return null;
-		String month_start = time_month_start;
-		String month_end = time_month_end;
-		FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
-		try
-		{
-			java.util.Date csv_start_month_date = FinanceRecorderCmnDef.get_month_date(csv_time_month_start_str_builder.toString());
-			java.util.Date csv_end_month_date = FinanceRecorderCmnDef.get_month_date(csv_time_month_end_str_builder.toString());
-			java.util.Date start_month_date = FinanceRecorderCmnDef.get_month_date(time_month_start);
-			java.util.Date end_month_date = FinanceRecorderCmnDef.get_month_date(time_month_end);
-			if (start_month_date.before(csv_start_month_date))
-			{
-				FinanceRecorderCmnDef.format_warn("Out of range in %s! Change start month from %s to %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finance_source_type_index], time_month_start, csv_time_month_start_str_builder.toString());
-				month_start = csv_time_month_start_str_builder.toString();
-			}
-			if (end_month_date.after(csv_end_month_date))
-			{
-				FinanceRecorderCmnDef.format_warn("Out of range in %s! Change end month from %s to %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finance_source_type_index], time_month_end, csv_time_month_end_str_builder.toString());
-				month_end = csv_time_month_end_str_builder.toString();
-			}
-			time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(month_start, month_end);
-		}
-		catch (ParseException e)
-		{
-			FinanceRecorderCmnDef.format_error("Incorrect time format, due to: %s", e.toString());
-		}
-		catch (Exception e)
-		{
-			FinanceRecorderCmnDef.format_error("Error occur due to: %s", e.toString());
-		}
-
-		return time_range_cfg;
-	}
-
-	@Override
-	public short notify(short type)
-	{
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		switch (type)
-		{
-//		case StockRecorderCmnDef.NOTIFY_GET_DATA:
-//			break;
-		default:
-			ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
-			break;
-		}
-		return ret;
-	}
+//	private short check_time_month_range_from_csv(int source_type_index, StringBuilder csv_time_month_start_str_builder, StringBuilder csv_time_month_end_str_builder)
+//	{
+//		String command = String.format("ls %s | grep %s", FinanceRecorderCmnDef.DATA_ROOT_FOLDERPATH, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]);
+//		FinanceRecorderCmnDef.format_debug("Find CSV time range by command: %s", source_type_index, command);
+//		StringBuilder result_str_builder = new StringBuilder();
+//		short ret = FinanceRecorderCmnDef.execute_shell_command(command, result_str_builder);
+//		if (FinanceRecorderCmnDef.CheckFailure(ret))
+//			return ret;
+//// Check the search result
+//		String result_list_str = result_str_builder.toString();
+//		if (result_list_str.isEmpty())
+//		{
+//			FinanceRecorderCmnDef.format_error("No %s CSV files are found", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index]);
+//			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+//		}
+//// Find the csv time range from the result of shell command
+//		String[] result_list = result_list_str.split("\n");
+//		int result_list_len = result_list.length;
+////		Pattern csv_filename_pattern = Pattern.compile(String.format("%s([\\d]{6}).csv", FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]));
+//		Pattern csv_filename_pattern = Pattern.compile("([\\d]{6})");
+//		Matcher csv_filename_start_matcher = csv_filename_pattern.matcher(result_list[0]);
+//		if (!csv_filename_start_matcher.find())
+//		{
+//			FinanceRecorderCmnDef.format_error("Incorrect start time filename format: %s", result_list[0]);
+//			return FinanceRecorderCmnDef.RET_FAILURE_UNEXPECTED_VALUE;
+//		}
+//		Matcher csv_filename_end_matcher = csv_filename_pattern.matcher(result_list[result_list_len - 1]);
+//		if (!csv_filename_end_matcher.find())
+//		{
+//			FinanceRecorderCmnDef.format_error("Incorrect end time filename format: %s", result_list[result_list_len - 1]);
+//			return FinanceRecorderCmnDef.RET_FAILURE_UNEXPECTED_VALUE;
+//		}
+//		String start_time_str = csv_filename_start_matcher.group(1);
+//		String end_time_str = csv_filename_end_matcher.group(1);
+//		int start_year = Integer.parseInt(start_time_str.substring(0, 4));
+//		int start_month = Integer.parseInt(start_time_str.substring(4));
+//		int end_year = Integer.parseInt(end_time_str.substring(0, 4));
+//		int end_month = Integer.parseInt(end_time_str.substring(4));
+//
+//		csv_time_month_start_str_builder.append(String.format("%04d-%02d", start_year, start_month));
+//		csv_time_month_end_str_builder.append(String.format("%04d-%02d", end_year, end_month));
+//		FinanceRecorderCmnDef.format_debug("Time range from CSV: %s %s", csv_time_month_start_str_builder.toString(), csv_time_month_end_str_builder.toString());
+//
+//		return FinanceRecorderCmnDef.RET_SUCCESS;
+//	}
+//
+//	private FinanceRecorderCmnClass.TimeRangeCfg get_time_range_cfg_object_after_adjustment(int source_type_index, String time_month_start, String time_month_end)
+//	{
+//		StringBuilder csv_time_month_start_str_builder = new StringBuilder();
+//		StringBuilder csv_time_month_end_str_builder = new StringBuilder();
+//		short ret = check_time_month_range_from_csv(source_type_index, csv_time_month_start_str_builder, csv_time_month_end_str_builder);
+//		if (FinanceRecorderCmnDef.CheckFailure(ret))
+//			return null;
+//		String month_start = time_month_start;
+//		String month_end = time_month_end;
+//		FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
+//		try
+//		{
+//			java.util.Date csv_start_month_date = FinanceRecorderCmnDef.get_month_date(csv_time_month_start_str_builder.toString());
+//			java.util.Date csv_end_month_date = FinanceRecorderCmnDef.get_month_date(csv_time_month_end_str_builder.toString());
+//			java.util.Date start_month_date = FinanceRecorderCmnDef.get_month_date(time_month_start);
+//			java.util.Date end_month_date = FinanceRecorderCmnDef.get_month_date(time_month_end);
+//			if (start_month_date.before(csv_start_month_date))
+//			{
+//				FinanceRecorderCmnDef.format_warn("Out of range in %s! Change start month from %s to %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index], time_month_start, csv_time_month_start_str_builder.toString());
+//				month_start = csv_time_month_start_str_builder.toString();
+//			}
+//			if (end_month_date.after(csv_end_month_date))
+//			{
+//				FinanceRecorderCmnDef.format_warn("Out of range in %s! Change end month from %s to %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index], time_month_end, csv_time_month_end_str_builder.toString());
+//				month_end = csv_time_month_end_str_builder.toString();
+//			}
+//			time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(month_start, month_end);
+//		}
+//		catch (ParseException e)
+//		{
+//			FinanceRecorderCmnDef.format_error("Incorrect time format, due to: %s", e.toString());
+//		}
+//		catch (Exception e)
+//		{
+//			FinanceRecorderCmnDef.format_error("Error occur due to: %s", e.toString());
+//		}
+//
+//		return time_range_cfg;
+//	}
 
 	public short write()
 	{
@@ -579,8 +565,8 @@ OUT:
 		short ret;
 		for (Map.Entry<Integer, FinanceRecorderCmnClass.TimeRangeCfg> entry : finance_source_time_range_table.entrySet())
 		{
-			int finance_source_type_index = entry.getKey();
-			FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index));
+			int source_type_index = entry.getKey();
+			FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(source_type_index));
 			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = entry.getValue();
 
 			FinanceRecorderCmnDef.format_debug("Try to write data [%s %s] into MySQL......", finance_recorder_data_handler.get_description(), time_range_cfg.toString());
@@ -627,13 +613,13 @@ OUT:
 		ret = init_database_time_range_table();
 // Write the data into MySQL one by one
 		int data_name_list_length = FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST.length;
-		for (int finance_source_type_index = 0 ; finance_source_type_index < data_name_list_length ; finance_source_type_index++)
+		for (int source_type_index = 0 ; source_type_index < data_name_list_length ; source_type_index++)
 		{
 			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
 			try
 			{
-				time_range_cfg = database_time_range.get_source_type_time_range(finance_source_type_index);
-				FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index), src_folderpath);
+				time_range_cfg = database_time_range.get_source_type_time_range(source_type_index);
+				FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(source_type_index), src_folderpath);
 				FinanceRecorderCmnDef.format_debug("Try to restore data [%s %s] into MySQL......", finance_recorder_data_handler.get_description(), time_range_cfg.toString());
 	// Write the data into MySQL
 				ret = finance_recorder_data_handler.write_to_sql(time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single, FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_No);
@@ -642,7 +628,7 @@ OUT:
 			}
 			catch (IllegalArgumentException e)
 			{
-				FinanceRecorderCmnDef.format_debug("No data[%d] to restore, skipped...", finance_source_type_index);
+				FinanceRecorderCmnDef.format_debug("No data[%d] to restore, skipped...", source_type_index);
 			}
 		}
 		return FinanceRecorderCmnDef.RET_SUCCESS;
@@ -665,57 +651,6 @@ OUT:
 		return restore(restore_folderpath, restore_foldername);
 	}
 
-	private short get_time_range_slice(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, int slice_size, ArrayList<FinanceRecorderCmnClass.TimeRangeCfg> time_range_slice_cfg_list)
-	{
-		if (slice_size <= 1)
-		{
-			FinanceRecorderCmnDef.error("The Slice Size should be larger than 1");
-			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
-		}
-		int[] time_list = FinanceRecorderCmnClass.TimeRangeCfg.get_start_and_end_month_value_range(time_range_cfg);
-		if (time_list == null)
-		{
-			FinanceRecorderCmnDef.format_error("Incorrect time range format: %s",time_range_cfg.toString());
-			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
-		}
-		int year_start = time_list[0]; 
-		int month_start = time_list[1];
-		int year_end = time_list[2];
-		int month_end = time_list[3];
-
-		int year_cur_end = year_start;
-		int month_cur_end = month_start;
-		int month_offset = slice_size - 1;
-		int year_to_month_end = year_end * 12 + month_end;
-		while(true)
-		{
-			month_cur_end = month_start + month_offset;
-			year_cur_end = year_start;
-			while (month_cur_end > 12)
-			{
-				year_cur_end++;
-				month_cur_end -= 12;
-			}
-
-			int year_to_month_cur_end = year_cur_end * 12 + month_cur_end;
-			if (year_to_month_cur_end > year_to_month_end)
-			{
-				year_cur_end = year_end;
-				month_cur_end = month_end;
-			}
-			time_range_slice_cfg_list.add(new FinanceRecorderCmnClass.TimeRangeCfg(year_start, month_start, year_cur_end, month_cur_end));
-			if (year_cur_end == year_end && month_cur_end == month_end)
-				break;
-			month_start = month_start + slice_size;
-			while (month_start > 12)
-			{
-				year_start++;
-				month_start -= 12;
-			}
-		}
-		return FinanceRecorderCmnDef.RET_SUCCESS;
-	}
-	
 	public short write_by_multithread()
 	{
 		ThreadPoolExecutor executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(FinanceRecorderCmnDef.MAX_CONCURRENT_THREAD);
@@ -726,8 +661,8 @@ OUT:
 		{
 			for (Map.Entry<Integer, FinanceRecorderCmnClass.TimeRangeCfg> entry : finance_source_time_range_table.entrySet())
 			{
-				int finance_source_type_index = entry.getKey();
-//				FinanceRecorderWriter finance_recorder_data_handler = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index));
+				int source_type_index = entry.getKey();
+//				FinanceRecorderWriter finance_recorder_data_handler = new FinanceRecorderWriter(FinanceRecorderCmnDef.FinanceSourceType.valueOf(source_type_index));
 				FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = entry.getValue();
 // Split the time range into several smaller time range slice
 				ArrayList<FinanceRecorderCmnClass.TimeRangeCfg> time_range_slice_cfg_list = new ArrayList<FinanceRecorderCmnClass.TimeRangeCfg>();
@@ -738,9 +673,9 @@ OUT:
 				{
 // Setup the time range
 // Activate the task of writing data into SQL
-					FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index));
+					FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(source_type_index));
 //					FinanceRecorderCmnDef.format_debug("Try to write data [%s %04d%02d:%04d%02d] into MySQL......", finance_recorder_data_handler.get_description(), time_range_slice_cfg.get_start_time().get_year(), time_range_slice_cfg.get_start_time().get_month(), time_range_slice_cfg.get_end_time().get_year(), time_range_slice_cfg.get_end_time().get_month());
-					FinanceRecorderStockWriteSQLTask task = new FinanceRecorderStockWriteSQLTask(new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index)), time_range_slice_cfg);
+					FinanceRecorderStockWriteSQLTask task = new FinanceRecorderStockWriteSQLTask(new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(source_type_index)), time_range_slice_cfg);
 					Future<Integer> res = executor.submit(task);
 //					try{Thread.sleep(5);}
 //					catch (InterruptedException e){}
@@ -835,21 +770,21 @@ OUT:
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 //		FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
-		for (int finance_source_type_index = 0 ; finance_source_type_index < FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE ; finance_source_type_index++)
+		for (int source_type_index = 0 ; source_type_index < FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE ; source_type_index++)
 		{
-			LinkedList<Integer> query_field = query_set.get_index(finance_source_type_index);
+			LinkedList<Integer> query_field = query_set.get_index(source_type_index);
 			if (query_field.isEmpty())
 				continue;
 // Add to the result set
-			ret = result_set.add_set(finance_source_type_index, query_field);
+			ret = result_set.add_set(source_type_index, query_field);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 
-			FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index));
+			FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(source_type_index));
 			FinanceRecorderCmnDef.format_debug("Try to read data [%s %s] from MySQL......", finance_recorder_data_handler.get_description(), restrict_time_range_cfg.toString());
 // Format the SQL query command
 			StringBuilder field_cmd_builder = new StringBuilder();
-			ret = FinanceRecorderSQLClient.get_sql_field_command(finance_source_type_index, query_field, field_cmd_builder);
+			ret = FinanceRecorderSQLClient.get_sql_field_command(source_type_index, query_field, field_cmd_builder);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 // Read the data from MySQL
@@ -875,8 +810,8 @@ OUT:
 		for (Map.Entry<Integer, FinanceRecorderCmnClass.TimeRangeCfg> entry : finance_source_time_range_table.entrySet())
 		{
 //			LinkedList<String> data_list = new LinkedList<String>();
-			int finance_source_type_index = entry.getKey();
-			FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index));
+			int source_type_index = entry.getKey();
+			FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(source_type_index));
 			FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = entry.getValue();
 
 			FinanceRecorderCmnDef.format_debug("Try to read data [%s %s] from MySQL......", finance_recorder_data_handler.get_description(), time_range_cfg.toString());
@@ -890,19 +825,19 @@ OUT:
 		return ret;
 	}
 
-	public short clear(int finance_source_type_index)
+	public short clear(int source_type_index)
 	{
-		FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index));
+		FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(source_type_index));
 		FinanceRecorderCmnDef.format_debug("Try to delete database [%s]......", finance_recorder_data_handler.get_description());
 		return finance_recorder_data_handler.delete_sql();
 	}
 
-	public short clear_multi(LinkedList<Integer> finance_source_type_index_list)
+	public short clear_multi(LinkedList<Integer> source_type_index_list)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		for (Integer finance_source_type_index : finance_source_type_index_list)
+		for (Integer source_type_index : source_type_index_list)
 		{
-			ret = clear(finance_source_type_index);
+			ret = clear(source_type_index);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 		}
@@ -913,9 +848,9 @@ OUT:
 	public short clear_all()
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		for (int finance_source_type_index = 0 ; finance_source_type_index < FinanceRecorderCmnDef.FinanceSourceType.values().length ; finance_source_type_index++)
+		for (int source_type_index = 0 ; source_type_index < FinanceRecorderCmnDef.FinanceSourceType.values().length ; source_type_index++)
 		{
-			ret = clear(finance_source_type_index);
+			ret = clear(source_type_index);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 		}
@@ -929,13 +864,13 @@ OUT:
 		class DatabaseStartDateCfg implements Comparable
 		{
 			public java.util.Date database_start_date;
-			public int finance_source_type_index;
+			public int source_type_index;
 //			private LinkedList<String> date_list;
 
 			public DatabaseStartDateCfg(java.util.Date date, int index)
 			{
 				database_start_date = date;
-				finance_source_type_index = index;
+				source_type_index = index;
 //				date_list = new LinkedList<String>();
 			}
 			public final java.util.Date get_start_date(){return database_start_date;}
@@ -947,7 +882,7 @@ OUT:
 			@Override
 			public String toString()
 			{
-				return String.format("%s: %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[finance_source_type_index], FinanceRecorderCmnDef.get_date_str(database_start_date));
+				return String.format("%s: %s", FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index], FinanceRecorderCmnDef.get_date_str(database_start_date));
 			}
 		};
 
@@ -955,9 +890,9 @@ OUT:
 		ArrayList<DatabaseStartDateCfg> database_start_date_cfg_list = new ArrayList<DatabaseStartDateCfg>();
 // Get the time range for each database
 		String total_time_range_str = "";
-		for (int finance_source_type_index = 0 ; finance_source_type_index < FinanceRecorderCmnDef.FinanceSourceType.values().length ; finance_source_type_index++)
+		for (int source_type_index = 0 ; source_type_index < FinanceRecorderCmnDef.FinanceSourceType.values().length ; source_type_index++)
 		{
-			FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index));
+			FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(source_type_index));
 			ret = finance_recorder_data_handler.find_database_time_range();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
@@ -966,7 +901,7 @@ OUT:
 			try
 			{
 				java.util.Date date_str = FinanceRecorderCmnDef.get_date(database_start_date_builder.toString());
-				database_start_date_cfg_list.add(new DatabaseStartDateCfg(date_str, finance_source_type_index));
+				database_start_date_cfg_list.add(new DatabaseStartDateCfg(date_str, source_type_index));
 			}
 			catch (ParseException e)
 			{
@@ -1009,12 +944,12 @@ OUT:
 //		LinkedList<String> data_base_list = null;
 		String[] data_base_array = null;
 		int data_base_array_size = 0;
-		int data_base_finance_source_type_index = -1;
+		int data_base_source_type_index = -1;
 //		database_start_date_cfg_list.remove(0);
 		String base_database_print_str = null;
 		for (DatabaseStartDateCfg database_start_date_cfg : database_start_date_cfg_list)
 		{
-			FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(database_start_date_cfg.finance_source_type_index));
+			FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(database_start_date_cfg.source_type_index));
 			if (data_base_array == null)
 			{
 //				data_base_list = new LinkedList<String>();
@@ -1022,7 +957,7 @@ OUT:
 //				ret = finance_recorder_data_handler.find_database_time_range();
 				ret = finance_recorder_data_handler.read_from_sql(
 						new FinanceRecorderCmnClass.TimeRangeCfg(FinanceRecorderCmnDef.get_date_str(database_start_date_cfg.database_start_date), FinanceRecorderCmnDef.get_time_date_today()), 
-						FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[database_start_date_cfg.finance_source_type_index][0], 
+						FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[database_start_date_cfg.source_type_index][0], 
 						base_result_set
 					);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -1033,14 +968,14 @@ OUT:
 				date_data_array.toArray(data_base_array);
 				base_database_print_str = String.format("The base database: %s\n", finance_recorder_data_handler.get_description());
 				data_base_array_size = data_base_array.length;
-				data_base_finance_source_type_index = database_start_date_cfg.finance_source_type_index;
+				data_base_source_type_index = database_start_date_cfg.source_type_index;
 			}
 			else
 			{
 				FinanceRecorderCmnClass.ResultSet compare_result_set = new FinanceRecorderCmnClass.ResultSet();
 				ret = finance_recorder_data_handler.read_from_sql(
 						new FinanceRecorderCmnClass.TimeRangeCfg(FinanceRecorderCmnDef.get_date_str(database_start_date_cfg.database_start_date), FinanceRecorderCmnDef.get_time_date_today()), 
-						FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[database_start_date_cfg.finance_source_type_index][0],
+						FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[database_start_date_cfg.source_type_index][0],
 						compare_result_set
 					);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -1080,9 +1015,9 @@ OUT:
 						base_database_print_str = null;
 					}
 					String err_result = String.format("The size in NOT identical, %s: %d, %s: %d",
-						FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[database_start_date_cfg.finance_source_type_index],
+						FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[database_start_date_cfg.source_type_index],
 						data_compare_array_size, 
-						FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[data_base_finance_source_type_index],
+						FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[data_base_source_type_index],
 						sub_data_base_array_size
 					);
 					FinanceRecorderCmnDef.format_error(err_result);
@@ -1098,7 +1033,7 @@ OUT:
 						while (compare_data.compareTo(base_data) != 0)
 						{
 							String err_result_detail = String.format("Date NOT Found %s: %s",
-									FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[database_start_date_cfg.finance_source_type_index],
+									FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[database_start_date_cfg.source_type_index],
 									base_data
 								);
 							FinanceRecorderCmnDef.format_error(err_result_detail);
@@ -1118,9 +1053,9 @@ OUT:
 //						base_database_print_str = null;
 //					}
 //					String err_result = String.format("The size in NOT identical, %s: %d, %s: %d",
-//						FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[database_start_date_cfg.finance_source_type_index],
+//						FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[database_start_date_cfg.source_type_index],
 //						compare_result_set.size(), 
-//						FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[data_base_finance_source_type_index],
+//						FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[data_base_source_type_index],
 //						sub_data_base_list.size()
 //					);
 //					FinanceRecorderCmnDef.format_error(err_result);
@@ -1138,7 +1073,7 @@ OUT:
 //						while (compare_data.compareTo(base_data) != 0)
 //						{
 //							String err_result_detail = String.format("Date NOT Found %s: %s",
-//									FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[database_start_date_cfg.finance_source_type_index], 
+//									FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[database_start_date_cfg.source_type_index], 
 //									base_data
 //								);
 //							FinanceRecorderCmnDef.format_error(err_result_detail);
@@ -1154,8 +1089,8 @@ OUT:
 //				{
 //					FinanceRecorderCmnDef.format_error(
 //						"Date in Database(%s, %s) are NOT identical", 
-//						FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[data_base_finance_source_type_index],
-//						FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[database_start_date_cfg.finance_source_type_index]
+//						FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[data_base_source_type_index],
+//						FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[database_start_date_cfg.source_type_index]
 //					);
 //					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_DATA_NOT_CONSISTENT;
 //				}
@@ -1400,11 +1335,11 @@ OUT:
 		{
 			for (Map.Entry<Integer, FinanceRecorderCmnClass.TimeRangeCfg> entry : finance_backup_source_time_range_table.entrySet())
 			{
-				int finance_source_type_index = entry.getKey();
+				int source_type_index = entry.getKey();
 				FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = entry.getValue();
 // Restrict the search time range
 				FinanceRecorderCmnClass.TimeRangeCfg restrict_time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(time_range_cfg.get_start_time_str(), time_range_cfg.get_end_time_str());
-				database_time_range.restrict_time_range(finance_source_type_index, restrict_time_range_cfg);
+				database_time_range.restrict_time_range(source_type_index, restrict_time_range_cfg);
 
 // Split the time range into several smaller time range slice
 				ArrayList<FinanceRecorderCmnClass.TimeRangeCfg> time_range_slice_cfg_list = new ArrayList<FinanceRecorderCmnClass.TimeRangeCfg>();
@@ -1415,9 +1350,9 @@ OUT:
 				for (FinanceRecorderCmnClass.TimeRangeCfg time_range_slice_cfg : time_range_slice_cfg_list)
 				{
 // Backup the data from MySQL
-					FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index));
+					FinanceRecorderMarketDataHandler finance_recorder_data_handler = new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(source_type_index));
 					FinanceRecorderCmnDef.format_debug("Try to backup data [%s %04d%02d:%04d%02d] from MySQL......", finance_recorder_data_handler.get_description(), time_range_slice_cfg.get_start_time().get_year(), time_range_slice_cfg.get_start_time().get_month(), time_range_slice_cfg.get_end_time().get_year(), time_range_slice_cfg.get_end_time().get_month());
-					FinanceRecorderBackupSQLTask task = new FinanceRecorderBackupSQLTask(new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(finance_source_type_index)), time_range_slice_cfg, csv_backup_foldername, finance_backup_source_field_table.get(finance_source_type_index));
+					FinanceRecorderStockBackupSQLTask task = new FinanceRecorderStockBackupSQLTask(new FinanceRecorderMarketDataHandler(FinanceRecorderCmnDef.FinanceSourceType.valueOf(source_type_index)), time_range_slice_cfg, csv_backup_foldername, finance_backup_source_field_table.get(source_type_index));
 					Future<Integer> res = executor.submit(task);
 					res_list.add(res);
 				}

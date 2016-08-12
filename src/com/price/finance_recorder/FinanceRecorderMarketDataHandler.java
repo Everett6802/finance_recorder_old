@@ -238,7 +238,7 @@ OUT:
 		return read_from_sql(whole_field_query_set, time_range_cfg, result_set_map);
 	}
 
-	public short write_into_csv(FinanceRecorderCmnClass.ResultSetMap result_set_map)
+	public short write_into_csv(FinanceRecorderCmnClass.ResultSetMap result_set_map, String csv_root_folder_path)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		FinanceRecorderCmnDef.ResultSetDataUnit data_unit = result_set_map.get_data_unit();
@@ -260,7 +260,7 @@ OUT:
 			}
 			for (int source_type_index : source_type_list)
 			{
-				FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderMarketDataHandler.get_csv_filepath(FinanceRecorderCmnDef.CSV_FILE_ROOT_FOLDERPATH, source_type_index));
+				FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderMarketDataHandler.get_csv_filepath(csv_root_folder_path, source_type_index));
 //Assemble the data and write into CSV
 				ArrayList<String> csv_data_list = result_set.to_string_array(source_type_index);
 				csv_writer.set_write_data(csv_data_list);

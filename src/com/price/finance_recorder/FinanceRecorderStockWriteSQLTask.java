@@ -29,7 +29,7 @@ public class FinanceRecorderStockWriteSQLTask implements Callable<Integer>
 		FinanceRecorderCmnDef.format_error("The thread [%s] of stock write Starts......", thread_description);
 		short ret = writer.transfrom_csv_to_sql();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			FinanceRecorderCmnDef.format_error("The thread [%s] of stock write SQL FAIL, due to: %s", thread_description, FinanceRecorderCmnDef.GetErrorDescription(ret));
+			FinanceRecorderCmnDef.format_error("The thread [%s] of transform stock CSV to SQL FAIL, due to: %s", thread_description, FinanceRecorderCmnDef.GetErrorDescription(ret));
 		return Integer.valueOf(ret);
 //		FinanceRecorderCmnDef.format_debug("The thread for accessing [%s %s]", writer.get_description(), time_range_cfg.toString());
 //		short ret = writer.write_to_sql(time_range_cfg, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Multiple, FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_Yes);

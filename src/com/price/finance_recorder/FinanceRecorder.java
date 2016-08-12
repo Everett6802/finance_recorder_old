@@ -11,7 +11,7 @@ public class FinanceRecorder
 {
 	enum ActionType{Action_None, Action_Read, Action_Write, Action_ReadWrite};
 	static final String PARAM_SPLIT = ",";
-	static FinanceRecorderMgr finance_recorder_mgr = new FinanceRecorderMgr();
+	static FinanceRecorderMgrOld finance_recorder_mgr = new FinanceRecorderMgrOld();
 
 	public static void main(String args[])
 	{
