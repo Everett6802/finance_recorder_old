@@ -1,8 +1,6 @@
-package com.price.finance_recorder;
+package com.price.finance_recorder_base;
 
-import java.io.*;
 import java.util.*;
-
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
@@ -35,6 +33,39 @@ public class FinanceRecorderWorkdayCalendar
 		} 
 	}
 
+	public static class TraverseEntry implements Iterable<HashMap<Integer, ArrayList<LinkedList<Integer>>>>
+	{
+		private HashMap<Integer, ArrayList<LinkedList<Integer>>> workday_map = null;
+
+		public TraverseEntry(HashMap<Integer, ArrayList<LinkedList<Integer>>> workday_map_input)
+		{
+			workday_map = workday_map_input;
+		}
+		@Override
+		public Iterator<HashMap<Integer, ArrayList<LinkedList<Integer>>>> iterator()
+		{
+			Iterator<HashMap<Integer, ArrayList<LinkedList<Integer>>>> it = new Iterator<HashMap<Integer, ArrayList<LinkedList<Integer>>>>()
+			{
+//				private int array_size = company_profile_sorted_array.size();
+				private int cur_index = 0;
+				@Override
+				public boolean hasNext()
+				{
+					return cur_index < array_size;
+				}
+				@Override
+				public ArrayList<String> next()
+				{
+					return company_profile_sorted_array.get(cur_index++).profile_element_array;
+				}
+				@Override
+				public void remove() {throw new UnsupportedOperationException();}
+			};
+			return it;
+		}
+	};
+
+
 	private FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
 	private HashMap<Integer, ArrayList<LinkedList<Integer>>> workday_map = new HashMap<Integer, ArrayList<LinkedList<Integer>>>();
 	private ArrayList<Integer> workday_year_sort_array = new ArrayList<Integer>();
@@ -43,117 +74,205 @@ public class FinanceRecorderWorkdayCalendar
 	private short initialize()
 	{
 // Open the file
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		BufferedReader reader = null;
-		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
-		FinanceRecorderCmnDef.format_debug("Try to parse the configuration in %s", conf_filepath);
-// Check the file exists or not
-		File fp = new File(conf_filepath);
-		if (!fp.exists())
-		{
-			FinanceRecorderCmnDef.format_error("The configration file[%s] does NOT exist", conf_filepath);
-			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
-		}
-// Try to parse the content of the config file
-		try
-		{
-			reader = new BufferedReader(new FileReader(fp));
-			String buf;
-			boolean param_start = false;
-			OUT:
-			while ((buf = reader.readLine()) != null)
-			{
-				if (buf.length() == 0)
-					continue;
-				if (time_range_cfg == null)
-				{
-					int index = buf.indexOf(' ');
-					if (index == -1)
-					{
-						FinanceRecorderCmnDef.format_error("Incorrect time format in %s: %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, buf);
-						return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
-					}
-					String start_time_str = buf.substring(0, index);
-					String end_time_str = buf.substring(index + 1);
-					time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(start_time_str, end_time_str);
-					FinanceRecorderCmnDef.format_debug("Find the time range [%s %s] in %s", start_time_str, end_time_str, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
-				}
-				else
-				{
-					int year_end_index = buf.indexOf(']');
-					if (year_end_index == -1)
-					{
-						FinanceRecorderCmnDef.format_error("Incorrect data format in %s: %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, buf);
-						return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
-					}
-					int year = Integer.valueOf(buf.substring(1, year_end_index));
-					workday_year_sort_array.add(year);
-
-					ArrayList<LinkedList<Integer>> month_workday_array = new ArrayList<LinkedList<Integer>>();
-					String[] month_workday_array_str =  buf.substring(year_end_index + 1).split(";");
-					for (int i = 0 ; i < 12 ; i++)
-					{
-						LinkedList<Integer> workday_day_list = new LinkedList<Integer>();
-//						workday_day_list.clear();
-						month_workday_array.add(workday_day_list);
-					}
-
-					for (String month_workday_str : month_workday_array_str)
-					{
-						String[] month_tmp = month_workday_str.split(":");
-						if (month_tmp.length != 2)
-						{
-							FinanceRecorderCmnDef.format_error("Incorrect month workday list: %s", month_workday_str);
-							ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
-							break OUT;
-						}
-						int month = Integer.parseInt(month_tmp[0]);
-						if (month < 1 || month > 12)
-						{
-							FinanceRecorderCmnDef.format_error("Incorrect month value: %d", month);
-							ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
-							break OUT;
-						}
-						String[] workday_list = month_tmp[1].split(",");
-
-						LinkedList<Integer> workday_day_list = month_workday_array.get(month - 1);
-						for (String workday : workday_list)
-						{
-							workday_day_list.add(Integer.parseInt(workday));
-						}
-//						if (month != month_workday_array.size())
+		short ret = parse_config();
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+//		BufferedReader reader = null;
+//		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
+//		FinanceRecorderCmnDef.format_debug("Try to parse the configuration in %s", conf_filepath);
+//// Check the file exists or not
+//		File fp = new File(conf_filepath);
+//		if (!fp.exists())
+//		{
+//			FinanceRecorderCmnDef.format_error("The configration file[%s] does NOT exist", conf_filepath);
+//			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+//		}
+//// Try to parse the content of the config file
+//		try
+//		{
+//			reader = new BufferedReader(new FileReader(fp));
+//			String buf;
+////			boolean param_start = false;
+//			OUT:
+//			while ((buf = reader.readLine()) != null)
+//			{
+//				if (buf.length() == 0)
+//					continue;
+//				if (time_range_cfg == null)
+//				{
+//					int index = buf.indexOf(' ');
+//					if (index == -1)
+//					{
+//						FinanceRecorderCmnDef.format_error("Incorrect time format in %s: %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, buf);
+//						return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+//					}
+//					String start_time_str = buf.substring(0, index);
+//					String end_time_str = buf.substring(index + 1);
+//					time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(start_time_str, end_time_str);
+//					FinanceRecorderCmnDef.format_debug("Find the time range [%s %s] in %s", start_time_str, end_time_str, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
+//				}
+//				else
+//				{
+//					int year_end_index = buf.indexOf(']');
+//					if (year_end_index == -1)
+//					{
+//						FinanceRecorderCmnDef.format_error("Incorrect data format in %s: %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, buf);
+//						return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+//					}
+//					int year = Integer.valueOf(buf.substring(1, year_end_index));
+//					workday_year_sort_array.add(year);
+//
+//					ArrayList<LinkedList<Integer>> month_workday_array = new ArrayList<LinkedList<Integer>>();
+//					String[] month_workday_array_str =  buf.substring(year_end_index + 1).split(";");
+//					for (int i = 0 ; i < 12 ; i++)
+//					{
+//						LinkedList<Integer> workday_day_list = new LinkedList<Integer>();
+////						workday_day_list.clear();
+//						month_workday_array.add(workday_day_list);
+//					}
+//
+//					for (String month_workday_str : month_workday_array_str)
+//					{
+//						String[] month_tmp = month_workday_str.split(":");
+//						if (month_tmp.length != 2)
 //						{
-//							FinanceRecorderCmnDef.format_error("Incorrect month, expected: %d, actual: %d", month, month_workday_array.size());
+//							FinanceRecorderCmnDef.format_error("Incorrect month workday list: %s", month_workday_str);
 //							ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 //							break OUT;
 //						}
-					}
-					workday_map.put(year, month_workday_array);
-				}
-			}
-		}
-		catch (FileNotFoundException ex)
+//						int month = Integer.parseInt(month_tmp[0]);
+//						if (month < 1 || month > 12)
+//						{
+//							FinanceRecorderCmnDef.format_error("Incorrect month value: %d", month);
+//							ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+//							break OUT;
+//						}
+//						String[] workday_list = month_tmp[1].split(",");
+//
+//						LinkedList<Integer> workday_day_list = month_workday_array.get(month - 1);
+//						for (String workday : workday_list)
+//						{
+//							workday_day_list.add(Integer.parseInt(workday));
+//						}
+////						if (month != month_workday_array.size())
+////						{
+////							FinanceRecorderCmnDef.format_error("Incorrect month, expected: %d, actual: %d", month, month_workday_array.size());
+////							ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+////							break OUT;
+////						}
+//					}
+//					workday_map.put(year, month_workday_array);
+//				}
+//			}
+//		}
+//		catch (FileNotFoundException ex)
+//		{
+//			FinanceRecorderCmnDef.format_error("The config file[%s] does NOT exist", conf_filepath);
+//			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+//		}
+//		catch (IOException ex)
+//		{
+//			FinanceRecorderCmnDef.format_error("Error occur due to %s", ex.toString());
+//			ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
+//		}
+//		finally 
+//		{
+//// Close the file
+//			if (reader != null)
+//			{
+//				try 
+//				{
+//					reader.close();
+//				}
+//				catch (IOException e){}// nothing to do here except log the exception
+//			}
+//		}
+//		Collections.sort(workday_year_sort_array);
+//		workday_year_sort_array_size = workday_year_sort_array.size();
+		return ret;
+	}
+
+	private short parse_config()
+	{
+		LinkedList<String> config_line_list = new LinkedList<String>();
+		short ret = FinanceRecorderCmnDef.get_config_file_lines(FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, config_line_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;// Open the file
+
+// Try to parse the content of the config file
+		for (String config_line : config_line_list)
 		{
-			FinanceRecorderCmnDef.format_error("The config file[%s] does NOT exist", conf_filepath);
-			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
-		}
-		catch (IOException ex)
-		{
-			FinanceRecorderCmnDef.format_error("Error occur due to %s", ex.toString());
-			ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
-		}
-		finally 
-		{
-// Close the file
-			if (reader != null)
+			if (config_line.length() == 0)
+				continue;
+			if (time_range_cfg == null)
 			{
-				try 
+// Find the time range of the workday calendar in the first line
+				int index = config_line.indexOf(' ');
+				if (index == -1)
 				{
-					reader.close();
+					FinanceRecorderCmnDef.format_error("Incorrect time format in %s: %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, config_line);
+					return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 				}
-				catch (IOException e){}// nothing to do here except log the exception
+				String start_time_str = config_line.substring(0, index);
+				String end_time_str = config_line.substring(index + 1);
+				time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(start_time_str, end_time_str);
+				FinanceRecorderCmnDef.format_debug("Find the time range [%s %s] in %s", start_time_str, end_time_str, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
+			}
+			else
+			{
+// Parse the data in each year
+				int year_end_index = config_line.indexOf(']');
+				if (year_end_index == -1)
+				{
+					FinanceRecorderCmnDef.format_error("Incorrect data format in %s: %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, config_line);
+					return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+				}
+				int year = Integer.valueOf(config_line.substring(1, year_end_index));
+				workday_year_sort_array.add(year);
+
+				ArrayList<LinkedList<Integer>> month_workday_array = new ArrayList<LinkedList<Integer>>();
+				String[] month_workday_array_str =  config_line.substring(year_end_index + 1).split(";");
+				for (int i = 0 ; i < 12 ; i++)
+				{
+					LinkedList<Integer> workday_day_list = new LinkedList<Integer>();
+//					workday_day_list.clear();
+					month_workday_array.add(workday_day_list);
+				}
+// Parse the date in each month
+				for (String month_workday_str : month_workday_array_str)
+				{
+					String[] month_tmp = month_workday_str.split(":");
+					if (month_tmp.length != 2)
+					{
+						FinanceRecorderCmnDef.format_error("Incorrect month workday list: %s", month_workday_str);
+						ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+						break;
+					}
+					int month = Integer.parseInt(month_tmp[0]);
+					if (month < 1 || month > 12)
+					{
+						FinanceRecorderCmnDef.format_error("Incorrect month value: %d", month);
+						ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+						break;
+					}
+					String[] workday_list = month_tmp[1].split(",");
+// Parse each date in a month
+					LinkedList<Integer> workday_day_list = month_workday_array.get(month - 1);
+					for (String workday : workday_list)
+					{
+						workday_day_list.add(Integer.parseInt(workday));
+					}
+//					if (month != month_workday_array.size())
+//					{
+//						FinanceRecorderCmnDef.format_error("Incorrect month, expected: %d, actual: %d", month, month_workday_array.size());
+//						ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+//						break OUT;
+//					}
+				}
+				workday_map.put(year, month_workday_array);
 			}
 		}
+
 		Collections.sort(workday_year_sort_array);
 		workday_year_sort_array_size = workday_year_sort_array.size();
 		return ret;
@@ -164,24 +283,24 @@ public class FinanceRecorderWorkdayCalendar
 		return FinanceRecorderCmnClass.TimeRangeCfg.time_in_range(time_range_cfg, year, month, day);
 	}
 
-	private boolean check_in_range(final FinanceRecorderCmnClass.TimeCfg time_cfg)
-	{
-		return FinanceRecorderCmnClass.TimeRangeCfg.time_in_range(time_range_cfg, time_cfg);
-	}
-
-	private boolean check_greater_than_start(int year, int month, int day)
-	{
-		FinanceRecorderCmnClass.TimeCfg time_cfg = new FinanceRecorderCmnClass.TimeCfg(year, month, day);
-		boolean check = check_greater_than_start(time_cfg);
-		return check;
-	}
-
-	private boolean check_greater_than_start(final FinanceRecorderCmnClass.TimeCfg time_cfg)
-	{
-		if (time_range_cfg.get_start_time() == null)
-			throw new RuntimeException("The start time in time_range_cfg should NOT be null");
-		return (FinanceRecorderCmnClass.TimeCfg.get_int_value(time_cfg) >= FinanceRecorderCmnClass.TimeCfg.get_int_value(time_range_cfg.get_start_time()));
-	}
+//	private boolean check_in_range(final FinanceRecorderCmnClass.TimeCfg time_cfg)
+//	{
+//		return FinanceRecorderCmnClass.TimeRangeCfg.time_in_range(time_range_cfg, time_cfg);
+//	}
+//
+//	private boolean check_greater_than_start(int year, int month, int day)
+//	{
+//		FinanceRecorderCmnClass.TimeCfg time_cfg = new FinanceRecorderCmnClass.TimeCfg(year, month, day);
+//		boolean check = check_greater_than_start(time_cfg);
+//		return check;
+//	}
+//
+//	private boolean check_greater_than_start(final FinanceRecorderCmnClass.TimeCfg time_cfg)
+//	{
+//		if (time_range_cfg.get_start_time() == null)
+//			throw new RuntimeException("The start time in time_range_cfg should NOT be null");
+//		return (FinanceRecorderCmnClass.TimeCfg.get_int_value(time_cfg) >= FinanceRecorderCmnClass.TimeCfg.get_int_value(time_range_cfg.get_start_time()));
+//	}
 
 	private boolean check_less_than_end(int year, int month, int day)
 	{
@@ -200,7 +319,6 @@ public class FinanceRecorderWorkdayCalendar
 	private boolean is_workday(int year, int month, int day)
 	{
 		int[] date_index_list = new int[3];
-
 		return FinanceRecorderCmnDef.CheckSuccess(find_data_pos(year, month, day, date_index_list, TRAVERSE_SEARCH_TYPE.TRAVERSE_SEARCH_EQUAL));
 	}
 
@@ -476,7 +594,7 @@ public class FinanceRecorderWorkdayCalendar
 		boolean first_month = true;
 		int start_year_index = start_year_key - workday_year_sort_array.get(0);
 		int workday_array_count = 0;
-		int day_deque_size;
+//		int day_deque_size;
 		OUT:
 		for (int year_index = start_year_index ; year_index < workday_year_sort_array_size ; year_index++)
 		{

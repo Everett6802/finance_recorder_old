@@ -1,4 +1,4 @@
-package com.price.finance_recorder;
+package com.price.finance_recorder_base;
 
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 

@@ -1,298 +1,825 @@
 package com.price.finance_recorder_cmn;
 
 import java.util.*;
-//import java.util.Map.Entry;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+//import java.util.regex.Pattern;
 
 
 public class FinanceRecorderCmnClass 
 {
-	public static class TimeCfg
+	public static abstract class FinanceTimeBase
 	{
-		enum TimeType{TIME_MONTH, TIME_DATE};
-//		private static final String DELIM = "-";
-		private TimeType time_type;
-		private int year;
+		protected int year;
+		protected String time_description = null;
+
+		public FinanceTimeBase()
+		{
+			
+		}
+
+		protected abstract int get_value();
+		public abstract int[] get_time_value_list();
+		public abstract FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit();
+	};
+
+	public static class FinanceDate extends FinanceTimeBase implements Comparable
+	{
+		static public void check_value_range(int year, int month, int day)
+		{
+// Check Year Range
+			FinanceRecorderCmnDef.check_year_range(year);
+// Check Month Range
+			FinanceRecorderCmnDef.check_month_range(month);
+// Check Month Range
+			FinanceRecorderCmnDef.check_day_range(day, year, month);
+		}
+
 		private int month;
 		private int day;
-		private String time_str;
 
-		public static int get_int_value(int year, int month, int day)
+		public FinanceDate(int in_year, int in_month, int in_day)
 		{
-			return ((year & 0xFFFF) << 16) | ((month & 0xFF) << 8) | (day & 0xFF);
+			year = in_year;
+			month = in_month;
+			day = in_day;
 		}
-		public static int get_int_value(String time_str)
+		public FinanceDate(String finance_date_str)
 		{
-			int[] data = get_date_value(time_str);
-			assert data != null : String.format("Unsupported time format: %s", time_str);
-			return ((data[0] & 0xFFFF) << 16) | ((data[1] & 0xFF) << 8) | (data[2] & 0xFF);
+			int[] value = FinanceRecorderCmnDef.get_date_value_list_from_str(finance_date_str);
+			year = value[0];
+			month = value[1];
+			day = value[2];
 		}
-		public static int get_int_value(TimeCfg time_cfg)
+		public FinanceDate(FinanceDate another)
 		{
-			return get_int_value(time_cfg.get_year(), time_cfg.get_month(), time_cfg.get_day());
-		}
-
-		private static Matcher get_time_value_matcher(String time_str, String search_pattern)
-		{
-	// Time Format: yyyy-mm; Ex: 2015-09
-	// Time Format: yyyy-MM-dd; Ex: 2015-09-04		
-			Pattern pattern = Pattern.compile(search_pattern);
-			Matcher matcher = pattern.matcher(time_str);
-			if (!matcher.find())
-			{
-//				FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
-				return null;
-			}
-			return matcher;
+			year = another.year;
+			month = another.month;
+			day = another.day;
 		}
 
-		public static Matcher get_month_value_matcher(String time_str){return get_time_value_matcher(time_str, "([\\d]{4})-([\\d]{1,2})");}
-		public static Matcher get_date_value_matcher(String time_str){return get_time_value_matcher(time_str, "([\\d]{4})-([\\d]{1,2})-([\\d]{1,2})");}
-
-		public static int[] get_month_value(String time_str)
+		protected int get_value()
 		{
-			Matcher month_matcher = get_month_value_matcher(time_str);
-			if (month_matcher == null)
-			{
-//				FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
-				return null;
-			}
-			int year = Integer.valueOf(month_matcher.group(1));
-			int month = Integer.valueOf(month_matcher.group(2));
-
-			return new int[]{year, month};
+			return (year << 12 | month << 8 | day);
 		}
 
-		public static int[] get_date_value(String time_str)
+		public int[] get_time_value_list()
 		{
-			Matcher date_matcher = get_date_value_matcher(time_str);
-			if (date_matcher == null)
-			{
-//				FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
-				return null;
-			}
-			int year = Integer.valueOf(date_matcher.group(1));
-			int month = Integer.valueOf(date_matcher.group(2));
-			int day = Integer.valueOf(date_matcher.group(3));
-
 			return new int[]{year, month, day};
 		}
 
-		public TimeCfg(String cur_time_str) // Format: "2015-09" or "2015-09-04"
-		{
-			time_str = String.format("%s", cur_time_str);
-			int[] date_list = get_date_value(cur_time_str);
-			if (date_list != null)
-			{
-// Try to parse the date format
-				year = date_list[0];
-				month = date_list[1];
-				day = date_list[2];
-				time_type = TimeType.TIME_DATE;
-			}
-			else
-			{
-				int[] month_list = get_month_value(cur_time_str);
-				if (month_list == null)
-				{
-//					assert false : String.format("Incorrect time format: %s", cur_time_str);
-					throw new IllegalArgumentException(String.format("Incorrect time format: %s", cur_time_str));
-				}
-// Try to parse the month format
-				year = month_list[0];
-				month = month_list[1];
-				time_type = TimeType.TIME_MONTH;
-			}
-		}
+		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Date;}
 
-		public TimeCfg(int cur_year, int cur_month)
-		{
-			year = cur_year;
-			month = cur_month;
-			day = 0;
-			time_str = String.format("%04d-%02d", year, month);
-			time_type = TimeType.TIME_MONTH;
-		}
-
-		public TimeCfg(int cur_year, int cur_month, int cur_day)
-		{
-			year = cur_year;
-			month = cur_month;
-			day = cur_day;
-			time_str = String.format("%04d-%02d-%02d", year, month, day);
-			time_type = TimeType.TIME_DATE;
-		}
-
-		public int get_year(){return year;}
-		public int get_month(){return month;}
-		public int get_day(){return day;}
 		@Override
-		public String toString(){return time_str;}
+		public String toString()
+		{
+			if (time_description == null)
+				time_description = FinanceRecorderCmnDef.transform_date_str(year, month, day);
+			return time_description;
+		}
 
-		public boolean is_month_type(){return (time_type == TimeType.TIME_MONTH);}
+		@Override
+		public int compareTo(Object another) 
+		{
+			return (get_value() - ((FinanceDate)another).get_value());
+		}
+
 		@Override
 		public boolean equals(Object object)
 		{
-			TimeCfg another_time_cfg = (TimeCfg)object;
-			if (year != another_time_cfg.get_year())
+			FinanceDate another_date = (FinanceDate)object;
+			if (year != another_date.year)
 				return false;
-			if (month != another_time_cfg.get_month())
+			if (month != another_date.month)
 				return false;
-			if (!is_month_type() && day != another_time_cfg.get_day())
+			if (day != another_date.day)
 				return false;
 			return true;
 		}
+
+		public boolean less(FinanceDate another){return (compareTo(another) < 0);}
+		public boolean less_equal(FinanceDate another){return (compareTo(another) <= 0);}
+		public boolean equal(FinanceDate another){return (compareTo(another) == 0);}
+		public boolean not_equal(FinanceDate another){return (compareTo(another) != 0);}
+		public boolean greater(FinanceDate another){return (compareTo(another) > 0);}
+		public boolean greater_equal(FinanceDate another){return (compareTo(another) >= 0);}
 	};
 
-	public static class TimeRangeCfg
+	public static class FinanceMonth extends FinanceTimeBase implements Comparable
 	{
-		private TimeCfg time_start_cfg = null;
-		private TimeCfg time_end_cfg = null;
-		private String time_range_description = null;
-		private boolean type_is_month = false;
-
-		public static boolean time_in_range(TimeRangeCfg time_range_cfg, TimeCfg time_cfg)
+		static public void check_value_range(int year, int month)
 		{
-			int time_cfg_value = TimeCfg.get_int_value(time_cfg);
-			return (time_cfg_value >= TimeCfg.get_int_value(time_range_cfg.time_start_cfg) && time_cfg_value <= TimeCfg.get_int_value(time_range_cfg.time_end_cfg));
+// Check Year Range
+			FinanceRecorderCmnDef.check_year_range(year);
+// Check Month Range
+			FinanceRecorderCmnDef.check_month_range(month);
 		}
 
-		public static boolean time_in_range(TimeRangeCfg time_range_cfg, int year, int month, int day)
+		private int month;
+
+		public FinanceMonth(int in_year, int in_month)
 		{
-			return time_in_range(time_range_cfg, new TimeCfg(year, month, day));
+			year = in_year;
+			month = in_month;
+		}
+		public FinanceMonth(String finance_month_str)
+		{
+			int[] value = FinanceRecorderCmnDef.get_month_value_list_from_str(finance_month_str);
+			year = value[0];
+			month = value[1];
+		}
+		public FinanceMonth(FinanceMonth another)
+		{
+			year = another.year;
+			month = another.month;
 		}
 
-		public TimeRangeCfg(String time_start_str, String time_end_str)
+		protected int get_value()
 		{
-			if (time_start_str != null)
-				time_start_cfg = new TimeCfg(time_start_str);
-			if (time_end_str != null)
-				time_end_cfg = new TimeCfg(time_end_str);
-			if (time_start_cfg != null && time_end_cfg != null)
+			return (year << 4 | month);
+		}
+
+		public int[] get_time_value_list()
+		{
+			return new int[]{year, month};
+		}
+
+		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Month;}
+
+		@Override
+		public String toString()
+		{
+			if (time_description == null)
+				time_description = FinanceRecorderCmnDef.transform_month_str(year, month);
+			return time_description;
+		}
+
+		@Override
+		public int compareTo(Object another) 
+		{
+			return (get_value() - ((FinanceMonth)another).get_value());
+		}
+
+		@Override
+		public boolean equals(Object object)
+		{
+			FinanceMonth another_month = (FinanceMonth)object;
+			if (year != another_month.year)
+				return false;
+			if (month != another_month.month)
+				return false;
+			return true;
+		}
+
+		public boolean less(FinanceMonth another){return (compareTo(another) < 0);}
+		public boolean less_equal(FinanceMonth another){return (compareTo(another) <= 0);}
+		public boolean equal(FinanceMonth another){return (compareTo(another) == 0);}
+		public boolean not_equal(FinanceMonth another){return (compareTo(another) != 0);}
+		public boolean greater(FinanceMonth another){return (compareTo(another) > 0);}
+		public boolean greater_equal(FinanceMonth another){return (compareTo(another) >= 0);}
+	};
+
+	public static class FinanceQuarter extends FinanceTimeBase implements Comparable
+	{
+		static public void check_value_range(int year, int quarter)
+		{
+// Check Year Range
+			FinanceRecorderCmnDef.check_year_range(year);
+// Check Quarter Range
+			FinanceRecorderCmnDef.check_quarter_range(quarter);
+		}
+
+		private int quarter;
+
+		public FinanceQuarter(int in_year, int in_quarter)
+		{
+			year = in_year;
+			quarter = in_quarter;
+		}
+		public FinanceQuarter(String finance_quarter_str)
+		{
+			int[] value = FinanceRecorderCmnDef.get_quarter_value_list_from_str(finance_quarter_str);
+			year = value[0];
+			quarter = value[1];
+		}
+		public FinanceQuarter(FinanceQuarter another)
+		{
+			year = another.year;
+			quarter = another.quarter;
+		}
+
+		protected int get_value()
+		{
+			return (year << 3 | quarter);
+		}
+
+		public int[] get_time_value_list()
+		{
+			return new int[]{year, quarter};
+		}
+
+		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Quarter;}
+
+		@Override
+		public String toString()
+		{
+			if (time_description == null)
+				time_description = FinanceRecorderCmnDef.transform_quarter_str(year, quarter);
+			return time_description;
+		}
+
+		@Override
+		public int compareTo(Object another) 
+		{
+			return (get_value() - ((FinanceQuarter)another).get_value());
+		}
+
+		@Override
+		public boolean equals(Object object)
+		{
+			FinanceQuarter another_quarter = (FinanceQuarter)object;
+			if (year != another_quarter.year)
+				return false;
+			if (quarter != another_quarter.quarter)
+				return false;
+			return true;
+		}
+
+		public boolean less(FinanceQuarter another){return (compareTo(another) < 0);}
+		public boolean less_equal(FinanceQuarter another){return (compareTo(another) <= 0);}
+		public boolean equal(FinanceQuarter another){return (compareTo(another) == 0);}
+		public boolean not_equal(FinanceQuarter another){return (compareTo(another) != 0);}
+		public boolean greater(FinanceQuarter another){return (compareTo(another) > 0);}
+		public boolean greater_equal(FinanceQuarter another){return (compareTo(another) >= 0);}
+	};
+
+	public static class FinanceTime
+	{
+		private FinanceTimeBase finance_time = null;
+		private FinanceRecorderCmnDef.FinanceTimeUnit finance_time_unit = FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Undefined;
+
+		public FinanceTime(FinanceDate in_finance_date)
+		{
+			finance_time = new FinanceDate(in_finance_date);
+			finance_time_unit = FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Date;
+		}
+		public FinanceTime(FinanceMonth in_finance_month)
+		{
+			finance_time = new FinanceMonth(in_finance_month);
+			finance_time_unit = FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Month;
+		}
+		public FinanceTime(FinanceQuarter in_finance_quarter)
+		{
+			finance_time = new FinanceQuarter(in_finance_quarter);
+			finance_time_unit = FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Quarter;
+		}
+		public FinanceTime(String in_finance_time)
+		{
+			finance_time_unit = FinanceRecorderCmnDef.get_time_unit_from_string(in_finance_time);
+// Initialize the instance
+			switch (finance_time_unit)
 			{
-				if (time_start_cfg.is_month_type() != time_end_cfg.is_month_type())
-				{
-					String errmsg = String.format("The time format is NOT identical, start: %s, end: %s", time_start_cfg.toString(), time_end_cfg.toString());
-					throw new IllegalArgumentException(errmsg);
-				}
-				type_is_month = time_start_cfg.is_month_type();
+			case FinanceTime_Date:
+			{
+				finance_time = new FinanceDate(in_finance_time);
 			}
-			else if (time_start_cfg != null)
-				type_is_month = time_start_cfg.is_month_type();
-			else if (time_end_cfg != null)
-				type_is_month = time_end_cfg.is_month_type();
-			else
-				throw new IllegalArgumentException("time_start_str and time_end_str should NOT be NULL simultaneously");
-		}
-		public TimeRangeCfg(int year_start, int month_start, int year_end, int month_end)
-		{
-			time_start_cfg = new TimeCfg(year_start, month_start);
-			time_end_cfg = new TimeCfg(year_end, month_end);
-			type_is_month = true;
-		}
-		public TimeRangeCfg(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end)
-		{
-			time_start_cfg = new TimeCfg(year_start, month_start, day_start);
-			time_end_cfg = new TimeCfg(year_end, month_end, day_end);
-			type_is_month = false;
+			break;
+			case FinanceTime_Month:
+			{
+				finance_time = new FinanceMonth(in_finance_time);
+			}
+			break;
+			case FinanceTime_Quarter:
+			{
+				finance_time = new FinanceQuarter(in_finance_time);
+			}
+			break;
+			default:
+				throw new IllegalStateException(String.format("Unknow time unit: %d", finance_time_unit.value()));
+			}
 		}
 
-		public boolean is_single_time()
+		public int[] get_time_value_list(){return finance_time.get_time_value_list();}
+		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return finance_time_unit;}
+	};
+
+	public abstract static class FinanceTimeRangeBase
+	{
+		public abstract int[] get_time_start_value_list();
+		public abstract int[] get_time_end_value_list();
+		public abstract int[] get_time_range_value_list();
+		public abstract FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit();
+	};
+
+	public static class FinanceDateRange extends FinanceTimeRangeBase
+	{
+		public static boolean in_range(FinanceDateRange finance_date_range, int year, int month, int day)
 		{
-			if (time_start_cfg != null && time_end_cfg != null)
-				return time_start_cfg.equals(time_end_cfg);
-			return false;
+			return in_range(finance_date_range, new FinanceDate(year, month, day));
 		}
-		public boolean is_month_type(){return type_is_month;}
+		public static boolean in_range(FinanceDateRange finance_date_range, String cur_finance_date_str)
+		{
+			return in_range(finance_date_range, new FinanceDate(cur_finance_date_str));
+		}
+		public static boolean in_range(FinanceDateRange finance_date_range, FinanceDate cur_finance_date)
+		{
+			return cur_finance_date.greater_equal(finance_date_range.get_date_start()) && cur_finance_date.less_equal(finance_date_range.get_date_end());
+		}
+
+		private FinanceDate finance_date_start = null;
+		private FinanceDate finance_date_end = null;
+		protected String time_range_description = null;
+
+		public FinanceDateRange(FinanceDate in_finance_date_start, FinanceDate in_finance_date_end)
+		{
+			finance_date_start = new FinanceDate(in_finance_date_start);
+			finance_date_end = new FinanceDate(in_finance_date_end);
+		}
+		public FinanceDateRange(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end)
+		{
+			finance_date_start = new FinanceDate(year_start, month_start, day_start);
+			finance_date_end = new FinanceDate(year_end, month_end, day_end);
+		}
+		public FinanceDateRange(String finance_date_start_str, String finance_date_end_str)
+		{
+			finance_date_start = new FinanceDate(finance_date_start_str);
+			finance_date_end = new FinanceDate(finance_date_end_str);
+		}
 
 		@Override
 		public String toString() 
 		{
 			if (time_range_description == null)
-			{
-				if (time_start_cfg != null && time_end_cfg != null)
-					time_range_description = String.format("%s:%s", time_start_cfg.toString(), time_end_cfg.toString());
-				else if (time_start_cfg != null)
-					time_range_description = String.format("%s", time_start_cfg.toString());
-				else if (time_end_cfg != null)
-					time_range_description = String.format("%s", time_end_cfg.toString());
-			}
+				time_range_description = String.format("%s-%s", finance_date_start.toString(), finance_date_end.toString());
 			return time_range_description;
 		}
 
-		public final TimeCfg get_start_time()
+		public final FinanceDate get_date_start(){return finance_date_start;}
+		public final FinanceDate get_date_end(){return finance_date_end;}
+		public int[] get_time_start_value_list(){return finance_date_start.get_time_value_list();}
+		public int[] get_time_end_value_list(){return finance_date_end.get_time_value_list();}
+		public int[] get_time_range_value_list()
 		{
-//			assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
-			return time_start_cfg;
+			int[] start_value_list = get_time_start_value_list();
+			int[] end_value_list = get_time_end_value_list();
+			return new int[]{start_value_list[0], start_value_list[1], start_value_list[2], end_value_list[0], end_value_list[1], end_value_list[2]};
 		}
-
-		public String get_start_time_str()
-		{
-//			assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
-			return (time_start_cfg != null ? time_start_cfg.toString() : null);
-		}
-
-		public final TimeCfg get_end_time()
-		{
-//			assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
-			return time_end_cfg;
-		}
-
-		public String get_end_time_str()
-		{
-//			assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
-			return (time_end_cfg != null ? time_end_cfg.toString() : null);
-		}
-
-		private void reset_time(TimeCfg new_start_time_cfg, TimeCfg new_end_time_cfg)
-		{
-			if (new_start_time_cfg != null)
-				time_start_cfg = new_start_time_cfg;
-			if (new_end_time_cfg != null)
-				time_end_cfg = new_end_time_cfg;
-			time_range_description = null;
-		}
-
-		public void set_start_time(TimeCfg new_start_time_cfg){reset_time(new_start_time_cfg, null);}
-		public void set_end_time(TimeCfg new_end_time_cfg){reset_time(null, new_end_time_cfg);}
-
-		public static int[] get_start_and_end_month_value_range(TimeRangeCfg time_range_cfg)
-		{	
-			assert time_range_cfg.is_month_type() : "The time_range_cfg should be Month type";
-			assert time_range_cfg.get_start_time() != null : "The start time in time_rangte_cfg should NOT be NULL";
-			int[] month_value_start = TimeCfg.get_month_value(time_range_cfg.get_start_time_str());
-			if (month_value_start == null)
-				return null;
-			assert time_range_cfg.get_end_time() != null : "The end time in time_rangte_cfg should NOT be NULL";
-			int[] month_value_end = TimeCfg.get_month_value(time_range_cfg.get_end_time_str());
-			if (month_value_end == null)
-				return null;
-
-			return new int[]{month_value_start[0], month_value_start[1], month_value_end[0], month_value_end[1]};
-		}
-		public static int[] get_start_and_end_date_value_range(TimeRangeCfg time_range_cfg)
-		{	
-			assert !time_range_cfg.is_month_type() : "The time_range_cfg should be Date type";
-			assert time_range_cfg.get_start_time() != null : "The start time in time_rangte_cfg should NOT be NULL";
-			int[] date_value_start = TimeCfg.get_date_value(time_range_cfg.get_start_time_str());
-			if (date_value_start == null)
-				return null;
-			assert time_range_cfg.get_end_time() != null : "The end time in time_rangte_cfg should NOT be NULL";
-			int[] date_value_end = TimeCfg.get_date_value(time_range_cfg.get_end_time_str());
-			if (date_value_end == null)
-				return null;
-
-			return new int[]{date_value_start[0], date_value_start[1], date_value_start[2], date_value_end[0], date_value_end[1], date_value_end[2]};
-		}
+		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Date;}
 	};
 
-	public static class SingleTimeRangeCfg extends TimeRangeCfg
+	public static class FinanceMonthRange extends FinanceTimeRangeBase
 	{
-		public SingleTimeRangeCfg(String time_str) {super(time_str, time_str);} // Single day
-		SingleTimeRangeCfg(int year, int month) {super(year, month, year, month);} // Single month
-		SingleTimeRangeCfg(int year, int month, int day) {super(year, month, day, year, month, day);} // Single day
+		public static boolean in_range(FinanceMonthRange finance_month_range, int year, int month)
+		{
+			return in_range(finance_month_range, new FinanceMonth(year, month));
+		}
+		public static boolean in_range(FinanceMonthRange finance_month_range, String cur_finance_month_str)
+		{
+			return in_range(finance_month_range, new FinanceMonth(cur_finance_month_str));
+		}
+		public static boolean in_range(FinanceMonthRange finance_month_range, FinanceMonth cur_finance_month)
+		{
+			return cur_finance_month.greater_equal(finance_month_range.get_month_start()) && cur_finance_month.less_equal(finance_month_range.get_month_end());
+		}
+
+		private FinanceMonth finance_month_start = null;
+		private FinanceMonth finance_month_end = null;
+		protected String time_range_description = null;
+
+		public FinanceMonthRange(FinanceMonth in_finance_month_start, FinanceMonth in_finance_month_end)
+		{
+			finance_month_start = new FinanceMonth(in_finance_month_start);
+			finance_month_end = new FinanceMonth(in_finance_month_end);
+		}
+		public FinanceMonthRange(int year_start, int month_start, int year_end, int month_end)
+		{
+			finance_month_start = new FinanceMonth(year_start, month_start);
+			finance_month_end = new FinanceMonth(year_end, month_end);
+		}
+		public FinanceMonthRange(String finance_month_start_str, String finance_month_end_str)
+		{
+			finance_month_start = new FinanceMonth(finance_month_start_str);
+			finance_month_end = new FinanceMonth(finance_month_end_str);
+		}
+
+		@Override
+		public String toString() 
+		{
+			if (time_range_description == null)
+				time_range_description = String.format("%s-%s", finance_month_start.toString(), finance_month_end.toString());
+			return time_range_description;
+		}
+
+		public final FinanceMonth get_month_start(){return finance_month_start;}
+		public final FinanceMonth get_month_end(){return finance_month_end;}
+		public int[] get_time_start_value_list(){return finance_month_start.get_time_value_list();}
+		public int[] get_time_end_value_list(){return finance_month_end.get_time_value_list();}
+		public int[] get_time_range_value_list()
+		{
+			int[] start_value_list = get_time_start_value_list();
+			int[] end_value_list = get_time_end_value_list();
+			return new int[]{start_value_list[0], start_value_list[1], end_value_list[0], end_value_list[1]};
+		}
+		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Month;}
 	};
+
+	public static class FinanceQuarterRange extends FinanceTimeRangeBase
+	{
+		public static boolean in_range(FinanceQuarterRange finance_quarter_range, int year, int month)
+		{
+			return in_range(finance_quarter_range, new FinanceQuarter(year, month));
+		}
+		public static boolean in_range(FinanceQuarterRange finance_quarter_range, String cur_finance_month_str)
+		{
+			return in_range(finance_quarter_range, new FinanceQuarter(cur_finance_month_str));
+		}
+		public static boolean in_range(FinanceQuarterRange finance_quarter_range, FinanceQuarter cur_finance_month)
+		{
+			return cur_finance_month.greater_equal(finance_quarter_range.get_quarter_start()) && cur_finance_month.less_equal(finance_quarter_range.get_quarter_end());
+		}
+
+		private FinanceQuarter finance_quarter_start = null;
+		private FinanceQuarter finance_quarter_end = null;
+		protected String time_range_description = null;
+
+		public FinanceQuarterRange(FinanceQuarter in_finance_quarter_start, FinanceQuarter in_finance_quarter_end)
+		{
+			finance_quarter_start = new FinanceQuarter(in_finance_quarter_start);
+			finance_quarter_end = new FinanceQuarter(in_finance_quarter_end);
+		}
+		public FinanceQuarterRange(int year_start, int quarter_start, int year_end, int quarter_end)
+		{
+			finance_quarter_start = new FinanceQuarter(year_start, quarter_start);
+			finance_quarter_end = new FinanceQuarter(year_end, quarter_end);
+		}
+		public FinanceQuarterRange(String finance_quarter_start_str, String finance_quarter_end_str)
+		{
+			finance_quarter_start = new FinanceQuarter(finance_quarter_start_str);
+			finance_quarter_end = new FinanceQuarter(finance_quarter_end_str);
+		}
+
+		@Override
+		public String toString() 
+		{
+			if (time_range_description == null)
+				time_range_description = String.format("%s-%s", finance_quarter_start.toString(), finance_quarter_end.toString());
+			return time_range_description;
+		}
+
+		public final FinanceQuarter get_quarter_start(){return finance_quarter_start;}
+		public final FinanceQuarter get_quarter_end(){return finance_quarter_end;}
+		public int[] get_time_start_value_list(){return finance_quarter_start.get_time_value_list();}
+		public int[] get_time_end_value_list(){return finance_quarter_end.get_time_value_list();}
+		public int[] get_time_range_value_list()
+		{
+			int[] start_value_list = get_time_start_value_list();
+			int[] end_value_list = get_time_end_value_list();
+			return new int[]{start_value_list[0], start_value_list[1], end_value_list[0], end_value_list[1]};
+		}
+		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Quarter;}
+	};
+
+	public static class FinanceTimeRange
+	{
+		private FinanceTimeRangeBase finance_time_range = null;
+		private FinanceRecorderCmnDef.FinanceTimeUnit finance_time_unit = FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Undefined;
+
+		public FinanceTimeRange(FinanceDate in_finance_date_start, FinanceDate in_finance_date_end)
+		{
+			finance_time_range = new FinanceDateRange(in_finance_date_start, in_finance_date_end);
+			finance_time_unit = FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Date;
+		}
+		public FinanceTimeRange(FinanceMonth in_finance_month_start, FinanceMonth in_finance_month_end)
+		{
+			finance_time_range = new FinanceMonthRange(in_finance_month_start, in_finance_month_end);
+			finance_time_unit = FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Month;
+		}
+		public FinanceTimeRange(FinanceQuarter in_finance_quarter_start, FinanceQuarter in_finance_quarter_end)
+		{
+			finance_time_range = new FinanceQuarterRange(in_finance_quarter_start, in_finance_quarter_end);
+			finance_time_unit = FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Quarter;
+		}
+		public FinanceTimeRange(String in_finance_time_start, String in_finance_time_end)
+		{
+// Check if the start and end time is the same unit
+			FinanceRecorderCmnDef.FinanceTimeUnit finance_start_time_unit = FinanceRecorderCmnDef.get_time_unit_from_string(in_finance_time_start);
+			FinanceRecorderCmnDef.FinanceTimeUnit finance_end_time_unit = FinanceRecorderCmnDef.get_time_unit_from_string(in_finance_time_end);
+			if (finance_start_time_unit != finance_end_time_unit)
+				throw new IllegalStateException(String.format("Time unit of start[%s] and end[%s] is NOT identical: %d, %d", in_finance_time_start, in_finance_time_end, finance_start_time_unit.value(), finance_end_time_unit.value()));
+			finance_time_unit = finance_start_time_unit;
+// Initialize the instance
+			switch (finance_time_unit)
+			{
+			case FinanceTime_Date:
+			{
+				finance_time_range = new FinanceDateRange(in_finance_time_start, in_finance_time_end);
+			}
+			break;
+			case FinanceTime_Month:
+			{
+				finance_time_range = new FinanceMonthRange(in_finance_time_start, in_finance_time_end);
+			}
+			break;
+			case FinanceTime_Quarter:
+			{
+				finance_time_range = new FinanceQuarterRange(in_finance_time_start, in_finance_time_end);
+			}
+			break;
+			default:
+				throw new IllegalStateException(String.format("Unknow time unit: %d", finance_time_unit.value()));
+			}
+		}
+
+		public int[] get_time_start_value_list(){return finance_time_range.get_time_start_value_list();}
+		public int[] get_time_end_value_list(){return finance_time_range.get_time_end_value_list();}
+		public int[] get_time_range_value_list(){return finance_time_range.get_time_range_value_list();}
+		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return finance_time_unit;}
+	};
+
+//	public static class TimeCfg
+//	{
+//		enum TimeType{TIME_MONTH, TIME_DATE};
+////		private static final String DELIM = "-";
+//		private TimeType time_type;
+//		private int year;
+//		private int month;
+//		private int day;
+//		private String time_str;
+//
+//		public static int get_int_value(int year, int month, int day)
+//		{
+//			return ((year & 0xFFFF) << 16) | ((month & 0xFF) << 8) | (day & 0xFF);
+//		}
+//		public static int get_int_value(String time_str)
+//		{
+//			int[] data = get_date_value(time_str);
+//			assert data != null : String.format("Unsupported time format: %s", time_str);
+//			return ((data[0] & 0xFFFF) << 16) | ((data[1] & 0xFF) << 8) | (data[2] & 0xFF);
+//		}
+//		public static int get_int_value(TimeCfg time_cfg)
+//		{
+//			return get_int_value(time_cfg.get_year(), time_cfg.get_month(), time_cfg.get_day());
+//		}
+//
+//		private static Matcher get_time_value_matcher(String time_str, String search_pattern)
+//		{
+//	// Time Format: yyyy-mm; Ex: 2015-09
+//	// Time Format: yyyy-MM-dd; Ex: 2015-09-04		
+//			Pattern pattern = Pattern.compile(search_pattern);
+//			Matcher matcher = pattern.matcher(time_str);
+//			if (!matcher.find())
+//			{
+////				FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
+//				return null;
+//			}
+//			return matcher;
+//		}
+//
+//		public static Matcher get_month_value_matcher(String time_str){return get_time_value_matcher(time_str, "([\\d]{4})-([\\d]{1,2})");}
+//		public static Matcher get_date_value_matcher(String time_str){return get_time_value_matcher(time_str, "([\\d]{4})-([\\d]{1,2})-([\\d]{1,2})");}
+//
+//		public static int[] get_month_value(String time_str)
+//		{
+//			Matcher month_matcher = get_month_value_matcher(time_str);
+//			if (month_matcher == null)
+//			{
+////				FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
+//				return null;
+//			}
+//			int year = Integer.valueOf(month_matcher.group(1));
+//			int month = Integer.valueOf(month_matcher.group(2));
+//
+//			return new int[]{year, month};
+//		}
+//
+//		public static int[] get_date_value(String time_str)
+//		{
+//			Matcher date_matcher = get_date_value_matcher(time_str);
+//			if (date_matcher == null)
+//			{
+////				FinanceRecorderCmnDef.format_error("Incorrect time format: %s", time_str);
+//				return null;
+//			}
+//			int year = Integer.valueOf(date_matcher.group(1));
+//			int month = Integer.valueOf(date_matcher.group(2));
+//			int day = Integer.valueOf(date_matcher.group(3));
+//
+//			return new int[]{year, month, day};
+//		}
+//
+//		public TimeCfg(String cur_time_str) // Format: "2015-09" or "2015-09-04"
+//		{
+//			time_str = String.format("%s", cur_time_str);
+//			int[] date_list = get_date_value(cur_time_str);
+//			if (date_list != null)
+//			{
+//// Try to parse the date format
+//				year = date_list[0];
+//				month = date_list[1];
+//				day = date_list[2];
+//				time_type = TimeType.TIME_DATE;
+//			}
+//			else
+//			{
+//				int[] month_list = get_month_value(cur_time_str);
+//				if (month_list == null)
+//				{
+////					assert false : String.format("Incorrect time format: %s", cur_time_str);
+//					throw new IllegalArgumentException(String.format("Incorrect time format: %s", cur_time_str));
+//				}
+//// Try to parse the month format
+//				year = month_list[0];
+//				month = month_list[1];
+//				time_type = TimeType.TIME_MONTH;
+//			}
+//		}
+//
+//		public TimeCfg(int cur_year, int cur_month)
+//		{
+//			year = cur_year;
+//			month = cur_month;
+//			day = 0;
+//			time_str = String.format("%04d-%02d", year, month);
+//			time_type = TimeType.TIME_MONTH;
+//		}
+//
+//		public TimeCfg(int cur_year, int cur_month, int cur_day)
+//		{
+//			year = cur_year;
+//			month = cur_month;
+//			day = cur_day;
+//			time_str = String.format("%04d-%02d-%02d", year, month, day);
+//			time_type = TimeType.TIME_DATE;
+//		}
+//
+//		public int get_year(){return year;}
+//		public int get_month(){return month;}
+//		public int get_day(){return day;}
+//		@Override
+//		public String toString(){return time_str;}
+//
+//		public boolean is_month_type(){return (time_type == TimeType.TIME_MONTH);}
+//		@Override
+//		public boolean equals(Object object)
+//		{
+//			TimeCfg another_time_cfg = (TimeCfg)object;
+//			if (year != another_time_cfg.get_year())
+//				return false;
+//			if (month != another_time_cfg.get_month())
+//				return false;
+//			if (!is_month_type() && day != another_time_cfg.get_day())
+//				return false;
+//			return true;
+//		}
+//	};
+//
+//	public static class TimeRangeCfg
+//	{
+//		private TimeCfg time_start_cfg = null;
+//		private TimeCfg time_end_cfg = null;
+//		private String time_range_description = null;
+//		private boolean type_is_month = false;
+//
+//		public static boolean time_in_range(TimeRangeCfg time_range_cfg, TimeCfg time_cfg)
+//		{
+//			int time_cfg_value = TimeCfg.get_int_value(time_cfg);
+//			return (time_cfg_value >= TimeCfg.get_int_value(time_range_cfg.time_start_cfg) && time_cfg_value <= TimeCfg.get_int_value(time_range_cfg.time_end_cfg));
+//		}
+//
+//		public static boolean time_in_range(TimeRangeCfg time_range_cfg, int year, int month, int day)
+//		{
+//			return time_in_range(time_range_cfg, new TimeCfg(year, month, day));
+//		}
+//
+//		public TimeRangeCfg(String time_start_str, String time_end_str)
+//		{
+//			if (time_start_str != null)
+//				time_start_cfg = new TimeCfg(time_start_str);
+//			if (time_end_str != null)
+//				time_end_cfg = new TimeCfg(time_end_str);
+//			if (time_start_cfg != null && time_end_cfg != null)
+//			{
+//				if (time_start_cfg.is_month_type() != time_end_cfg.is_month_type())
+//				{
+//					String errmsg = String.format("The time format is NOT identical, start: %s, end: %s", time_start_cfg.toString(), time_end_cfg.toString());
+//					throw new IllegalArgumentException(errmsg);
+//				}
+//				type_is_month = time_start_cfg.is_month_type();
+//			}
+//			else if (time_start_cfg != null)
+//				type_is_month = time_start_cfg.is_month_type();
+//			else if (time_end_cfg != null)
+//				type_is_month = time_end_cfg.is_month_type();
+//			else
+//				throw new IllegalArgumentException("time_start_str and time_end_str should NOT be NULL simultaneously");
+//		}
+//		public TimeRangeCfg(int year_start, int month_start, int year_end, int month_end)
+//		{
+//			time_start_cfg = new TimeCfg(year_start, month_start);
+//			time_end_cfg = new TimeCfg(year_end, month_end);
+//			type_is_month = true;
+//		}
+//		public TimeRangeCfg(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end)
+//		{
+//			time_start_cfg = new TimeCfg(year_start, month_start, day_start);
+//			time_end_cfg = new TimeCfg(year_end, month_end, day_end);
+//			type_is_month = false;
+//		}
+//
+//		public boolean is_single_time()
+//		{
+//			if (time_start_cfg != null && time_end_cfg != null)
+//				return time_start_cfg.equals(time_end_cfg);
+//			return false;
+//		}
+//		public boolean is_month_type(){return type_is_month;}
+//
+//		@Override
+//		public String toString() 
+//		{
+//			if (time_range_description == null)
+//			{
+//				if (time_start_cfg != null && time_end_cfg != null)
+//					time_range_description = String.format("%s:%s", time_start_cfg.toString(), time_end_cfg.toString());
+//				else if (time_start_cfg != null)
+//					time_range_description = String.format("%s", time_start_cfg.toString());
+//				else if (time_end_cfg != null)
+//					time_range_description = String.format("%s", time_end_cfg.toString());
+//			}
+//			return time_range_description;
+//		}
+//
+//		public final TimeCfg get_start_time()
+//		{
+////			assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
+//			return time_start_cfg;
+//		}
+//
+//		public String get_start_time_str()
+//		{
+////			assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
+//			return (time_start_cfg != null ? time_start_cfg.toString() : null);
+//		}
+//
+//		public final TimeCfg get_end_time()
+//		{
+////			assert(time_end_cfg != NULL && "time_end_cfg should NOT be NULL");
+//			return time_end_cfg;
+//		}
+//
+//		public String get_end_time_str()
+//		{
+////			assert(time_start_cfg != NULL && "time_start_cfg should NOT be NULL");
+//			return (time_end_cfg != null ? time_end_cfg.toString() : null);
+//		}
+//
+//		private void reset_time(TimeCfg new_start_time_cfg, TimeCfg new_end_time_cfg)
+//		{
+//			if (new_start_time_cfg != null)
+//				time_start_cfg = new_start_time_cfg;
+//			if (new_end_time_cfg != null)
+//				time_end_cfg = new_end_time_cfg;
+//			time_range_description = null;
+//		}
+//
+//		public void set_start_time(TimeCfg new_start_time_cfg){reset_time(new_start_time_cfg, null);}
+//		public void set_end_time(TimeCfg new_end_time_cfg){reset_time(null, new_end_time_cfg);}
+//
+//		public static int[] get_start_and_end_month_value_range(TimeRangeCfg time_range_cfg)
+//		{	
+//			assert time_range_cfg.is_month_type() : "The time_range_cfg should be Month type";
+//			assert time_range_cfg.get_start_time() != null : "The start time in time_rangte_cfg should NOT be NULL";
+//			int[] month_value_start = TimeCfg.get_month_value(time_range_cfg.get_start_time_str());
+//			if (month_value_start == null)
+//				return null;
+//			assert time_range_cfg.get_end_time() != null : "The end time in time_rangte_cfg should NOT be NULL";
+//			int[] month_value_end = TimeCfg.get_month_value(time_range_cfg.get_end_time_str());
+//			if (month_value_end == null)
+//				return null;
+//
+//			return new int[]{month_value_start[0], month_value_start[1], month_value_end[0], month_value_end[1]};
+//		}
+//		public static int[] get_start_and_end_date_value_range(TimeRangeCfg time_range_cfg)
+//		{	
+//			assert !time_range_cfg.is_month_type() : "The time_range_cfg should be Date type";
+//			assert time_range_cfg.get_start_time() != null : "The start time in time_rangte_cfg should NOT be NULL";
+//			int[] date_value_start = TimeCfg.get_date_value(time_range_cfg.get_start_time_str());
+//			if (date_value_start == null)
+//				return null;
+//			assert time_range_cfg.get_end_time() != null : "The end time in time_rangte_cfg should NOT be NULL";
+//			int[] date_value_end = TimeCfg.get_date_value(time_range_cfg.get_end_time_str());
+//			if (date_value_end == null)
+//				return null;
+//
+//			return new int[]{date_value_start[0], date_value_start[1], date_value_start[2], date_value_end[0], date_value_end[1], date_value_end[2]};
+//		}
+//	};
+//
+//	public static class SingleTimeRangeCfg extends TimeRangeCfg
+//	{
+//		public SingleTimeRangeCfg(String time_str) {super(time_str, time_str);} // Single day
+//		SingleTimeRangeCfg(int year, int month) {super(year, month, year, month);} // Single month
+//		SingleTimeRangeCfg(int year, int month, int day) {super(year, month, day, year, month, day);} // Single day
+//	};
 
 	public static class FinanceDataArrayBase<T>
 	{
@@ -448,206 +975,206 @@ public class FinanceRecorderCmnClass
 		return add_query(query_set, source_type, field_index);
 	}
 
-	public static class CompanyGroupSet implements Iterable<Map.Entry<Integer, ArrayList<String>>>
-	{
-		private static TreeMap<Integer, ArrayList<String>> whole_company_number_in_group_map;
-		private TreeMap<Integer, ArrayList<String>> company_number_in_group_map = null;
-		private TreeMap<Integer, ArrayList<String>> altered_company_number_in_group_map = null;
-		private boolean is_add_done = false;
+//	public static class CompanyGroupSet implements Iterable<Map.Entry<Integer, ArrayList<String>>>
+//	{
+//		private static TreeMap<Integer, ArrayList<String>> whole_company_number_in_group_map;
+//		private TreeMap<Integer, ArrayList<String>> company_number_in_group_map = null;
+//		private TreeMap<Integer, ArrayList<String>> altered_company_number_in_group_map = null;
+//		private boolean is_add_done = false;
+//
+//		static void init_whole_company_number_in_group_map()
+//		{
+//			assert whole_company_number_in_group_map == null : "whole_company_number_in_group_map is NOT null";
+//
+//			FinanceRecorderCmnClassCompanyProfile company_profile = FinanceRecorderCmnClassCompanyProfile.get_instance();
+//			whole_company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
+//			int company_group_size = company_profile.get_company_group_size();
+//			for (int i = 0 ; i < company_group_size ; i++)
+//			{
+//				FinanceRecorderCmnClassCompanyProfile.TraverseEntry traverse_entry = company_profile.group_entry(i);
+//				ArrayList<String> company_number_array = new ArrayList<String>();
+//				for (ArrayList<String> entry : traverse_entry)
+//					company_number_array.add(entry.get(FinanceRecorderCmnClassCompanyProfile.COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER));
+//				whole_company_number_in_group_map.put(i, company_number_array);
+//			}
+//		}
+//
+//		static public CompanyGroupSet get_whole_company_group_set()
+//		{
+//			CompanyGroupSet company_group_set = new CompanyGroupSet();
+//			company_group_set.add_done();
+//			return company_group_set;
+//		}
+//
+//		public CompanyGroupSet(){}
+//
+//		@Override
+//		public Iterator<Map.Entry<Integer, ArrayList<String>>> iterator()
+//		{
+//			if (!is_add_done)
+//			{
+//				String errmsg = "The add_done flag is NOT set to True";
+//				FinanceRecorderCmnDef.format_error(errmsg);
+//				throw new IllegalStateException(errmsg);
+//			}
+//			Iterator<Map.Entry<Integer, ArrayList<String>>> it = new Iterator<Map.Entry<Integer, ArrayList<String>>>()
+//			{
+//				private Iterator<Map.Entry<Integer, ArrayList<String>>> iter = altered_company_number_in_group_map.entrySet().iterator();
+//				@Override
+//				public boolean hasNext()
+//				{
+//					return iter.hasNext();
+//				}
+//				@Override
+//				public Map.Entry<Integer, ArrayList<String>> next()
+//				{
+//					return (Map.Entry<Integer, ArrayList<String>>)iter.next();
+//				}
+//				@Override
+//				public void remove() {throw new UnsupportedOperationException();}
+//			};
+//			return it;
+//		}
+//
+//		public short add_company_list(int company_group_number, ArrayList<String> company_code_number_in_group_array)
+//		{
+//			if (is_add_done)
+//			{
+//				FinanceRecorderCmnDef.format_error("The add_done flag has already been set to True");
+//				return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+//			}
+//			if (company_number_in_group_map == null)
+//				company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
+//			if (!company_number_in_group_map.containsKey(company_group_number))
+//			{
+//				ArrayList<String> company_number_deque = new ArrayList<String>();
+//				company_number_in_group_map.put(company_group_number, company_number_deque);
+//			}
+//			else
+//			{
+//				if (company_number_in_group_map.get(company_group_number) == null)
+//				{
+//					FinanceRecorderCmnDef.format_error("The company group[%d] has already been set to NULL", company_group_number);
+//					return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+//				}
+//			}
+//			for (String company_code_number : company_code_number_in_group_array)
+//			{
+//				if (company_number_in_group_map.get(company_group_number).indexOf(company_code_number) != -1)
+//				{
+//					FinanceRecorderCmnDef.format_warn("The company code number[%s] has already been added to the group[%d]", company_code_number, company_group_number);
+//					continue;
+//				}
+//				company_number_in_group_map.get(company_group_number).add(company_code_number);
+//			}
+//			return FinanceRecorderCmnDef.RET_SUCCESS;
+//		}
+//
+//		public short add_company(int company_group_number, String company_code_number)
+//		{
+//			ArrayList<String> company_code_number_in_group_array = new ArrayList<String>();
+//			company_code_number_in_group_array.add(company_code_number);
+//			return add_company_list(company_group_number, company_code_number_in_group_array);
+//		}
+//
+//		public short add_company_group(int company_group_number)
+//		{
+//			if (is_add_done)
+//			{
+//				FinanceRecorderCmnDef.format_error("The add_done flag has already been set to True");
+//				return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+//			}
+//
+//			if (company_number_in_group_map == null)
+//				company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
+//
+//			if (company_number_in_group_map.containsKey(company_group_number))
+//			{
+//				if (company_number_in_group_map.get(company_group_number) != null)
+//					FinanceRecorderCmnDef.format_warn("Select all company group[%d], ignore the original settings......", company_group_number);
+//			}
+//			company_number_in_group_map.put(company_group_number, null);
+//			return FinanceRecorderCmnDef.RET_SUCCESS;
+//		}
+//
+//		public short add_done()
+//		{
+//			if (is_add_done)
+//			{
+//				FinanceRecorderCmnDef.format_error("The add_done flag has already been set to True");
+//				return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+//			}
+//			setup_for_traverse();
+//			is_add_done = true;
+//			return FinanceRecorderCmnDef.RET_SUCCESS;
+//		}
+//
+//		final ArrayList<String> get_company_number_in_group_list(int company_group_index)
+//		{
+//			if (!is_add_done)
+//			{
+//				String errmsg = "The add_done flag is NOT set to True";
+//				FinanceRecorderCmnDef.format_error(errmsg);
+//				throw new IllegalStateException(errmsg);
+//			}
+//			if (!altered_company_number_in_group_map.containsKey(company_group_index))
+//			{
+//				String errmsg = String.format("The company group index[%d] is NOT found in data structure", company_group_index);
+//				FinanceRecorderCmnDef.format_error(errmsg);
+//				throw new IllegalArgumentException(errmsg);
+//			}
+//			return altered_company_number_in_group_map.get(company_group_index);
+//		}
+//
+//		private void setup_for_traverse()
+//		{
+//			if (whole_company_number_in_group_map == null)
+//				init_whole_company_number_in_group_map();
+//			if (company_number_in_group_map == null)
+//				altered_company_number_in_group_map = whole_company_number_in_group_map;
+//			else
+//			{
+//				altered_company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
+//				for (Map.Entry<Integer, ArrayList<String>> entry : company_number_in_group_map.entrySet())
+//					altered_company_number_in_group_map.put(entry.getKey(), (entry.getValue() != null) ? entry.getValue() : whole_company_number_in_group_map.get(entry.getKey()));
+//			}
+//		}
+//	};
 
-		static void init_whole_company_number_in_group_map()
-		{
-			assert whole_company_number_in_group_map == null : "whole_company_number_in_group_map is NOT null";
-
-			FinanceRecorderCmnClassCompanyProfile company_profile = FinanceRecorderCmnClassCompanyProfile.get_instance();
-			whole_company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
-			int company_group_size = company_profile.get_company_group_size();
-			for (int i = 0 ; i < company_group_size ; i++)
-			{
-				FinanceRecorderCmnClassCompanyProfile.TraverseEntry traverse_entry = company_profile.group_entry(i);
-				ArrayList<String> company_number_array = new ArrayList<String>();
-				for (ArrayList<String> entry : traverse_entry)
-					company_number_array.add(entry.get(FinanceRecorderCmnClassCompanyProfile.COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER));
-				whole_company_number_in_group_map.put(i, company_number_array);
-			}
-		}
-
-		static public CompanyGroupSet get_whole_company_group_set()
-		{
-			CompanyGroupSet company_group_set = new CompanyGroupSet();
-			company_group_set.add_done();
-			return company_group_set;
-		}
-
-		public CompanyGroupSet(){}
-
-		@Override
-		public Iterator<Map.Entry<Integer, ArrayList<String>>> iterator()
-		{
-			if (!is_add_done)
-			{
-				String errmsg = "The add_done flag is NOT set to True";
-				FinanceRecorderCmnDef.format_error(errmsg);
-				throw new IllegalStateException(errmsg);
-			}
-			Iterator<Map.Entry<Integer, ArrayList<String>>> it = new Iterator<Map.Entry<Integer, ArrayList<String>>>()
-			{
-				private Iterator<Map.Entry<Integer, ArrayList<String>>> iter = altered_company_number_in_group_map.entrySet().iterator();
-				@Override
-				public boolean hasNext()
-				{
-					return iter.hasNext();
-				}
-				@Override
-				public Map.Entry<Integer, ArrayList<String>> next()
-				{
-					return (Map.Entry<Integer, ArrayList<String>>)iter.next();
-				}
-				@Override
-				public void remove() {throw new UnsupportedOperationException();}
-			};
-			return it;
-		}
-
-		public short add_company_list(int company_group_number, ArrayList<String> company_code_number_in_group_array)
-		{
-			if (is_add_done)
-			{
-				FinanceRecorderCmnDef.format_error("The add_done flag has already been set to True");
-				return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
-			}
-			if (company_number_in_group_map == null)
-				company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
-			if (!company_number_in_group_map.containsKey(company_group_number))
-			{
-				ArrayList<String> company_number_deque = new ArrayList<String>();
-				company_number_in_group_map.put(company_group_number, company_number_deque);
-			}
-			else
-			{
-				if (company_number_in_group_map.get(company_group_number) == null)
-				{
-					FinanceRecorderCmnDef.format_error("The company group[%d] has already been set to NULL", company_group_number);
-					return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
-				}
-			}
-			for (String company_code_number : company_code_number_in_group_array)
-			{
-				if (company_number_in_group_map.get(company_group_number).indexOf(company_code_number) != -1)
-				{
-					FinanceRecorderCmnDef.format_warn("The company code number[%s] has already been added to the group[%d]", company_code_number, company_group_number);
-					continue;
-				}
-				company_number_in_group_map.get(company_group_number).add(company_code_number);
-			}
-			return FinanceRecorderCmnDef.RET_SUCCESS;
-		}
-
-		public short add_company(int company_group_number, String company_code_number)
-		{
-			ArrayList<String> company_code_number_in_group_array = new ArrayList<String>();
-			company_code_number_in_group_array.add(company_code_number);
-			return add_company_list(company_group_number, company_code_number_in_group_array);
-		}
-
-		public short add_company_group(int company_group_number)
-		{
-			if (is_add_done)
-			{
-				FinanceRecorderCmnDef.format_error("The add_done flag has already been set to True");
-				return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
-			}
-
-			if (company_number_in_group_map == null)
-				company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
-
-			if (company_number_in_group_map.containsKey(company_group_number))
-			{
-				if (company_number_in_group_map.get(company_group_number) != null)
-					FinanceRecorderCmnDef.format_warn("Select all company group[%d], ignore the original settings......", company_group_number);
-			}
-			company_number_in_group_map.put(company_group_number, null);
-			return FinanceRecorderCmnDef.RET_SUCCESS;
-		}
-
-		public short add_done()
-		{
-			if (is_add_done)
-			{
-				FinanceRecorderCmnDef.format_error("The add_done flag has already been set to True");
-				return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
-			}
-			setup_for_traverse();
-			is_add_done = true;
-			return FinanceRecorderCmnDef.RET_SUCCESS;
-		}
-
-		final ArrayList<String> get_company_number_in_group_list(int company_group_index)
-		{
-			if (!is_add_done)
-			{
-				String errmsg = "The add_done flag is NOT set to True";
-				FinanceRecorderCmnDef.format_error(errmsg);
-				throw new IllegalStateException(errmsg);
-			}
-			if (!altered_company_number_in_group_map.containsKey(company_group_index))
-			{
-				String errmsg = String.format("The company group index[%d] is NOT found in data structure", company_group_index);
-				FinanceRecorderCmnDef.format_error(errmsg);
-				throw new IllegalArgumentException(errmsg);
-			}
-			return altered_company_number_in_group_map.get(company_group_index);
-		}
-
-		private void setup_for_traverse()
-		{
-			if (whole_company_number_in_group_map == null)
-				init_whole_company_number_in_group_map();
-			if (company_number_in_group_map == null)
-				altered_company_number_in_group_map = whole_company_number_in_group_map;
-			else
-			{
-				altered_company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
-				for (Map.Entry<Integer, ArrayList<String>> entry : company_number_in_group_map.entrySet())
-					altered_company_number_in_group_map.put(entry.getKey(), (entry.getValue() != null) ? entry.getValue() : whole_company_number_in_group_map.get(entry.getKey()));
-			}
-		}
-	};
-
-	public class StockQuerySet extends QuerySet
-	{
-		protected CompanyGroupSet company_group_set;
-
-		public StockQuerySet()
-		{
-			company_group_set = new CompanyGroupSet();
-		}
-
-		public short add_company_list(int company_group_number, final ArrayList<String> company_code_number_in_group_array)
-		{
-			return company_group_set.add_company_list(company_group_number, company_code_number_in_group_array);
-		}
-
-		public short add_company(int company_group_number, String company_code_number)
-		{
-			return company_group_set.add_company(company_group_number, company_code_number);
-		}
-
-		public short add_company_group(int company_group_number)
-		{
-			return company_group_set.add_company_group(company_group_number);
-		}
-
-		public final CompanyGroupSet get_company_group_set()
-		{
-			return company_group_set;
-		}
-
-//		public CompanyGroupSet get_company_group_set()
+//	public class StockQuerySet extends QuerySet
+//	{
+//		protected CompanyGroupSet company_group_set;
+//
+//		public StockQuerySet()
+//		{
+//			company_group_set = new CompanyGroupSet();
+//		}
+//
+//		public short add_company_list(int company_group_number, final ArrayList<String> company_code_number_in_group_array)
+//		{
+//			return company_group_set.add_company_list(company_group_number, company_code_number_in_group_array);
+//		}
+//
+//		public short add_company(int company_group_number, String company_code_number)
+//		{
+//			return company_group_set.add_company(company_group_number, company_code_number);
+//		}
+//
+//		public short add_company_group(int company_group_number)
+//		{
+//			return company_group_set.add_company_group(company_group_number);
+//		}
+//
+//		public final CompanyGroupSet get_company_group_set()
 //		{
 //			return company_group_set;
 //		}
-	};
+//
+////		public CompanyGroupSet get_company_group_set()
+////		{
+////			return company_group_set;
+////		}
+//	};
 
 	public static class ResultSet
 	{
@@ -807,17 +1334,17 @@ public class FinanceRecorderCmnClass
 			return -1;
 		}
 
-		public int find_first_after_date_index(String search_date, int search_start_index)
-		{
-			int search_date_value = TimeCfg.get_int_value(search_date);
-			for (int index = search_start_index ; index < date_data_size ; index++)
-			{
-				int date_value = TimeCfg.get_int_value(date_data.get_index(index));
-				if (date_value >= search_date_value)
-					return index;
-			}
-			return date_data_size;
-		}
+//		public int find_first_after_date_index(String search_date, int search_start_index)
+//		{
+//			int search_date_value = TimeCfg.get_int_value(search_date);
+//			for (int index = search_start_index ; index < date_data_size ; index++)
+//			{
+//				int date_value = TimeCfg.get_int_value(date_data.get_index(index));
+//				if (date_value >= search_date_value)
+//					return index;
+//			}
+//			return date_data_size;
+//		}
 
 		public final FinanceStringDataArray get_date_array(){return date_data;}
 		public final String get_date_array_element(int index)

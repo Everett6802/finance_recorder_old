@@ -1,10 +1,10 @@
-package com.price.finance_recorder;
+package com.price.finance_recorder_stock;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.concurrent.Callable;
+import com.price.finance_recorder_base.FinanceRecorderDataHandlerInf;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.CompanyGroupSet;
 
 
 public class FinanceRecorderStockBackupSQLTask implements Callable<Integer>
@@ -15,11 +15,11 @@ public class FinanceRecorderStockBackupSQLTask implements Callable<Integer>
 	private String csv_backup_folderpath = null;
 	FinanceRecorderCmnClass.TimeRangeCfg csv_time_range_cfg = null;
 
-	public FinanceRecorderStockBackupSQLTask(final ArrayList<Integer> source_type_list, final CompanyGroupSet company_group_set, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String backup_folderpath)
+	public FinanceRecorderStockBackupSQLTask(final LinkedList<Integer> source_type_list, final FinanceRecorderCompanyGroupSet company_group_set, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String backup_folderpath)
 	{
 		this(source_type_list, company_group_set, time_range_cfg, backup_folderpath, String.format("StockBackupSQLThread:%d", ++thread_count));
 	}
-	public FinanceRecorderStockBackupSQLTask(final ArrayList<Integer> source_type_list, final CompanyGroupSet company_group_set, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String backup_folderpath, String description)
+	public FinanceRecorderStockBackupSQLTask(final LinkedList<Integer> source_type_list, final FinanceRecorderCompanyGroupSet company_group_set, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String backup_folderpath, String description)
 	{
 		data_handler = FinanceRecorderStockDataHandler.get_data_handler(source_type_list, company_group_set);
 		thread_description = description;

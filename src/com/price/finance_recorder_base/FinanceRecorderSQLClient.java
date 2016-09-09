@@ -1,13 +1,11 @@
-package com.price.finance_recorder;
+package com.price.finance_recorder_base;
 
 import java.sql.*;
 import java.text.*;
 import java.util.*;
-
 import com.price.finance_recorder_cmn.FinanceRecorderCmnBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
-//import com.price.finance_recorder_cmn.FinanceRecorderCmnDef.FinanceFieldType;
 
 
 public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
@@ -254,11 +252,11 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 //	private String table_name = null;
 //	private FinanceRecorderCmnDef.FinanceObserverInf finance_observer = null;
 //	private int source_type_index;
-	private FinanceRecorderCmnDef.DatabaseNotExistIngoreType database_not_exist_ignore_type = null; 
-	private FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type = null;
+//	private FinanceRecorderCmnDef.DatabaseNotExistIngoreType database_not_exist_ignore_type = null; 
+//	private FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type = null;
 	private FinanceRecorderCmnDef.DatabaseEnableBatchType batch_operation = FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_No;
 
-	FinanceRecorderSQLClient()
+	protected FinanceRecorderSQLClient()
 	{
 		// source_type_index = finance_data_type.ordinal();
 		server = DEF_SERVER;
@@ -267,7 +265,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 //		finance_observer = observer;
 	}
 
-	protected short try_connect_mysql(
+	public short try_connect_mysql(
 			String database_name, 
 			FinanceRecorderCmnDef.DatabaseNotExistIngoreType database_not_exist_ignore_type, 
 			FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type
@@ -275,8 +273,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 	{
 //		database_name = database;
 		FinanceRecorderCmnDef.format_debug("Try to connect to the MySQL database server[%s]......", database_name);
-
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Create the connection to the MySQL server and database
 		String cmd_create_database = String.format(FORMAT_CMD_CREATE_DATABASE, database_name);
 		FinanceRecorderCmnDef.format_debug("Create database by command: %s", cmd_create_database);

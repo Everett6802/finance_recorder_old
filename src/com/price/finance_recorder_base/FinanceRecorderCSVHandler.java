@@ -1,8 +1,7 @@
-package com.price.finance_recorder;
+package com.price.finance_recorder_base;
 
 import java.io.*;
 import java.util.*;
-
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 
@@ -36,7 +35,7 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 	private String csv_filepath;
 	private BufferedReader br = null;
 	private BufferedWriter bw = null;
-	private FinanceRecorderCmnDef.FinanceObserverInf parent_observer = null;
+//	private FinanceRecorderCmnDef.FinanceObserverInf parent_observer = null;
 	private HandlerMode handler_mode;
 	private ArrayList<String> data_list = null;
 //	private boolean IgnoreErrorIfFileNotExist = true;
@@ -138,7 +137,7 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		String line = null;
 		int count = 0;
-		String field_string = null;
+//		String field_string = null;
 		try
 		{
 			while ((line = br.readLine()) != null) 
@@ -184,9 +183,9 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 		}
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		String line = null;
+//		String line = null;
 		int count = 0;
-		String field_string = null;
+//		String field_string = null;
 		try
 		{
 			for (String data : data_list)

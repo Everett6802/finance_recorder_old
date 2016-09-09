@@ -1,26 +1,27 @@
-package com.price.finance_recorder;
+package com.price.finance_recorder_market;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
+//import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+//import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-
+//import java.util.LinkedList;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
-public class FinanceRecorderDatabaseTimeRange 
+
+public class FinanceRecorderDatabaseDateRange
 {
-	private FinanceRecorderDatabaseTimeRange(){}
+	private FinanceRecorderDatabaseDateRange(){}
 	public Object clone() throws CloneNotSupportedException {throw new CloneNotSupportedException();}
 
-	private static FinanceRecorderDatabaseTimeRange instance = null;
-	public static FinanceRecorderDatabaseTimeRange get_instance()
+	private static FinanceRecorderDatabaseDateRange instance = null;
+	public static FinanceRecorderDatabaseDateRange get_instance()
 	{
 		if (instance == null)
 			allocate();
@@ -30,7 +31,7 @@ public class FinanceRecorderDatabaseTimeRange
 	{
 		if (instance == null)
 		{
-			instance = new FinanceRecorderDatabaseTimeRange();
+			instance = new FinanceRecorderDatabaseDateRange();
 			short ret = instance.initialize();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 			{
@@ -49,62 +50,89 @@ public class FinanceRecorderDatabaseTimeRange
 	private short initialize()
 	{
 		database_time_range_array = new ArrayList<FinanceRecorderCmnClass.TimeRangeCfg>();
-// Open the file
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		BufferedReader reader = null;
-		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
-		FinanceRecorderCmnDef.format_debug("Try to parse the configuration in %s", conf_filepath);
-// Check the file exists or not
-		File fp = new File(conf_filepath);
-		if (!fp.exists())
-		{
-			FinanceRecorderCmnDef.format_error("The configration file[%s] does NOT exist", conf_filepath);
-			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
-		}
-// Try to parse the content of the config file
+//// Open the file
+//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+//		BufferedReader reader = null;
+//		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
+//		FinanceRecorderCmnDef.format_debug("Try to parse the configuration in %s", conf_filepath);
+//// Check the file exists or not
+//		File fp = new File(conf_filepath);
+//		if (!fp.exists())
+//		{
+//			FinanceRecorderCmnDef.format_error("The configration file[%s] does NOT exist", conf_filepath);
+//			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+//		}
+//// Try to parse the content of the config file
+//		int source_type_index_count = 0;
+//		try
+//		{
+//			reader = new BufferedReader(new FileReader(fp));
+//			String buf;
+//			OUT:
+//			while ((buf = reader.readLine()) != null)
+//			{
+//				if (buf.length() == 0)
+//					continue;
+//// Check if the source type in the config file is in order
+//				String data_array[] = buf.split(" ");
+//				if (data_array.length != 2)
+//				{
+//					FinanceRecorderCmnDef.format_error("Incorrect config format: %s", buf);
+//					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+//					break OUT;
+//				}
+//				String finance_database_description = data_array[0];
+//				if (!finance_database_description.equals(FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index_count]))
+//				{
+//					String errmsg = String.format("The source type[%s] is NOT identical to %s in %s", finance_database_description, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index_count], FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
+//					throw new RuntimeException(errmsg);
+//				}
+//				source_type_index_count++;
+//				String time_array[] = data_array[1].split(":");
+//// Find the start/end time string
+//				database_time_range_array.add(new FinanceRecorderCmnClass.TimeRangeCfg(time_array[0], time_array[1]));
+//			}
+//		}
+//		catch (IOException ex)
+//		{
+//			FinanceRecorderCmnDef.format_error("Error occur due to %s", ex.toString());
+//			ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
+//		}
+//		finally 
+//		{
+//// Close the file
+//			if (reader != null)
+//			{
+//				try {reader.close();}
+//				catch (IOException e){}// nothing to do here except log the exception
+//			}
+//		}
+// Read the data from the config file
+		LinkedList<String> config_line_list = new LinkedList<String>();
+		short ret = FinanceRecorderCmnDef.get_config_file_lines(FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME, config_line_list);
 		int source_type_index_count = 0;
-		try
+
+		OUT:
+		for (String config_line : config_line_list)
 		{
-			reader = new BufferedReader(new FileReader(fp));
-			String buf;
-			OUT:
-			while ((buf = reader.readLine()) != null)
-			{
-				if (buf.length() == 0)
-					continue;
 // Check if the source type in the config file is in order
-				String data_array[] = buf.split(" ");
-				if (data_array.length != 2)
-				{
-					FinanceRecorderCmnDef.format_error("Incorrect config format: %s", buf);
-					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
-					break OUT;
-				}
-				String finance_database_description = data_array[0];
-				if (!finance_database_description.equals(FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index_count]))
-				{
-					String errmsg = String.format("The source type[%s] is NOT identical to %s in %s", finance_database_description, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index_count], FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
-					throw new RuntimeException(errmsg);
-				}
-				source_type_index_count++;
-				String time_array[] = data_array[1].split(":");
-// Find the start/end time string
-				database_time_range_array.add(new FinanceRecorderCmnClass.TimeRangeCfg(time_array[0], time_array[1]));
-			}
-		}
-		catch (IOException ex)
-		{
-			FinanceRecorderCmnDef.format_error("Error occur due to %s", ex.toString());
-			ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
-		}
-		finally 
-		{
-// Close the file
-			if (reader != null)
+			String data_array[] = config_line.split(" ");
+			if (data_array.length != 2)
 			{
-				try {reader.close();}
-				catch (IOException e){}// nothing to do here except log the exception
+				FinanceRecorderCmnDef.format_error("Incorrect config format: %s", config_line);
+				ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+				break OUT;
 			}
+			String finance_database_description = data_array[0];
+			if (!finance_database_description.equals(FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index_count]))
+			{
+				String errmsg = String.format("The source type[%s] is NOT identical to %s in %s", finance_database_description, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index_count], FinanceRecorderCmnDef.DATABASE_TIME_RANGE_CONF_FILENAME);
+				throw new RuntimeException(errmsg);
+			}
+			source_type_index_count++;
+			String time_array[] = data_array[1].split(":");
+// Find the start/end time string
+			database_time_range_array.add(new FinanceRecorderCmnClass.TimeRangeCfg(time_array[0], time_array[1]));
 		}
 		return ret;
 	}

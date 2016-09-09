@@ -1,4 +1,4 @@
-package com.price.finance_recorder;
+package com.price.finance_recorder_base;
 
 import java.util.ArrayList;
 import java.util.TreeMap;

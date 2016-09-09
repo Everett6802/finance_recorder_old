@@ -2,20 +2,19 @@ package com.price.finance_recorder;
 
 import java.io.*;
 import java.util.*;
-
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnClassCompanyProfile;
+//import com.price.finance_recorder_stock.FinanceRecorderCmnClassCompanyProfile;
 
 
 public class FinanceRecorder 
 {
 	enum ActionType{Action_None, Action_Read, Action_Write, Action_ReadWrite};
 	static final String PARAM_SPLIT = ",";
-	static FinanceRecorderMgrOld finance_recorder_mgr = new FinanceRecorderMgrOld();
+	static FinanceRecorderMgr finance_recorder_mgr = new FinanceRecorderMgr();
 
 	public static void main(String args[])
 	{
-		FinanceRecorderCmnClassCompanyProfile lookup = FinanceRecorderCmnClassCompanyProfile.get_instance();
+//		FinanceRecorderCmnClassCompanyProfile lookup = FinanceRecorderCmnClassCompanyProfile.get_instance();
 //		for (ArrayList<String> data : lookup.entry())
 //		{
 //			System.out.printf("%s\n", data.get(FinanceRecorderCompanyProfileLookup.COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER));
@@ -29,11 +28,6 @@ public class FinanceRecorder
 //			}
 //		}
 //		System.exit(0);
-		
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		ret = finance_recorder_mgr.initialize();
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			show_error_and_exit(String.format("Faiil to initialize the Manager class, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 
 		ActionType action_type = ActionType.Action_None;
 		boolean use_multithread = false;
@@ -47,7 +41,7 @@ public class FinanceRecorder
 		String restore_folderpath = null;
 		String restore_foldername = null;
 		LinkedList<Integer> remove_database_list = null;
-		LinkedList<Integer> finance_data_type_index_list = null;
+		LinkedList<Integer> source_type_index_list = null;
 		String time_month_begin = null;
 		String time_month_end = null;
 		String conf_filename = null;
@@ -85,17 +79,17 @@ public class FinanceRecorder
 				if (index + 1 >= args_len)
 					show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
 
-				finance_data_type_index_list = new LinkedList<Integer>();
+				source_type_index_list = new LinkedList<Integer>();
 				if (args[index + 1].equals("all"))
 				{
 					for (int source_index = 0 ; source_index < FinanceRecorderCmnDef.FinanceSourceType.values().length ; source_index++)
-						finance_data_type_index_list.addLast(source_index);
+						source_type_index_list.addLast(source_index);
 				}
 				else
 				{
 					String[] data_source_array = args[index + 1].split(PARAM_SPLIT);
 					for (String data_source : data_source_array)
-						finance_data_type_index_list.addLast(Integer.valueOf(data_source));
+						source_type_index_list.addLast(Integer.valueOf(data_source));
 				}
 				index_offset = 2;
 			}
@@ -228,6 +222,12 @@ public class FinanceRecorder
 			}
 			index += index_offset;
 		}
+
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		ret = finance_recorder_mgr.initialize();
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			show_error_and_exit(String.format("Faiil to initialize the Manager class, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+
 /////////////////////////////////////////////////////////////////
 // CAUTION: The process stops after restore !!!
 /////////////////////////////////////////////////////////////////
@@ -255,7 +255,7 @@ public class FinanceRecorder
 			delete_sql(remove_database_list);
 
 // Setup time range if necessary
-		if (finance_data_type_index_list != null)
+		if (source_type_index_list != null)
 		{
 			if (time_month_begin == null)
 				time_month_begin = FinanceRecorderCmnDef.get_time_month_today();
@@ -268,7 +268,7 @@ public class FinanceRecorder
 // If the config file is set, parse it...
 			if(FinanceRecorderCmnDef.is_show_console())
 			{
-				if (finance_data_type_index_list != null || time_month_begin != null || time_month_end != null)
+				if (source_type_index_list != null || time_month_begin != null || time_month_end != null)
 					System.out.println("Ingnore the Source/Time parameters");
 				System.out.printf("Setup config from file[%s]\n", conf_filename);
 			}
@@ -277,7 +277,7 @@ public class FinanceRecorder
 		else
 		{
 // If no config file is selected, check if the data source selection are set from the command line
-			if (finance_data_type_index_list == null)
+			if (source_type_index_list == null)
 			{
 				String msg = "No data sources are selected......";
 				FinanceRecorderCmnDef.debug(msg);
@@ -286,7 +286,7 @@ public class FinanceRecorder
 				action_type = ActionType.Action_None;
 			}
 			else
-				setup_time_range_table(finance_data_type_index_list, time_month_begin, time_month_end);
+				setup_time_range_table(source_type_index_list, time_month_begin, time_month_end);
 		}
 
 // Should be the first action since the database time range could probably be modified
@@ -414,10 +414,10 @@ public class FinanceRecorder
 		return ret;
 	}
 
-	private static short setup_time_range_table(LinkedList<Integer> finance_data_type_index_list, String time_month_begin, String time_month_end)
+	private static short setup_time_range_table(LinkedList<Integer> source_type_index_list, String time_month_begin, String time_month_end)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		ret = finance_recorder_mgr.setup_time_range_table_by_parameter(finance_data_type_index_list, time_month_begin, time_month_end);
+		ret = finance_recorder_mgr.setup_time_range_table_by_parameter(source_type_index_list, time_month_begin, time_month_end);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to setup the parameters, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 
@@ -434,23 +434,23 @@ public class FinanceRecorder
 		return ret;
 	}
 
-	private static short setup_backup_time_range_table(LinkedList<Integer> finance_data_type_index_list, String time_month_begin, String time_month_end)
+	private static short setup_backup_time_range_table(LinkedList<Integer> source_type_index_list, String time_month_begin, String time_month_end)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		ret = finance_recorder_mgr.setup_backup_time_range_table_by_parameter(finance_data_type_index_list, time_month_begin, time_month_end);
+		ret = finance_recorder_mgr.setup_backup_time_range_table_by_parameter(source_type_index_list, time_month_begin, time_month_end);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to setup the parameters, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 
 		return ret;
 	}
 
-	private static short delete_sql(LinkedList<Integer> finance_data_type_index_list)
+	private static short delete_sql(LinkedList<Integer> source_type_index_list)
 	{
 		if(FinanceRecorderCmnDef.is_show_console())
 			System.out.println("Delete old MySQL data......");
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		ret = finance_recorder_mgr.clear_multi(finance_data_type_index_list);
+		ret = finance_recorder_mgr.clear_multi(source_type_index_list);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to remove the old MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 

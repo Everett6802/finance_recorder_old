@@ -1,17 +1,18 @@
-package com.price.finance_recorder;
+package com.price.finance_recorder_stock;
 
 import java.util.*;
-
+import com.price.finance_recorder_base.FinanceRecorderCSVHandler;
+import com.price.finance_recorder_base.FinanceRecorderCSVHandlerMap;
+import com.price.finance_recorder_base.FinanceRecorderDataHandlerInf;
+//import com.price.finance_recorder_base.FinanceRecorderSQLClient;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnClassCompanyProfile;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.*;
 
 
 public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase implements FinanceRecorderDataHandlerInf
 {
-	private static FinanceRecorderCmnClassCompanyProfile company_profile = FinanceRecorderCmnClassCompanyProfile.get_instance();
+//	private static FinanceRecorderCmnClassCompanyProfile company_profile = FinanceRecorderCmnClassCompanyProfile.get_instance();
 	private static FinanceRecorderCmnClass.QuerySet whole_field_query_set = null;
 	private static String get_csv_filepath(String csv_folderpath, int source_type_index, int company_group_number, String company_code_number)
 	{
@@ -28,7 +29,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 //		return String.format("%s%s", company_code_number, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]);
 //	}
 
-	public static FinanceRecorderDataHandlerInf get_data_handler(final ArrayList<Integer> source_type_list, final CompanyGroupSet company_group_set)
+	public static FinanceRecorderDataHandlerInf get_data_handler(final LinkedList<Integer> source_type_list, final FinanceRecorderCompanyGroupSet company_group_set)
 	{
 		if (!FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
 		{
@@ -50,17 +51,17 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 	}
 	public static FinanceRecorderDataHandlerInf get_data_handler_whole()
 	{
-		ArrayList<Integer> source_type_list = new ArrayList<Integer>();
+		LinkedList<Integer> source_type_list = new LinkedList<Integer>();
 		int start_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_StockStart.value();
 		int end_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_StockEnd.value();
 		for (int source_type_index = start_index ; source_type_index < end_index ; source_type_index++)
 			source_type_list.add(source_type_index);
-		CompanyGroupSet company_group_set = CompanyGroupSet.get_whole_company_group_set();
+		FinanceRecorderCompanyGroupSet company_group_set = FinanceRecorderCompanyGroupSet.get_whole_company_group_set();
 		return get_data_handler(source_type_list, company_group_set);
 	}
 
-	private ArrayList<Integer> source_type_list = null;
-	private CompanyGroupSet company_group_set = null;
+	private LinkedList<Integer> source_type_list = null;
+	private FinanceRecorderCompanyGroupSet company_group_set = null;
 	private FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type = FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single;
 	private String csv_backup_foldername = FinanceRecorderCmnDef.COPY_BACKUP_FOLDERPATH;
 
