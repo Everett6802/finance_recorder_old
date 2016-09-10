@@ -61,26 +61,38 @@ public class FinanceRecorderCmnDef
 		"Warning Index Ignore" 
 	};
 
-	private static final String[] ErrorRetDescription = new String[] {
-			"Failure Base", "Failure Unknown", "Failure Invalid Argument",
-			"Failure Invalid Pointer", "Failure Insufficient Memory",
-			"Failure Incorrect Operation", "Failure Not Found",
-			"Failure Incorrect Config", "Failure Handle Thread",
-			"Failure Incorrect Path", "Failure IO Operation",
-			"Failure Unexpected Value" };
+	private static final String[] ErrorRetDescription = new String[] 
+	{
+		"Failure Base", 
+		"Failure Unknown", 
+		"Failure Invalid Argument",
+		"Failure Invalid Pointer", 
+		"Failure Insufficient Memory",
+		"Failure Incorrect Operation", 
+		"Failure Not Found",
+		"Failure Incorrect Config", 
+		"Failure Handle Thread",
+		"Failure Incorrect Path", 
+		"Failure IO Operation",
+		"Failure Unexpected Value" 
+	};
 
-	private static final String[] SQLErrorRetDescription = new String[] {
-			"SQL Failure Base", "SQL Failure Common",
-			"SQL Failure Unknown Database", "SQL Failure No Driver",
-			"SQL Failure Execute Command",
-			"SQL Failure Database Already Exist",
-			"SQL Failure Data Not Consistent" };
+	private static final String[] SQLErrorRetDescription = new String[] 
+	{
+		"SQL Failure Base", 
+		"SQL Failure Common",
+		"SQL Failure Unknown Database", 
+		"SQL Failure No Driver",
+		"SQL Failure Execute Command",
+		"SQL Failure Database Already Exist",
+		"SQL Failure Data Not Consistent" 
+	};
 
-	public static String GetErrorDescription(short error_code) {
+	public static String GetErrorDescription(short error_code) 
+	{
 		if (error_code >= RET_FAILURE_MYSQL_BASE)
 			return SQLErrorRetDescription[error_code - RET_FAILURE_MYSQL_BASE];
-		else if (error_code >= RET_FAILURE_BASE
-				&& error_code < RET_FAILURE_MYSQL_BASE)
+		else if (error_code >= RET_FAILURE_BASE && error_code < RET_FAILURE_MYSQL_BASE)
 			return ErrorRetDescription[error_code - RET_FAILURE_BASE];
 		else if (error_code >= RET_WARN_BASE)
 			return WarnRetDescription[error_code - RET_WARN_BASE];
@@ -100,10 +112,7 @@ public class FinanceRecorderCmnDef
 	public static final String COPY_BACKUP_FOLDERPATH = "/var/www/finance";
 	public static final String CSV_MARKET_FOLDERNAME = "market";
 	public static final String CSV_STOCK_FOLDERNAME = "stock";
-	public static final String CSV_FOLDERPATH = String.format("%s/%s",
-			CSV_ROOT_FOLDERPATH,
-			(IS_FINANCE_MARKET_MODE ? CSV_MARKET_FOLDERNAME
-					: CSV_STOCK_FOLDERNAME));
+	public static final String CSV_FOLDERPATH = String.format("%s/%s", CSV_ROOT_FOLDERPATH, (IS_FINANCE_MARKET_MODE ? CSV_MARKET_FOLDERNAME : CSV_STOCK_FOLDERNAME));
 	public static final String SQL_MARKET_DATABASE_NAME = "market";
 	public static final String SQL_STOCK_DATABASE_NAME = "stock";
 	public static final String RESULT_FOLDERNAME = "result";
@@ -156,12 +165,15 @@ public class FinanceRecorderCmnDef
 
 	// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// enumeration
-	public static enum FinanceAnalysisMode {
-		FinanceAnalysis_Market(0), FinanceAnalysis_Stock(1);
+	public static enum FinanceAnalysisMode 
+	{
+		FinanceAnalysis_Market(0), 
+		FinanceAnalysis_Stock(1);
 
 		private int value = 0;
 
-		private FinanceAnalysisMode(int value) {
+		private FinanceAnalysisMode(int value) 
+		{
 			this.value = value;
 		}
 
@@ -203,12 +215,15 @@ public class FinanceRecorderCmnDef
 
 		private int value = 0;
 
-		private FinanceSourceType(int value) {
+		private FinanceSourceType(int value) 
+		{
 			this.value = value;
 		}
 
-		public static FinanceSourceType valueOf(int value) {
-			switch (value) {
+		public static FinanceSourceType valueOf(int value) 
+		{
+			switch (value) 
+			{
 			case 0:
 				return FinanceSource_StockExchangeAndVolume;
 			case 1:
@@ -230,31 +245,39 @@ public class FinanceRecorderCmnDef
 			}
 		}
 
-		public int value() {
+		public int value() 
+		{
 			return this.value;
 		}
 
-		public static boolean is_market_source_type(int source_type_index) {
+		public static boolean is_market_source_type(int source_type_index) 
+		{
 			return (source_type_index >= FinanceSource_MarketStart.value && source_type_index < FinanceSource_MarketEnd.value);
 		}
 
-		public static boolean is_stock_source_type(int source_type_index) {
+		public static boolean is_stock_source_type(int source_type_index) 
+		{
 			return (source_type_index >= FinanceSource_StockStart.value && source_type_index < FinanceSource_StockEnd.value);
 		}
 	};
 
 	public static enum FinanceFieldType {
-		FinanceField_INT(0), FinanceField_LONG(1), FinanceField_FLOAT(2), FinanceField_DATE(
-				3);
+		FinanceField_INT(0), 
+		FinanceField_LONG(1), 
+		FinanceField_FLOAT(2), 
+		FinanceField_DATE(3);
 
 		private int value = 0;
 
-		private FinanceFieldType(int value) {
+		private FinanceFieldType(int value) 
+		{
 			this.value = value;
 		}
 
-		public static FinanceFieldType valueOf(int value) {
-			switch (value) {
+		public static FinanceFieldType valueOf(int value) 
+		{
+			switch (value) 
+			{
 			case 0:
 				return FinanceField_INT;
 			case 1:
@@ -268,7 +291,8 @@ public class FinanceRecorderCmnDef
 			}
 		}
 
-		public int value() {
+		public int value() 
+		{
 			return this.value;
 		}
 	};
@@ -314,18 +338,27 @@ public class FinanceRecorderCmnDef
 
 	public static enum ResultSetDataUnit {ResultSetDataUnit_NoSourceType, ResultSetDataUnit_SourceType};
 
-	public static final String[] FINANCE_DATA_NAME_LIST = new String[] {
-			"stock_exchange_and_volume",
-			"stock_top3_legal_persons_net_buy_or_sell",
-			"stock_margin_trading_and_short_selling",
-			"future_and_option_top3_legal_persons_open_interest",
-			"future_or_option_top3_legal_persons_open_interest",
-			"option_top3_legal_persons_buy_and_sell_option_open_interest",
-			"option_put_call_ratio", "future_top10_dealers_and_legal_persons" };
-	public static final String[] FINANCE_DATA_DESCRIPTION_LIST = new String[] {
-			"臺股指數及成交量", "三大法人現貨買賣超", "現貨融資融券餘額", "三大法人期貨和選擇權留倉淨額",
-			"三大法人期貨或選擇權留倉淨額", "三大法人選擇權買賣權留倉淨額", "三大法人選擇權賣權買權比",
-			"十大交易人及特定法人期貨資訊" };
+	public static final String[] FINANCE_DATA_NAME_LIST = new String[] 
+	{
+		"stock_exchange_and_volume",
+		"stock_top3_legal_persons_net_buy_or_sell",
+		"stock_margin_trading_and_short_selling",
+		"future_and_option_top3_legal_persons_open_interest",
+		"future_or_option_top3_legal_persons_open_interest",
+		"option_top3_legal_persons_buy_and_sell_option_open_interest",
+		"option_put_call_ratio", "future_top10_dealers_and_legal_persons" 
+	};
+	public static final String[] FINANCE_DATA_DESCRIPTION_LIST = new String[] 
+	{
+		"臺股指數及成交量", 
+		"三大法人現貨買賣超", 
+		"現貨融資融券餘額", 
+		"三大法人期貨和選擇權留倉淨額",
+		"三大法人期貨或選擇權留倉淨額", 
+		"三大法人選擇權買賣權留倉淨額", 
+		"三大法人選擇權賣權買權比",
+		"十大交易人及特定法人期貨資訊" 
+	};
 	public static final String[] FINANCE_DATA_SQL_FIELD_LIST = new String[] {
 			transform_array_to_sql_string(merge_string_array_element(
 					FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_DEFINITION,
@@ -393,21 +426,21 @@ public class FinanceRecorderCmnDef
 	private static boolean set_show_console = false;
 	private static boolean show_console = false;
 
-	public static void enable_show_console(boolean show) {
-		if (!set_show_console) {
+	public static void enable_show_console(boolean show) 
+	{
+		if (!set_show_console) 
+		{
 			show_console = show;
 			set_show_console = true;
-		} else
+		} 
+		else
+		{
 			warn("The show_console variable has already been Set");
+		}
 	}
+	public static boolean is_show_console() {return show_console;}
 
-	public static boolean is_show_console() {
-		return show_console;
-	}
-
-	public static void wait_for_logging() {
-		finance_recorder_logger.deinitialize();
-	}
+	public static void wait_for_logging() {finance_recorder_logger.deinitialize();}
 
 	// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Functions
@@ -478,45 +511,50 @@ public class FinanceRecorderCmnDef
 		return mode;
 	}
 
-	private static boolean is_market_mode() {
+	private static boolean is_market_mode() 
+	{
 		return get_finance_analysis_mode() == FinanceAnalysisMode.FinanceAnalysis_Market;
 	}
 
-	private static boolean is_stock_mode() {
+	private static boolean is_stock_mode() 
+	{
 		return get_finance_analysis_mode() == FinanceAnalysisMode.FinanceAnalysis_Stock;
 	}
 
-	public static int get_source_key(int source_type_index) {
-		if (!IS_FINANCE_MARKET_MODE) {
+	public static int get_source_key(int source_type_index) 
+	{
+		if (!IS_FINANCE_MARKET_MODE) 
+		{
 			String errmsg = "It's NOT Market mode";
 			throw new IllegalStateException(errmsg);
 		}
 		return source_type_index;
 	}
 
-	public static int get_source_key(int source_type_index,
-			int company_group_number, String company_code_number) {
-		if (!IS_FINANCE_STOCK_MODE) {
+	public static int get_source_key(int source_type_index, int company_group_number, String company_code_number) 
+	{
+		if (!IS_FINANCE_STOCK_MODE) 
+		{
 			String errmsg = "It's NOT Stock mode";
 			throw new IllegalStateException(errmsg);
 		}
 		int company_code_number_int = Integer.valueOf(company_code_number);
-		return (company_group_number << SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET
-				| company_code_number_int << SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET | source_type_index << SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET);
+		return (company_group_number << SOURCE_KEY_COMPANY_GROUP_NUMBER_BIT_OFFSET | company_code_number_int << SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET | source_type_index << SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET);
 	}
 
-	public static int get_source_type(int source_key) {
+	public static int get_source_type(int source_key) 
+	{
 		return ((source_key & SOURCE_KEY_SOURCE_TYPE_INDEX_MASK) >> SOURCE_KEY_SOURCE_TYPE_INDEX_BIT_OFFSET);
 	}
 
-	public static String get_company_code_number(int source_key) {
-		if (!IS_FINANCE_STOCK_MODE) {
+	public static String get_company_code_number(int source_key)
+	{
+		if (!IS_FINANCE_STOCK_MODE) 
+		{
 			String errmsg = "It's NOT Stock mode";
 			throw new IllegalStateException(errmsg);
 		}
-		return String
-				.format("%04d",
-						(source_key & SOURCE_KEY_COMPANY_GROUP_NUMBER_MASK) >> SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET);
+		return String.format("%04d", (source_key & SOURCE_KEY_COMPANY_GROUP_NUMBER_MASK) >> SOURCE_KEY_COMPANY_CODE_NUMBER_BIT_OFFSET);
 	}
 
 	public static int get_company_group_number(int source_key) 
@@ -673,36 +711,64 @@ public class FinanceRecorderCmnDef
 			throw new IndexOutOfBoundsException(String.format("Day[%d] is NOT in range [%d, %d]", day_value, FinanceRecorderCmnDef.DEF_START_DAY, end_day_in_month));
 	}
 
-	public static short get_config_file_lines(String filename,
-			LinkedList<String> config_line_list) {
+	public static int get_quarter_from_month(int month)
+	{
+		check_month_range(month);
+		switch (month)
+		{
+		case 1:
+		case 2:
+		case 3:
+			return 1;
+		case 4:
+		case 5:
+		case 6:
+			return 2;
+		case 7:
+		case 8:
+		case 9:
+			return 3;
+		case 10:
+		case 11:
+		case 12:
+			return 4;
+		}
+// Impossible to reach
+		return 0;
+	}
+	
+	public static short get_config_file_lines(String filename, LinkedList<String> config_line_list) {
 		String current_path = get_current_path();
-		String conf_filepath = String.format("%s/%s/%s", current_path,
-				CONF_FOLDERNAME, filename);
+		String conf_filepath = String.format("%s/%s/%s", current_path, CONF_FOLDERNAME, filename);
 		debug(String.format("Check the config file[%s] exist", conf_filepath));
 		File f = new File(conf_filepath);
-		if (!f.exists()) {
-			format_error("The configration file[%s] does NOT exist",
-					conf_filepath);
+		if (!f.exists()) 
+		{
+			format_error("The configration file[%s] does NOT exist", conf_filepath);
 			return RET_FAILURE_NOT_FOUND;
 		}
 
 		// Open the config file for reading
 		BufferedReader br = null;
-		try {
+		try 
+		{
 			FileInputStream fis = new FileInputStream(f);
 			InputStreamReader isr = new InputStreamReader(fis);
 			br = new BufferedReader(isr);
-		} catch (IOException e) {
-			format_error("Fails to open %s file, due to: %s", conf_filepath,
-					e.toString());
+		} 
+		catch (IOException e) 
+		{
+			format_error("Fails to open %s file, due to: %s", conf_filepath, e.toString());
 			return RET_FAILURE_IO_OPERATION;
 		}
 
 		short ret = RET_SUCCESS;
 		// Read the conf file
-		try {
+		try 
+		{
 			String line = null;
-			while ((line = br.readLine()) != null) {
+			while ((line = br.readLine()) != null) 
+			{
 				if (line.startsWith("#"))
 					continue;
 				String line_strip = line.replace("\n", "");
@@ -710,34 +776,39 @@ public class FinanceRecorderCmnDef
 					continue;
 				config_line_list.add(line_strip);
 			}
-		} catch (IOException e) {
-			format_error(
-					"IO Error occur while parsing the config file, due to: %s",
-					e.toString());
+		} 
+		catch (IOException e) 
+		{
+			format_error("IO Error occur while parsing the config file, due to: %s", e.toString());
 			ret = RET_FAILURE_IO_OPERATION;
-		} catch (Exception e) {
-			format_error(
-					"Error occur while parsing the config file, due to: %s",
-					e.toString());
+		} 
+		catch (Exception e) 
+		{
+			format_error("Error occur while parsing the config file, due to: %s", e.toString());
 			ret = RET_FAILURE_UNKNOWN;
-		} finally {
-			if (br != null) {
-				try {
+		} 
+		finally 
+		{
+			if (br != null) 
+			{
+				try 
+				{
 					br.close();
-				} catch (Exception e) {
-				}
+				} 
+				catch (Exception e) {}
 				br = null;
 			}
 		}
 		return ret;
 	}
 
-	private static FinanceFieldType[] TransformFieldTypeString2Enum(
-			String[] field_type_string_list) {
+	private static FinanceFieldType[] TransformFieldTypeString2Enum(String[] field_type_string_list) {
 		FinanceFieldType[] file_type_int_list = new FinanceFieldType[field_type_string_list.length];
-		for (int i = 0; i < field_type_string_list.length; i++) {
+		for (int i = 0; i < field_type_string_list.length; i++) 
+		{
 			String field_type_string = field_type_string_list[i].split(" ")[0];
-			switch (field_type_string) {
+			switch (field_type_string) 
+			{
 			case "INT":
 				file_type_int_list[i] = FinanceFieldType.FinanceField_INT;
 				break;
@@ -751,16 +822,15 @@ public class FinanceRecorderCmnDef
 				file_type_int_list[i] = FinanceFieldType.FinanceField_DATE;
 				break;
 			default:
-				throw new IllegalArgumentException(String.format(
-						"Unknown field type: %s", field_type_string));
+				throw new IllegalArgumentException(String.format("Unknown field type: %s", field_type_string));
 			}
 		}
 		return file_type_int_list;
 	}
 
-	private static final String get_code_position() {
-		return String.format("%s:%d", FinanceRecorderCmnBase.__FILE__(),
-				FinanceRecorderCmnBase.__LINE__());
+	private static final String get_code_position() 
+	{
+		return String.format("%s:%d", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__());
 	}
 
 	// public static String field_array_to_string(String[] field_array)
@@ -782,66 +852,59 @@ public class FinanceRecorderCmnDef
 	// return field_string.split(DATA_SPLIT);
 	// }
 
-	public static void debug(String msg) {
+	public static void debug(String msg) 
+	{
 		finance_recorder_logger.write_debug_msg(String.format("[%s:%d] %s",
 				FinanceRecorderCmnBase.__FILE__(),
 				FinanceRecorderCmnBase.__LINE__(), msg));
 	}
 
-	public static void info(String msg) {
-		finance_recorder_logger.write_info_msg(String.format("[%s:%d] %s",
-				FinanceRecorderCmnBase.__FILE__(),
-				FinanceRecorderCmnBase.__LINE__(), msg));
+	public static void info(String msg) 
+	{
+		finance_recorder_logger.write_info_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), msg));
 	}
 
-	public static void warn(String msg) {
-		finance_recorder_logger.write_warn_msg(String.format("[%s:%d] %s",
-				FinanceRecorderCmnBase.__FILE__(),
-				FinanceRecorderCmnBase.__LINE__(), msg));
+	public static void warn(String msg) 
+	{
+		finance_recorder_logger.write_warn_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), msg));
 	}
 
-	public static void error(String msg) {
-		finance_recorder_logger.write_error_msg(String.format("[%s:%d] %s",
-				FinanceRecorderCmnBase.__FILE__(),
-				FinanceRecorderCmnBase.__LINE__(), msg));
+	public static void error(String msg) 
+	{
+		finance_recorder_logger.write_error_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), msg));
 	}
 
-	public static void format_debug(String format, Object... arguments) {
-		finance_recorder_logger.write_debug_msg(String.format("[%s:%d] %s",
-				FinanceRecorderCmnBase.__FILE__(),
-				FinanceRecorderCmnBase.__LINE__(),
-				String.format(format, arguments)));
+	public static void format_debug(String format, Object... arguments) 
+	{
+		finance_recorder_logger.write_debug_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), String.format(format, arguments)));
 	}
 
-	public static void format_info(String format, Object... arguments) {
-		finance_recorder_logger.write_info_msg(String.format("[%s:%d] %s",
-				FinanceRecorderCmnBase.__FILE__(),
-				FinanceRecorderCmnBase.__LINE__(),
-				String.format(format, arguments)));
+	public static void format_info(String format, Object... arguments) 
+	{
+		finance_recorder_logger.write_info_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), String.format(format, arguments)));
 	}
 
-	public static void format_warn(String format, Object... arguments) {
-		finance_recorder_logger.write_warn_msg(String.format("[%s:%d] %s",
-				FinanceRecorderCmnBase.__FILE__(),
-				FinanceRecorderCmnBase.__LINE__(),
-				String.format(format, arguments)));
+	public static void format_warn(String format, Object... arguments)
+	{
+		finance_recorder_logger.write_warn_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), String.format(format, arguments)));
 	}
 
-	public static void format_error(String format, Object... arguments) {
-		finance_recorder_logger.write_error_msg(String.format("[%s:%d] %s",
-				FinanceRecorderCmnBase.__FILE__(),
-				FinanceRecorderCmnBase.__LINE__(),
-				String.format(format, arguments)));
+	public static void format_error(String format, Object... arguments) 
+	{
+		finance_recorder_logger.write_error_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), String.format(format, arguments)));
 	}
 
-	public static String get_current_path() {
+	public static String get_current_path() 
+	{
 		String cur_path = null;
-		try {
+		try 
+		{
 			File cur_dir = new File(".");
 			cur_path = cur_dir.getCanonicalPath();
-		} catch (Exception e) {
-			error(String.format("Fail to get the current path: %s",
-					e.toString()));
+		} 
+		catch (Exception e) 
+		{
+			error(String.format("Fail to get the current path: %s", e.toString()));
 			return null;
 		}
 		return cur_path;
@@ -863,12 +926,12 @@ public class FinanceRecorderCmnDef
 		return string_arr;
 	}
 
-	public static String transform_array_to_sql_string(String[] string_arr) {
+	public static String transform_array_to_sql_string(String[] string_arr) 
+	{
 		String sql_string = null;
-		for (String string : string_arr) {
-			String encoded_string = string;// new
-											// String(string.getBytes("UTF-16"),
-											// "Big5");
+		for (String string : string_arr) 
+		{
+			String encoded_string = string; // new String(string.getBytes("UTF-16"), "Big5");
 			if (sql_string == null)
 				sql_string = encoded_string;
 			else
@@ -877,7 +940,10 @@ public class FinanceRecorderCmnDef
 		return sql_string;
 	}
 
-	private static int get_month_last_day(int year, int month) {
+	public static int get_month_last_day(int year, int month) 
+	{
+		check_year_range(year);
+		check_month_range(month);
 		Calendar calendar = Calendar.getInstance();
 		// passing month-1 because 0-->jan, 1-->feb... 11-->dec
 		calendar.set(year, month - 1, 1);
@@ -885,11 +951,36 @@ public class FinanceRecorderCmnDef
 		return calendar.get(Calendar.DATE);
 	}
 
-	public static java.util.Date get_date(String date_str)
-			throws ParseException {
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your
-																			// template
-																			// here
+	public static int get_quarter_first_month(int quarter) 
+	{
+		check_quarter_range(quarter);
+		return (quarter * 3 - 2);
+	}
+	public static int get_quarter_last_month(int quarter) 
+	{
+		check_quarter_range(quarter);
+		return (quarter * 3);
+	}
+
+	public static int get_quarter_last_day(int quarter) 
+	{
+		check_quarter_range(quarter);
+		switch (quarter)
+		{
+		case 1:
+		case 4:
+			return 31;
+		case 2:
+		case 3:
+			return 30;
+		}
+// Should not reach
+		return 0;
+	}
+
+	public static java.util.Date get_date(String date_str) throws ParseException 
+	{
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
 		java.util.Date date = formatter.parse(date_str);
 		return date;
 	}
@@ -990,7 +1081,8 @@ public class FinanceRecorderCmnDef
 		return ret;
 	}
 
-	public static short direct_string_to_output_stream(String data) {
+	public static short direct_string_to_output_stream(String data) 
+	{
 		return direct_string_to_output_stream(data, null);
 	}
 
@@ -1024,14 +1116,15 @@ public class FinanceRecorderCmnDef
 		return RET_SUCCESS;
 	}
 
-	public static boolean check_file_exist(final String filepath) {
+	public static boolean check_file_exist(final String filepath) 
+	{
 		File file = new File(filepath);
 		return file.exists();
 	}
 
-	public static boolean check_config_file_exist(final String config_filename) {
-		String conf_filepath = String.format("%s/%s/%s", get_current_path(),
-				CONF_FOLDERNAME, config_filename);
+	public static boolean check_config_file_exist(final String config_filename) 
+	{
+		String conf_filepath = String.format("%s/%s/%s", get_current_path(), CONF_FOLDERNAME, config_filename);
 		return check_file_exist(conf_filepath);
 	}
 
@@ -1045,7 +1138,8 @@ public class FinanceRecorderCmnDef
 		return ret;
 	}
 
-	public static short create_folder_if_not_exist(final String path) {
+	public static short create_folder_if_not_exist(final String path) 
+	{
 		if (!check_file_exist(path))
 			return create_folder(path);
 		return RET_SUCCESS;
@@ -1081,19 +1175,21 @@ public class FinanceRecorderCmnDef
 	}
 
 	// Index range: Positive: [0, data_size-1]; Negative: [-1, -data_size]
-	public static int get_index_ex(int index, int data_size) {
+	public static int get_index_ex(int index, int data_size) 
+	{
 		return ((index < 0) ? index = data_size + index : index);
 	}
 
 	// Start index range: Positive: [0, data_size-1]; Negative: [-1, -data_size]
-	public static int get_start_index_ex(int index, int data_size) {
+	public static int get_start_index_ex(int index, int data_size) 
+	{
 		return get_index_ex(index, data_size);
 	}
 
 	// End index range: Positive: [1, data_size]; Negative: [-1, -data_size]
-	public static int get_end_index_ex(int end_index, int data_size) {
-		return ((end_index < 0) ? end_index = data_size + end_index + 1
-				: end_index);
+	public static int get_end_index_ex(int end_index, int data_size) 
+	{
+		return ((end_index < 0) ? end_index = data_size + end_index + 1 : end_index);
 	}
 
 	public static boolean check_start_index_in_range(int start_index,
@@ -1193,8 +1289,8 @@ public class FinanceRecorderCmnDef
 		return RET_SUCCESS;
 	}
 
-	public static short copy_folder(String src_folderpath,
-			String dest_folderpath) {
+	public static short copy_folder(String src_folderpath, String dest_folderpath) 
+	{
 		File src = new File(src_folderpath);
 		if (!src.exists()) {
 			format_error("Source Folder[%s] Not Found", src_folderpath);
@@ -1206,7 +1302,8 @@ public class FinanceRecorderCmnDef
 
 	// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Interface
-	public interface FinanceObserverInf {
+	public interface FinanceObserverInf 
+	{
 		public short notify(short type);
 	}
 }

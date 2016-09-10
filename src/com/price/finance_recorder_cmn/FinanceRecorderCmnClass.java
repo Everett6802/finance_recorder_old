@@ -102,6 +102,9 @@ public class FinanceRecorderCmnClass
 		public boolean not_equal(FinanceDate another){return (compareTo(another) != 0);}
 		public boolean greater(FinanceDate another){return (compareTo(another) > 0);}
 		public boolean greater_equal(FinanceDate another){return (compareTo(another) >= 0);}
+
+		public FinanceMonth get_month_object(){return new FinanceMonth(year, month);}
+		public FinanceQuarter get_quarter_object(){return new FinanceQuarter(year, FinanceRecorderCmnDef.get_quarter_from_month(month));}
 	};
 
 	public static class FinanceMonth extends FinanceTimeBase implements Comparable
@@ -176,6 +179,10 @@ public class FinanceRecorderCmnClass
 		public boolean not_equal(FinanceMonth another){return (compareTo(another) != 0);}
 		public boolean greater(FinanceMonth another){return (compareTo(another) > 0);}
 		public boolean greater_equal(FinanceMonth another){return (compareTo(another) >= 0);}
+
+		public FinanceDate get_date_start_object(){return new FinanceDate(year, month, 1);}
+		public FinanceDate get_date_end_object(){return new FinanceDate(year, month, FinanceRecorderCmnDef.get_month_last_day(year, month));}
+		public FinanceQuarter get_quarter_object(){return new FinanceQuarter(year, FinanceRecorderCmnDef.get_quarter_from_month(month));}
 	};
 
 	public static class FinanceQuarter extends FinanceTimeBase implements Comparable
@@ -250,6 +257,15 @@ public class FinanceRecorderCmnClass
 		public boolean not_equal(FinanceQuarter another){return (compareTo(another) != 0);}
 		public boolean greater(FinanceQuarter another){return (compareTo(another) > 0);}
 		public boolean greater_equal(FinanceQuarter another){return (compareTo(another) >= 0);}
+
+		public FinanceDate get_date_start_object(){return new FinanceDate(year, FinanceRecorderCmnDef.get_quarter_first_month(quarter), 1);}
+		public FinanceDate get_date_end_object()
+		{
+			int month = FinanceRecorderCmnDef.get_quarter_last_month(quarter);
+			return new FinanceDate(year, month, FinanceRecorderCmnDef.get_quarter_last_day(month));
+		}
+		public FinanceMonth get_month_start_object(){return new FinanceMonth(year, FinanceRecorderCmnDef.get_quarter_first_month(quarter));}
+		public FinanceMonth get_month_end_object(){return new FinanceMonth(year, FinanceRecorderCmnDef.get_quarter_last_month(quarter));}
 	};
 
 	public static class FinanceTime
@@ -364,6 +380,9 @@ public class FinanceRecorderCmnClass
 			return new int[]{start_value_list[0], start_value_list[1], start_value_list[2], end_value_list[0], end_value_list[1], end_value_list[2]};
 		}
 		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Date;}
+
+		public FinanceMonthRange get_month_object(){return new FinanceMonthRange(finance_date_start.get_month_object(), finance_date_end.get_month_object());}
+		public FinanceQuarterRange get_quarter_object(){return new FinanceQuarterRange(finance_date_start.get_quarter_object(), finance_date_end.get_quarter_object());}
 	};
 
 	public static class FinanceMonthRange extends FinanceTimeRangeBase
@@ -420,6 +439,9 @@ public class FinanceRecorderCmnClass
 			return new int[]{start_value_list[0], start_value_list[1], end_value_list[0], end_value_list[1]};
 		}
 		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Month;}
+
+		public FinanceDateRange get_date_object(){return new FinanceDateRange(finance_month_start.get_date_start_object(), finance_month_end.get_date_end_object());}
+		public FinanceQuarterRange get_quarter_object(){return new FinanceQuarterRange(finance_month_start.get_quarter_object(), finance_month_end.get_quarter_object());}
 	};
 
 	public static class FinanceQuarterRange extends FinanceTimeRangeBase
@@ -476,6 +498,9 @@ public class FinanceRecorderCmnClass
 			return new int[]{start_value_list[0], start_value_list[1], end_value_list[0], end_value_list[1]};
 		}
 		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Quarter;}
+
+		public FinanceDateRange get_date_object(){return new FinanceDateRange(finance_quarter_start.get_date_start_object(), finance_quarter_end.get_date_end_object());}
+		public FinanceMonthRange get_month_object(){return new FinanceMonthRange(finance_quarter_start.get_month_start_object(), finance_quarter_end.get_month_end_object());}
 	};
 
 	public static class FinanceTimeRange
