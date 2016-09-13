@@ -177,8 +177,10 @@ public class FinanceRecorderCmnDef
 			this.value = value;
 		}
 
-		public static FinanceAnalysisMode valueOf(int value) {
-			switch (value) {
+		public static FinanceAnalysisMode valueOf(int value)
+		{
+			switch (value) 
+			{
 			case 0:
 				return FinanceAnalysis_Market;
 			case 1:
@@ -188,7 +190,8 @@ public class FinanceRecorderCmnDef
 			}
 		}
 
-		public int value() {
+		public int value() 
+		{
 			return this.value;
 		}
 	};
@@ -261,7 +264,8 @@ public class FinanceRecorderCmnDef
 		}
 	};
 
-	public static enum FinanceFieldType {
+	public static enum FinanceFieldType 
+	{
 		FinanceField_INT(0), 
 		FinanceField_LONG(1), 
 		FinanceField_FLOAT(2), 
@@ -306,12 +310,15 @@ public class FinanceRecorderCmnDef
 
 		private int value = 0;
 
-		private FinanceTimeUnit(int value) {
+		private FinanceTimeUnit(int value) 
+		{
 			this.value = value;
 		}
 
-		public static FinanceTimeUnit valueOf(int value) {
-			switch (value) {
+		public static FinanceTimeUnit valueOf(int value) 
+		{
+			switch (value) 
+			{
 			case 0:
 				return FinanceTime_Date;
 			case 1:
@@ -325,8 +332,81 @@ public class FinanceRecorderCmnDef
 			}
 		}
 
-		public int value() {
+		public int value() 
+		{
 			return this.value;
+		}
+	};
+
+	public static enum FinanceTimeRangeType
+	{
+		FinanceTimeRange_Between(0), 
+		FinanceTimeRange_Greater(1),
+		FinanceTimeRange_GreaterEqual(2),
+		FinanceTimeRange_Less(3),
+		FinanceTimeRange_LessEqual(4),
+		FinanceTimeRange_Undefined(5);
+
+		private int value = 0;
+
+		private FinanceTimeRangeType(int value) 
+		{
+			this.value = value;
+		}
+
+		public static FinanceTimeRangeType valueOf(int value)
+		{
+			switch (value) 
+			{
+			case 0:
+				return FinanceTimeRange_Between;
+			case 1:
+				return FinanceTimeRange_Greater;
+			case 2:
+				return FinanceTimeRange_GreaterEqual;
+			case 3:
+				return FinanceTimeRange_Less;
+			case 4:
+				return FinanceTimeRange_LessEqual;
+			default:
+				return null;
+			}
+		}
+
+		public int value() 
+		{
+			return this.value;
+		}
+		public boolean is_time_start_exist()
+		{
+			switch (value) 
+			{
+			case 0:
+			case 1:
+			case 2:
+				return true;
+			}
+			return false;
+		}
+		public boolean is_time_end_exist()
+		{
+			switch (value) 
+			{
+			case 0:
+			case 3:
+			case 4:
+				return true;
+			}
+			return false;
+		}
+		public boolean is_time_range_exist()
+		{
+			switch (value) 
+			{
+			case 0:
+				return true;
+			}
+			return false;
 		}
 	};
 
@@ -359,67 +439,61 @@ public class FinanceRecorderCmnDef
 		"三大法人選擇權賣權買權比",
 		"十大交易人及特定法人期貨資訊" 
 	};
-	public static final String[] FINANCE_DATA_SQL_FIELD_LIST = new String[] {
-			transform_array_to_sql_string(merge_string_array_element(
-					FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_DEFINITION,
-					FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION)),
-			transform_array_to_sql_string(merge_string_array_element(
-					FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION,
-					FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION)),
-			transform_array_to_sql_string(merge_string_array_element(
-					FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DEFINITION,
-					FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION)),
-			transform_array_to_sql_string(merge_string_array_element(
-					FinanceRecorderCmnDefMarketDatabase.FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION,
-					FinanceRecorderCmnDefMarketDatabase.FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION)),
-			transform_array_to_sql_string(merge_string_array_element(
-					FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION,
-					FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION)),
-			transform_array_to_sql_string(merge_string_array_element(
-					FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DEFINITION,
-					FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION)),
-			transform_array_to_sql_string(merge_string_array_element(
-					FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_DEFINITION,
-					FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION)),
-			transform_array_to_sql_string(merge_string_array_element(
-					FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION,
-					FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION)) };
-	public static final String[][] FINANCE_DATA_SQL_FIELD_DEFINITION_LIST = new String[][] {
-			FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_DEFINITION,
-			FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION,
-			FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DEFINITION,
-			FinanceRecorderCmnDefMarketDatabase.FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION,
-			FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION,
-			FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DEFINITION,
-			FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_DEFINITION,
-			FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION };
-	public static final String[][] FINANCE_DATA_SQL_FIELD_TYPE_DEFINITION_LIST = new String[][] {
-			FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION,
-			FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION,
-			FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION,
-			FinanceRecorderCmnDefMarketDatabase.FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
-			FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
-			FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
-			FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION,
-			FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION };
-	public static final FinanceFieldType[][] FINANCE_DATABASE_FIELD_TYPE_LIST = new FinanceFieldType[][] {
-			TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION),
-			TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION),
-			TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION),
-			TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION),
-			TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION),
-			TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION),
-			TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION),
-			TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION) };
-	public static final int FINANCE_DATABASE_FIELD_AMOUNT_LIST[] = {
-			FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION.length,
-			FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION.length,
-			FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION.length,
-			FinanceRecorderCmnDefMarketDatabase.FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION.length,
-			FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION.length,
-			FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION.length,
-			FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION.length,
-			FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION.length };
+	public static final String[] FINANCE_DATA_SQL_FIELD_LIST = new String[] 
+	{
+		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION)) 
+	};
+	public static final String[][] FINANCE_DATA_SQL_FIELD_DEFINITION_LIST = new String[][] 
+	{
+		FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_DEFINITION,
+		FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION,
+		FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DEFINITION,
+		FinanceRecorderCmnDefMarketDatabase.FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION,
+		FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION,
+		FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DEFINITION,
+		FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_DEFINITION,
+		FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION 
+	};
+	public static final String[][] FINANCE_DATA_SQL_FIELD_TYPE_DEFINITION_LIST = new String[][] 
+	{
+		FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION,
+		FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION,
+		FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION,
+		FinanceRecorderCmnDefMarketDatabase.FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
+		FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
+		FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
+		FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION,
+		FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION 
+		};
+	public static final FinanceFieldType[][] FINANCE_DATABASE_FIELD_TYPE_LIST = new FinanceFieldType[][] 
+	{
+		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION) 
+	};
+	public static final int FINANCE_DATABASE_FIELD_AMOUNT_LIST[] = 
+	{
+		FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION.length,
+		FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION.length,
+		FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION.length,
+		FinanceRecorderCmnDefMarketDatabase.FUTURE_AND_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION.length,
+		FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION.length,
+		FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION.length,
+		FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION.length,
+		FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION.length 
+	};
 
 	// Setter and Getter
 	// Allow to assign the variable only once
@@ -445,7 +519,8 @@ public class FinanceRecorderCmnDef
 	// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Functions
 
-	private static FinanceAnalysisMode get_finance_analysis_mode() {
+	private static FinanceAnalysisMode get_finance_analysis_mode() 
+	{
 		FinanceAnalysisMode mode = null;
 		String errmsg;
 		//
@@ -486,26 +561,22 @@ public class FinanceRecorderCmnDef
 		// }
 		// Read the data from the config file
 		LinkedList<String> config_line_list = new LinkedList<String>();
-		short res = get_config_file_lines(MARKET_STOCK_SWITCH_CONF_FILENAME,
-				config_line_list);
-		if (CheckFailure(res)) {
-			errmsg = String
-					.format("Fail to parse the config file: %s, due to: %s",
-							MARKET_STOCK_SWITCH_CONF_FILENAME,
-							GetErrorDescription(res));
+		short res = get_config_file_lines(MARKET_STOCK_SWITCH_CONF_FILENAME, config_line_list);
+		if (CheckFailure(res)) 
+		{
+			errmsg = String.format("Fail to parse the config file: %s, due to: %s", MARKET_STOCK_SWITCH_CONF_FILENAME, GetErrorDescription(res));
 			throw new RuntimeException(errmsg);
 		}
-		if (config_line_list.size() != 1) {
-			errmsg = String.format("Incorrect content in the config file: %s",
-					MARKET_STOCK_SWITCH_CONF_FILENAME);
+		if (config_line_list.size() != 1) 
+		{
+			errmsg = String.format("Incorrect content in the config file: %s", MARKET_STOCK_SWITCH_CONF_FILENAME);
 			throw new RuntimeException(errmsg);
 		}
 
-		mode = FinanceAnalysisMode.valueOf(Integer.parseInt(config_line_list
-				.get(0)));
-		if (mode == null) {
-			errmsg = String.format("Unknown finance analysis mode: %s",
-					config_line_list.get(0));
+		mode = FinanceAnalysisMode.valueOf(Integer.parseInt(config_line_list.get(0)));
+		if (mode == null) 
+		{
+			errmsg = String.format("Unknown finance analysis mode: %s", config_line_list.get(0));
 			throw new RuntimeException(errmsg);
 		}
 		return mode;
@@ -737,7 +808,8 @@ public class FinanceRecorderCmnDef
 		return 0;
 	}
 	
-	public static short get_config_file_lines(String filename, LinkedList<String> config_line_list) {
+	public static short get_config_file_lines(String filename, LinkedList<String> config_line_list) 
+	{
 		String current_path = get_current_path();
 		String conf_filepath = String.format("%s/%s/%s", current_path, CONF_FOLDERNAME, filename);
 		debug(String.format("Check the config file[%s] exist", conf_filepath));
@@ -802,7 +874,8 @@ public class FinanceRecorderCmnDef
 		return ret;
 	}
 
-	private static FinanceFieldType[] TransformFieldTypeString2Enum(String[] field_type_string_list) {
+	private static FinanceFieldType[] TransformFieldTypeString2Enum(String[] field_type_string_list) 
+	{
 		FinanceFieldType[] file_type_int_list = new FinanceFieldType[field_type_string_list.length];
 		for (int i = 0; i < field_type_string_list.length; i++) 
 		{
@@ -854,9 +927,7 @@ public class FinanceRecorderCmnDef
 
 	public static void debug(String msg) 
 	{
-		finance_recorder_logger.write_debug_msg(String.format("[%s:%d] %s",
-				FinanceRecorderCmnBase.__FILE__(),
-				FinanceRecorderCmnBase.__LINE__(), msg));
+		finance_recorder_logger.write_debug_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), msg));
 	}
 
 	public static void info(String msg) 
@@ -910,19 +981,16 @@ public class FinanceRecorderCmnDef
 		return cur_path;
 	}
 
-	private static String[] merge_string_array_element(String[] string_arr1,
-			String[] string_arr2) {
-		if (string_arr1.length != string_arr2.length) {
-			assert false : String
-					.format("The length of string_arr1 and string_arr2 are NOT equal: %d, %d",
-							string_arr1.length, string_arr2.length);
+	private static String[] merge_string_array_element(String[] string_arr1, String[] string_arr2) {
+		if (string_arr1.length != string_arr2.length) 
+		{
+			assert false : String.format("The length of string_arr1 and string_arr2 are NOT equal: %d, %d", string_arr1.length, string_arr2.length);
 			return null;
 		}
 		int string_arr_len = string_arr1.length;
 		String[] string_arr = new String[string_arr_len];
 		for (int index = 0; index < string_arr_len; index++)
-			string_arr[index] = String.format("%s %s", string_arr1[index],
-					string_arr2[index]);
+			string_arr[index] = String.format("%s %s", string_arr1[index], tring_arr2[index]);
 		return string_arr;
 	}
 
@@ -985,63 +1053,68 @@ public class FinanceRecorderCmnDef
 		return date;
 	}
 
-	public static java.util.Date get_month_date(String date_str)
-			throws ParseException {
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM"); // your
-																		// template
-																		// here
+	public static java.util.Date get_month_date(String date_str) throws ParseException 
+	{
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM"); // your template here
 		java.util.Date date = formatter.parse(date_str);
 		return date;
 	}
 
-	public static final String get_month_str(java.util.Date date) {
+	public static final String get_month_str(java.util.Date date) 
+	{
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(date);
-		String time_month = String.format("%04d-%02d", cal.get(Calendar.YEAR),
-				cal.get(Calendar.MONTH) + 1);
+		String time_month = String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1);
 		return time_month;
 	}
 
-	public static final String get_date_str(java.util.Date date) {
+	public static final String get_date_str(java.util.Date date)
+	{
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(date);
-		String time_date = String.format("%04d-%02d-%02d",
-				cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1,
-				cal.get(Calendar.DATE));
+		String time_date = String.format("%04d-%02d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DATE));
 		return time_date;
 	}
 
-	public static final String get_time_month_today() {
+	public static final String get_time_month_today() 
+	{
 		return get_month_str(new java.util.Date());
 	}
 
-	public static final String get_time_date_today() {
+	public static final String get_time_date_today() 
+	{
 		return get_date_str(new java.util.Date());
 	}
 
-	public static short copy_file(String src_filepath, String dst_filepath) {
+	public static short copy_file(String src_filepath, String dst_filepath) 
+	{
 		Path src_filepath_obj = Paths.get(src_filepath);
 		Path dst_filepath_obj = Paths.get(dst_filepath);
-		try {
-			CopyOption[] options = new CopyOption[] {
-					StandardCopyOption.REPLACE_EXISTING,
-					StandardCopyOption.COPY_ATTRIBUTES };
-			format_debug("Copy File; From: %s, To: %s", src_filepath,
-					dst_filepath);
+		try 
+		{
+			CopyOption[] options = new CopyOption[] 
+			{
+				StandardCopyOption.REPLACE_EXISTING,
+				StandardCopyOption.COPY_ATTRIBUTES 
+			};
+			format_debug("Copy File; From: %s, To: %s", src_filepath, dst_filepath);
 			Files.copy(src_filepath_obj, dst_filepath_obj, options);
-		} catch (IOException e) {
+		} 
+		catch (IOException e) 
+		{
 			format_error("Fail to copy file, due to: %s", e.toString());
 			return RET_FAILURE_IO_OPERATION;
 		}
 		return RET_SUCCESS;
 	}
 
-	public static short direct_string_to_output_stream(String data,
-			String filepath) {
+	public static short direct_string_to_output_stream(String data, String filepath) 
+	{
 		// Open the config file for writing
 		OutputStreamWriter osw = null;
 		BufferedWriter bw = null;
-		try {
+		try 
+		{
 			if (filepath != null) // To file
 			{
 				File f = new File(filepath);
@@ -1052,29 +1125,34 @@ public class FinanceRecorderCmnDef
 				osw = new OutputStreamWriter(System.out);
 			}
 			bw = new BufferedWriter(osw);
-		} catch (IOException e) {
-			format_error(
-					"Error occur while directing to output stream, due to: %s",
-					e.toString());
+		} 
+		catch (IOException e) 
+		{
+			format_error("Error occur while directing to output stream, due to: %s", e.toString());
 			return RET_FAILURE_IO_OPERATION;
 		}
 
 		short ret = RET_SUCCESS;
 		// Read the conf file
-		try {
+		try 
+		{
 			bw.write(data);
 			bw.flush();
-		} catch (IOException e) {
-			format_error(
-					"Error occur while parsing the config file, due to: %s",
-					e.toString());
+		} 
+		catch (IOException e) 
+		{
+			format_error("Error occur while parsing the config file, due to: %s", e.toString());
 			ret = RET_FAILURE_IO_OPERATION;
-		} finally {
-			if (bw != null) {
-				try {
+		} 
+		finally 
+		{
+			if (bw != null) 
+			{
+				try 
+				{
 					bw.close();
-				} catch (Exception e) {
-				}
+				} 
+				catch (Exception e) {}
 				bw = null;
 			}
 		}
@@ -1128,10 +1206,12 @@ public class FinanceRecorderCmnDef
 		return check_file_exist(conf_filepath);
 	}
 
-	public static short create_folder(final String path) {
+	public static short create_folder(final String path) 
+	{
 		short ret = RET_SUCCESS;
 		File file = new File(path);
-		if (!file.mkdirs()) {
+		if (!file.mkdirs()) 
+		{
 			format_error("Fail to create the folder: %s", path);
 			ret = RET_FAILURE_IO_OPERATION;
 		}
@@ -1145,18 +1225,18 @@ public class FinanceRecorderCmnDef
 		return RET_SUCCESS;
 	}
 
-	public static short create_folder_in_project_if_not_exist(
-			final String foldername_in_project) {
-		String folder_path = String.format("%s/%s", get_current_path(),
-				foldername_in_project);
+	public static short create_folder_in_project_if_not_exist(final String foldername_in_project) 
+	{
+		String folder_path = String.format("%s/%s", get_current_path(), foldername_in_project);
 		return create_folder_if_not_exist(folder_path);
 	}
 
-	public static short send_email(String title, String address, String content) {
+	public static short send_email(String title, String address, String content) 
+	{
 		short ret = RET_SUCCESS;
-		String cmd = String.format("echo \"%s\" | mail -s \"%s\" %s", content,
-				title, address);
-		try {
+		String cmd = String.format("echo \"%s\" | mail -s \"%s\" %s", content, title, address);
+		try 
+		{
 			StringBuilder result_str_builder = new StringBuilder();
 			ret = execute_shell_command(cmd, result_str_builder);
 			if (CheckFailure(ret))
@@ -1165,9 +1245,10 @@ public class FinanceRecorderCmnDef
 			// int exit_val = p.waitFor();
 			// format_debug("The process of the command[%s] exit value: %d",
 			// cmd, exit_val);
-		} catch (Exception ex) {
-			format_error("Fail to run command: %s, due to: %s", cmd,
-					ex.toString());
+		} 
+		catch (Exception ex) 
+		{
+			format_error("Fail to run command: %s, due to: %s", cmd, ex.toString());
 			return RET_FAILURE_UNKNOWN;
 		}
 
@@ -1192,41 +1273,44 @@ public class FinanceRecorderCmnDef
 		return ((end_index < 0) ? end_index = data_size + end_index + 1 : end_index);
 	}
 
-	public static boolean check_start_index_in_range(int start_index,
-			int range_start, int range_end) {
+	public static boolean check_start_index_in_range(int start_index, int range_start, int range_end) 
+	{
 		assert range_start >= 0 : "range_start should be larger than 0";
 		assert range_end >= 1 : "range_end should be larger than 1";
-		return ((start_index >= range_start && start_index < range_end) ? true
-				: false);
+		return ((start_index >= range_start && start_index < range_end) ? true : false);
 	}
 
-	public static boolean check_end_index_in_range(int end_index,
-			int range_start, int range_end) {
+	public static boolean check_end_index_in_range(int end_index, int range_start, int range_end) 
+	{
 		assert range_start >= 0 : "range_start should be larger than 0";
 		assert range_end >= 1 : "range_end should be larger than 1";
-		return ((end_index > range_start && end_index <= range_end) ? true
-				: false);
+		return ((end_index > range_start && end_index <= range_end) ? true : false);
 	}
 
-	public static short get_subfolder_list(String folderpath,
-			List<String> subfolder_list) {
+	public static short get_subfolder_list(String folderpath, List<String> subfolder_list) 
+	{
 		File dir = new File(folderpath);
-		if (!dir.exists()) {
+		if (!dir.exists()) 
+		{
 			format_error("The folder does Not exist", folderpath);
 			return RET_FAILURE_NOT_FOUND;
 		}
 		String[] children = dir.list();
-		if (children != null) {
+		if (children != null) 
+		{
 			for (int i = 0; i < children.length; i++)
 				subfolder_list.add(children[i]);
 		}
 		return RET_SUCCESS;
 	}
 
-	private static boolean delete_dir(File dir) {
-		if (dir.isDirectory()) {
+	private static boolean delete_dir(File dir) 
+	{
+		if (dir.isDirectory()) 
+		{
 			String[] children = dir.list();
-			for (int i = 0; i < children.length; i++) {
+			for (int i = 0; i < children.length; i++) 
+			{
 				boolean success = delete_dir(new File(dir, children[i]));
 				if (!success)
 					return false;
@@ -1236,36 +1320,43 @@ public class FinanceRecorderCmnDef
 		return dir.delete();
 	}
 
-	public static short delete_subfolder(String folderpath) {
+	public static short delete_subfolder(String folderpath) 
+	{
 		File dir = new File(folderpath);
-		if (!dir.exists()) {
+		if (!dir.exists()) 
+		{
 			// format_error("The folder does Not exist", folderpath);
 			return RET_FAILURE_NOT_FOUND;
 		}
 		return delete_dir(dir) ? RET_SUCCESS : RET_FAILURE_UNKNOWN;
 	}
 
-	public static short copy_dir(File src, File dest) {
-		if (src.isDirectory()) {
+	public static short copy_dir(File src, File dest) 
+	{
+		if (src.isDirectory()) 
+		{
 			// if directory not exists, create it
-			if (!dest.exists()) {
+			if (!dest.exists()) 
+			{
 				dest.mkdir();
-				format_debug(
-						"The destination directory[%s] does NOT exist, create one",
-						dest);
+				format_debug("The destination directory[%s] does NOT exist, create one", dest);
 			}
 			// list all the directory contents
 			String files[] = src.list();
-			for (String file : files) {
+			for (String file : files) 
+			{
 				// construct the src and dest file structure
 				File srcFile = new File(src, file);
 				File destFile = new File(dest, file);
 				// recursive copy
 				copy_dir(srcFile, destFile);
 			}
-		} else {
+		} 
+		else 
+		{
 			// if file, then copy it. Use bytes stream to support all file types
-			try {
+			try 
+			{
 				InputStream in = new FileInputStream(src);
 				OutputStream out = new FileOutputStream(dest);
 				byte[] buffer = new byte[1024];
@@ -1277,12 +1368,15 @@ public class FinanceRecorderCmnDef
 				out.close();
 				// System.out.println("File copied from " + src + " to " +
 				// dest);
-			} catch (FileNotFoundException e) {
+			} 
+			catch (FileNotFoundException e) 
+			{
 				format_error("File Not Found, due to: %s", e.toString());
 				return RET_FAILURE_NOT_FOUND;
-			} catch (IOException e) {
-				format_error("Error occurs while Operating IO, due to: %s",
-						e.toString());
+			} 
+			catch (IOException e) 
+			{
+				format_error("Error occurs while Operating IO, due to: %s", e.toString());
 				return RET_FAILURE_IO_OPERATION;
 			}
 		}
@@ -1292,7 +1386,8 @@ public class FinanceRecorderCmnDef
 	public static short copy_folder(String src_folderpath, String dest_folderpath) 
 	{
 		File src = new File(src_folderpath);
-		if (!src.exists()) {
+		if (!src.exists()) 
+		{
 			format_error("Source Folder[%s] Not Found", src_folderpath);
 			return RET_FAILURE_NOT_FOUND;
 		}

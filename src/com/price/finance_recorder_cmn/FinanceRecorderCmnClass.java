@@ -19,6 +19,7 @@ public class FinanceRecorderCmnClass
 
 		protected abstract int get_value();
 		public abstract int[] get_time_value_list();
+		public abstract FinanceTime get_time_object();
 		public abstract FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit();
 	};
 
@@ -66,6 +67,8 @@ public class FinanceRecorderCmnClass
 		{
 			return new int[]{year, month, day};
 		}
+
+		public FinanceTime get_time_object(){return new FinanceTime(this);}
 
 		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Date;}
 
@@ -146,6 +149,8 @@ public class FinanceRecorderCmnClass
 			return new int[]{year, month};
 		}
 
+		public FinanceTime get_time_object(){return new FinanceTime(this);}
+
 		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Month;}
 
 		@Override
@@ -223,6 +228,8 @@ public class FinanceRecorderCmnClass
 		{
 			return new int[]{year, quarter};
 		}
+
+		public FinanceTime get_time_object(){return new FinanceTime(this);}
 
 		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Quarter;}
 
@@ -320,9 +327,25 @@ public class FinanceRecorderCmnClass
 
 	public abstract static class FinanceTimeRangeBase
 	{
+		protected static FinanceRecorderCmnDef.FinanceTimeRangeType get_time_range_type(Object time_start, Object time_end)
+		{
+			if (time_start == null && time_end == null)
+				throw new IllegalArgumentException("start and end time can NOT be null at the same time");
+			if (time_start == null)
+				return FinanceRecorderCmnDef.FinanceTimeRangeType.FinanceTimeRange_LessEqual;
+			else if (time_end == null)
+				return FinanceRecorderCmnDef.FinanceTimeRangeType.FinanceTimeRange_GreaterEqual;
+			return FinanceRecorderCmnDef.FinanceTimeRangeType.FinanceTimeRange_Between;
+		}
+
+		protected FinanceRecorderCmnDef.FinanceTimeRangeType finance_time_range_type = null;
+
+		public FinanceRecorderCmnDef.FinanceTimeRangeType get_time_range_type(){return finance_time_range_type;}
+
 		public abstract int[] get_time_start_value_list();
 		public abstract int[] get_time_end_value_list();
 		public abstract int[] get_time_range_value_list();
+		public abstract FinanceTimeRange get_time_object();
 		public abstract FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit();
 	};
 
@@ -338,7 +361,19 @@ public class FinanceRecorderCmnClass
 		}
 		public static boolean in_range(FinanceDateRange finance_date_range, FinanceDate cur_finance_date)
 		{
-			return cur_finance_date.greater_equal(finance_date_range.get_date_start()) && cur_finance_date.less_equal(finance_date_range.get_date_end());
+			switch (finance_date_range.finance_time_range_type)
+			{
+			case FinanceTimeRange_Between:
+				return cur_finance_date.greater_equal(finance_date_range.get_date_start()) && cur_finance_date.less_equal(finance_date_range.get_date_end());
+			case FinanceTimeRange_LessEqual:
+				return cur_finance_date.less_equal(finance_date_range.get_date_end());
+			case FinanceTimeRange_GreaterEqual:
+				return cur_finance_date.greater_equal(finance_date_range.get_date_start());
+			default:
+				throw new IllegalArgumentException(String.format("Unsupported time range: %d", finance_date_range.finance_time_range_type.value()));
+			}
+//// Should not reach
+//			return false;
 		}
 
 		private FinanceDate finance_date_start = null;
@@ -347,42 +382,90 @@ public class FinanceRecorderCmnClass
 
 		public FinanceDateRange(FinanceDate in_finance_date_start, FinanceDate in_finance_date_end)
 		{
-			finance_date_start = new FinanceDate(in_finance_date_start);
-			finance_date_end = new FinanceDate(in_finance_date_end);
+			finance_time_range_type = get_time_range_type(in_finance_date_start, in_finance_date_end);
+			if (in_finance_date_start != null)
+				finance_date_start = new FinanceDate(in_finance_date_start);
+			if (in_finance_date_end != null)
+				finance_date_end = new FinanceDate(in_finance_date_end);
 		}
 		public FinanceDateRange(int year_start, int month_start, int day_start, int year_end, int month_end, int day_end)
 		{
+			finance_time_range_type = FinanceRecorderCmnDef.FinanceTimeRangeType.FinanceTimeRange_Between;
 			finance_date_start = new FinanceDate(year_start, month_start, day_start);
 			finance_date_end = new FinanceDate(year_end, month_end, day_end);
 		}
 		public FinanceDateRange(String finance_date_start_str, String finance_date_end_str)
 		{
-			finance_date_start = new FinanceDate(finance_date_start_str);
-			finance_date_end = new FinanceDate(finance_date_end_str);
+			finance_time_range_type = get_time_range_type(finance_date_start_str, finance_date_end_str);
+			if (finance_date_start_str != null)
+				finance_date_start = new FinanceDate(finance_date_start_str);
+			if (finance_date_end_str != null)
+				finance_date_end = new FinanceDate(finance_date_end_str);
 		}
 
 		@Override
 		public String toString() 
 		{
 			if (time_range_description == null)
-				time_range_description = String.format("%s-%s", finance_date_start.toString(), finance_date_end.toString());
+			{
+				switch (finance_time_range_type)
+				{
+				case FinanceTimeRange_Between:
+					time_range_description = String.format("%s-%s", finance_date_start.toString(), finance_date_end.toString());
+					break;
+				case FinanceTimeRange_LessEqual:
+					time_range_description = String.format("MinDate-%s", finance_date_end.toString());
+					break;
+				case FinanceTimeRange_GreaterEqual:
+					time_range_description = String.format("%s-MaxDate", finance_date_start.toString());
+					break;
+				default:
+					throw new IllegalArgumentException(String.format("Unsupported date range: %d", finance_time_range_type.value()));
+				}
+			}
 			return time_range_description;
 		}
 
 		public final FinanceDate get_date_start(){return finance_date_start;}
 		public final FinanceDate get_date_end(){return finance_date_end;}
-		public int[] get_time_start_value_list(){return finance_date_start.get_time_value_list();}
-		public int[] get_time_end_value_list(){return finance_date_end.get_time_value_list();}
+		public int[] get_time_start_value_list()
+		{
+			if (!finance_time_range_type.is_time_start_exist())
+				throw new IllegalStateException("Start Date does NOT exist");
+			return finance_date_start.get_time_value_list();
+		}
+		public int[] get_time_end_value_list()
+		{
+			if (!finance_time_range_type.is_time_end_exist())
+				throw new IllegalStateException("End Date does NOT exist");
+			return finance_date_end.get_time_value_list();
+		}
 		public int[] get_time_range_value_list()
 		{
+			if (!finance_time_range_type.is_time_range_exist())
+				throw new IllegalStateException("Start/End Date does NOT exist");
 			int[] start_value_list = get_time_start_value_list();
 			int[] end_value_list = get_time_end_value_list();
 			return new int[]{start_value_list[0], start_value_list[1], start_value_list[2], end_value_list[0], end_value_list[1], end_value_list[2]};
 		}
+
+		public FinanceTimeRange get_time_object(){return new FinanceTimeRange(finance_date_start, finance_date_end);}
 		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Date;}
 
-		public FinanceMonthRange get_month_object(){return new FinanceMonthRange(finance_date_start.get_month_object(), finance_date_end.get_month_object());}
-		public FinanceQuarterRange get_quarter_object(){return new FinanceQuarterRange(finance_date_start.get_quarter_object(), finance_date_end.get_quarter_object());}
+		public FinanceMonthRange get_month_object()
+		{
+			return new FinanceMonthRange(
+				finance_time_range_type.is_time_start_exist() ? finance_date_start.get_month_object() : null, 
+				finance_time_range_type.is_time_end_exist() ? finance_date_end.get_month_object() : null
+			);
+		}
+		public FinanceQuarterRange get_quarter_object()
+		{
+			return new FinanceQuarterRange(
+				finance_time_range_type.is_time_start_exist() ? finance_date_start.get_quarter_object() : null, 
+				finance_time_range_type.is_time_end_exist() ? finance_date_end.get_quarter_object() : null
+			);
+		}
 	};
 
 	public static class FinanceMonthRange extends FinanceTimeRangeBase
@@ -397,7 +480,17 @@ public class FinanceRecorderCmnClass
 		}
 		public static boolean in_range(FinanceMonthRange finance_month_range, FinanceMonth cur_finance_month)
 		{
-			return cur_finance_month.greater_equal(finance_month_range.get_month_start()) && cur_finance_month.less_equal(finance_month_range.get_month_end());
+			switch (finance_month_range.finance_time_range_type)
+			{
+			case FinanceTimeRange_Between:
+				return cur_finance_month.greater_equal(finance_month_range.get_month_start()) && cur_finance_month.less_equal(finance_month_range.get_month_end());
+			case FinanceTimeRange_LessEqual:
+				return cur_finance_month.less_equal(finance_month_range.get_month_end());
+			case FinanceTimeRange_GreaterEqual:
+				return cur_finance_month.greater_equal(finance_month_range.get_month_start());
+			default:
+				throw new IllegalArgumentException(String.format("Unsupported month range: %d", finance_month_range.finance_time_range_type.value()));
+			}
 		}
 
 		private FinanceMonth finance_month_start = null;
@@ -406,42 +499,90 @@ public class FinanceRecorderCmnClass
 
 		public FinanceMonthRange(FinanceMonth in_finance_month_start, FinanceMonth in_finance_month_end)
 		{
-			finance_month_start = new FinanceMonth(in_finance_month_start);
-			finance_month_end = new FinanceMonth(in_finance_month_end);
+			finance_time_range_type = get_time_range_type(in_finance_month_start, in_finance_month_end);
+			if (in_finance_month_start != null)
+				finance_month_start = new FinanceMonth(in_finance_month_start);
+			if (in_finance_month_end != null)
+				finance_month_end = new FinanceMonth(in_finance_month_end);
 		}
 		public FinanceMonthRange(int year_start, int month_start, int year_end, int month_end)
 		{
+			finance_time_range_type = FinanceRecorderCmnDef.FinanceTimeRangeType.FinanceTimeRange_Between;
 			finance_month_start = new FinanceMonth(year_start, month_start);
 			finance_month_end = new FinanceMonth(year_end, month_end);
 		}
 		public FinanceMonthRange(String finance_month_start_str, String finance_month_end_str)
 		{
-			finance_month_start = new FinanceMonth(finance_month_start_str);
-			finance_month_end = new FinanceMonth(finance_month_end_str);
+			finance_time_range_type = get_time_range_type(finance_month_start_str, finance_month_end_str);
+			if (finance_month_start_str != null)
+				finance_month_start = new FinanceMonth(finance_month_start_str);
+			if (finance_month_end_str != null)
+				finance_month_end = new FinanceMonth(finance_month_end_str);
 		}
 
 		@Override
 		public String toString() 
 		{
 			if (time_range_description == null)
-				time_range_description = String.format("%s-%s", finance_month_start.toString(), finance_month_end.toString());
+			{
+				switch (finance_time_range_type)
+				{
+				case FinanceTimeRange_Between:
+					time_range_description = String.format("%s-%s", finance_month_start.toString(), finance_month_end.toString());
+					break;
+				case FinanceTimeRange_LessEqual:
+					time_range_description = String.format("MinMonth-%s", finance_month_end.toString());
+					break;
+				case FinanceTimeRange_GreaterEqual:
+					time_range_description = String.format("%s-MaxMonth", finance_month_start.toString());
+					break;
+				default:
+					throw new IllegalArgumentException(String.format("Unsupported month range: %d", finance_time_range_type.value()));
+				}
+			}
 			return time_range_description;
 		}
 
 		public final FinanceMonth get_month_start(){return finance_month_start;}
 		public final FinanceMonth get_month_end(){return finance_month_end;}
-		public int[] get_time_start_value_list(){return finance_month_start.get_time_value_list();}
-		public int[] get_time_end_value_list(){return finance_month_end.get_time_value_list();}
+		public int[] get_time_start_value_list()
+		{
+			if (!finance_time_range_type.is_time_start_exist())
+				throw new IllegalStateException("Start Month does NOT exist");
+			return finance_month_start.get_time_value_list();
+		}
+		public int[] get_time_end_value_list()
+		{
+			if (!finance_time_range_type.is_time_end_exist())
+				throw new IllegalStateException("End Month does NOT exist");
+			return finance_month_end.get_time_value_list();
+		}
 		public int[] get_time_range_value_list()
 		{
+			if (!finance_time_range_type.is_time_range_exist())
+				throw new IllegalStateException("Start/End Month does NOT exist");
 			int[] start_value_list = get_time_start_value_list();
 			int[] end_value_list = get_time_end_value_list();
-			return new int[]{start_value_list[0], start_value_list[1], end_value_list[0], end_value_list[1]};
+			return new int[]{start_value_list[0], start_value_list[1], start_value_list[2], end_value_list[0], end_value_list[1], end_value_list[2]};
 		}
+
+		public FinanceTimeRange get_time_object(){return new FinanceTimeRange(finance_month_start, finance_month_end);}
 		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Month;}
 
-		public FinanceDateRange get_date_object(){return new FinanceDateRange(finance_month_start.get_date_start_object(), finance_month_end.get_date_end_object());}
-		public FinanceQuarterRange get_quarter_object(){return new FinanceQuarterRange(finance_month_start.get_quarter_object(), finance_month_end.get_quarter_object());}
+		public FinanceDateRange get_date_object()
+		{
+			return new FinanceDateRange(
+				finance_time_range_type.is_time_start_exist() ? finance_month_start.get_date_start_object() : null, 
+				finance_time_range_type.is_time_end_exist() ? finance_month_end.get_date_end_object() : null
+			);
+		}
+		public FinanceQuarterRange get_quarter_object()
+		{
+			return new FinanceQuarterRange(
+				finance_time_range_type.is_time_start_exist() ? finance_month_start.get_quarter_object() : null, 
+				finance_time_range_type.is_time_end_exist() ? finance_month_end.get_quarter_object() : null
+			);
+		}
 	};
 
 	public static class FinanceQuarterRange extends FinanceTimeRangeBase
@@ -450,13 +591,23 @@ public class FinanceRecorderCmnClass
 		{
 			return in_range(finance_quarter_range, new FinanceQuarter(year, month));
 		}
-		public static boolean in_range(FinanceQuarterRange finance_quarter_range, String cur_finance_month_str)
+		public static boolean in_range(FinanceQuarterRange finance_quarter_range, String cur_finance_quarter_str)
 		{
-			return in_range(finance_quarter_range, new FinanceQuarter(cur_finance_month_str));
+			return in_range(finance_quarter_range, new FinanceQuarter(cur_finance_quarter_str));
 		}
-		public static boolean in_range(FinanceQuarterRange finance_quarter_range, FinanceQuarter cur_finance_month)
+		public static boolean in_range(FinanceQuarterRange finance_quarter_range, FinanceQuarter cur_finance_quarter)
 		{
-			return cur_finance_month.greater_equal(finance_quarter_range.get_quarter_start()) && cur_finance_month.less_equal(finance_quarter_range.get_quarter_end());
+			switch (finance_quarter_range.finance_time_range_type)
+			{
+			case FinanceTimeRange_Between:
+				return cur_finance_quarter.greater_equal(finance_quarter_range.get_quarter_start()) && cur_finance_quarter.less_equal(finance_quarter_range.get_quarter_end());
+			case FinanceTimeRange_LessEqual:
+				return cur_finance_quarter.less_equal(finance_quarter_range.get_quarter_end());
+			case FinanceTimeRange_GreaterEqual:
+				return cur_finance_quarter.greater_equal(finance_quarter_range.get_quarter_start());
+			default:
+				throw new IllegalArgumentException(String.format("Unsupported quarter range: %d", finance_quarter_range.finance_time_range_type.value()));
+			}
 		}
 
 		private FinanceQuarter finance_quarter_start = null;
@@ -465,48 +616,97 @@ public class FinanceRecorderCmnClass
 
 		public FinanceQuarterRange(FinanceQuarter in_finance_quarter_start, FinanceQuarter in_finance_quarter_end)
 		{
-			finance_quarter_start = new FinanceQuarter(in_finance_quarter_start);
-			finance_quarter_end = new FinanceQuarter(in_finance_quarter_end);
+			finance_time_range_type = get_time_range_type(in_finance_quarter_start, in_finance_quarter_end);
+			if (in_finance_quarter_start != null)
+				finance_quarter_start = new FinanceQuarter(in_finance_quarter_start);
+			if (in_finance_quarter_end != null)
+				finance_quarter_end = new FinanceQuarter(in_finance_quarter_end);
 		}
 		public FinanceQuarterRange(int year_start, int quarter_start, int year_end, int quarter_end)
 		{
+			finance_time_range_type = FinanceRecorderCmnDef.FinanceTimeRangeType.FinanceTimeRange_Between;
 			finance_quarter_start = new FinanceQuarter(year_start, quarter_start);
 			finance_quarter_end = new FinanceQuarter(year_end, quarter_end);
 		}
 		public FinanceQuarterRange(String finance_quarter_start_str, String finance_quarter_end_str)
 		{
-			finance_quarter_start = new FinanceQuarter(finance_quarter_start_str);
-			finance_quarter_end = new FinanceQuarter(finance_quarter_end_str);
+			finance_time_range_type = get_time_range_type(finance_quarter_start_str, finance_quarter_end_str);
+			if (finance_quarter_start_str != null)
+				finance_quarter_start = new FinanceQuarter(finance_quarter_start_str);
+			if (finance_quarter_end_str != null)
+				finance_quarter_end = new FinanceQuarter(finance_quarter_end_str);
 		}
 
 		@Override
 		public String toString() 
 		{
 			if (time_range_description == null)
-				time_range_description = String.format("%s-%s", finance_quarter_start.toString(), finance_quarter_end.toString());
+			{
+				switch (finance_time_range_type)
+				{
+				case FinanceTimeRange_Between:
+					time_range_description = String.format("%s-%s", finance_quarter_start.toString(), finance_quarter_end.toString());
+					break;
+				case FinanceTimeRange_LessEqual:
+					time_range_description = String.format("MinQuarter-%s", finance_quarter_end.toString());
+					break;
+				case FinanceTimeRange_GreaterEqual:
+					time_range_description = String.format("%s-MaxQuarter", finance_quarter_start.toString());
+					break;
+				default:
+					throw new IllegalArgumentException(String.format("Unsupported quarter range: %d", finance_time_range_type.value()));
+				}
+			}
 			return time_range_description;
 		}
 
 		public final FinanceQuarter get_quarter_start(){return finance_quarter_start;}
 		public final FinanceQuarter get_quarter_end(){return finance_quarter_end;}
-		public int[] get_time_start_value_list(){return finance_quarter_start.get_time_value_list();}
-		public int[] get_time_end_value_list(){return finance_quarter_end.get_time_value_list();}
+		public int[] get_time_start_value_list()
+		{
+			if (!finance_time_range_type.is_time_start_exist())
+				throw new IllegalStateException("Start Quarter does NOT exist");
+			return finance_quarter_start.get_time_value_list();
+		}
+		public int[] get_time_end_value_list()
+		{
+			if (!finance_time_range_type.is_time_end_exist())
+				throw new IllegalStateException("End Quarter does NOT exist");
+			return finance_quarter_end.get_time_value_list();
+		}
 		public int[] get_time_range_value_list()
 		{
+			if (!finance_time_range_type.is_time_range_exist())
+				throw new IllegalStateException("Start/End Quarter does NOT exist");
 			int[] start_value_list = get_time_start_value_list();
 			int[] end_value_list = get_time_end_value_list();
-			return new int[]{start_value_list[0], start_value_list[1], end_value_list[0], end_value_list[1]};
+			return new int[]{start_value_list[0], start_value_list[1], start_value_list[2], end_value_list[0], end_value_list[1], end_value_list[2]};
 		}
+
+		public FinanceTimeRange get_time_object(){return new FinanceTimeRange(finance_quarter_start, finance_quarter_end);}
 		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Quarter;}
 
-		public FinanceDateRange get_date_object(){return new FinanceDateRange(finance_quarter_start.get_date_start_object(), finance_quarter_end.get_date_end_object());}
-		public FinanceMonthRange get_month_object(){return new FinanceMonthRange(finance_quarter_start.get_month_start_object(), finance_quarter_end.get_month_end_object());}
+		public FinanceDateRange get_date_object()
+		{
+			return new FinanceDateRange(
+				finance_time_range_type.is_time_start_exist() ? finance_quarter_start.get_date_start_object() : null, 
+				finance_time_range_type.is_time_end_exist() ? finance_quarter_end.get_date_end_object() : null
+			);
+		}
+		public FinanceMonthRange get_month_object()
+		{
+			return new FinanceMonthRange(
+				finance_time_range_type.is_time_start_exist() ? finance_quarter_start.get_month_start_object() : null, 
+				finance_time_range_type.is_time_end_exist() ? finance_quarter_end.get_month_end_object() : null
+			);
+		}
 	};
 
-	public static class FinanceTimeRange
+	public static class FinanceTimeRange extends FinanceTimeRangeBase
 	{
 		private FinanceTimeRangeBase finance_time_range = null;
 		private FinanceRecorderCmnDef.FinanceTimeUnit finance_time_unit = FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Undefined;
+		private FinanceRecorderCmnDef.FinanceTimeRangeType finance_time_range_type = FinanceRecorderCmnDef.FinanceTimeRangeType.FinanceTimeRange_Undefined;
 
 		public FinanceTimeRange(FinanceDate in_finance_date_start, FinanceDate in_finance_date_end)
 		{
@@ -525,12 +725,33 @@ public class FinanceRecorderCmnClass
 		}
 		public FinanceTimeRange(String in_finance_time_start, String in_finance_time_end)
 		{
+			finance_time_range_type = get_time_range_type(in_finance_time_start, in_finance_time_end);
+			switch (finance_time_range_type)
+			{
+			case FinanceTimeRange_Between:
+			{
+				FinanceRecorderCmnDef.FinanceTimeUnit finance_start_time_unit = FinanceRecorderCmnDef.get_time_unit_from_string(in_finance_time_start);
+				FinanceRecorderCmnDef.FinanceTimeUnit finance_end_time_unit = FinanceRecorderCmnDef.get_time_unit_from_string(in_finance_time_end);
+				if (finance_start_time_unit != finance_end_time_unit)
+					throw new IllegalStateException(String.format("Time unit of start[%s] and end[%s] is NOT identical: %d, %d", in_finance_time_start, in_finance_time_end, finance_start_time_unit.value(), finance_end_time_unit.value()));
+				finance_time_unit = finance_start_time_unit;
+			}
+			break;
+			case FinanceTimeRange_LessEqual:
+			{
+				finance_time_unit = FinanceRecorderCmnDef.get_time_unit_from_string(in_finance_time_end);
+			}
+			break;
+			case FinanceTimeRange_GreaterEqual:
+			{
+				finance_time_unit = FinanceRecorderCmnDef.get_time_unit_from_string(in_finance_time_start);
+			}
+			break;
+			default:
+				throw new IllegalArgumentException(String.format("Unsupported time range: %d", finance_time_range_type.value()));
+			}
 // Check if the start and end time is the same unit
-			FinanceRecorderCmnDef.FinanceTimeUnit finance_start_time_unit = FinanceRecorderCmnDef.get_time_unit_from_string(in_finance_time_start);
-			FinanceRecorderCmnDef.FinanceTimeUnit finance_end_time_unit = FinanceRecorderCmnDef.get_time_unit_from_string(in_finance_time_end);
-			if (finance_start_time_unit != finance_end_time_unit)
-				throw new IllegalStateException(String.format("Time unit of start[%s] and end[%s] is NOT identical: %d, %d", in_finance_time_start, in_finance_time_end, finance_start_time_unit.value(), finance_end_time_unit.value()));
-			finance_time_unit = finance_start_time_unit;
+
 // Initialize the instance
 			switch (finance_time_unit)
 			{
@@ -558,6 +779,7 @@ public class FinanceRecorderCmnClass
 		public int[] get_time_end_value_list(){return finance_time_range.get_time_end_value_list();}
 		public int[] get_time_range_value_list(){return finance_time_range.get_time_range_value_list();}
 		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return finance_time_unit;}
+		public FinanceTimeRange get_time_object(){return this;}
 	};
 
 //	public static class TimeCfg

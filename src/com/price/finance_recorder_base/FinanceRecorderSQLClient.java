@@ -65,7 +65,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		return field_string.split(FinanceRecorderCmnDef.COMMA_DATA_SPLIT);
 	}
 
-	private static java.sql.Date transform_java_sql_date_format(String date_str) throws ParseException
+	private static java.sql.Date transform_sql_date_format(String date_str) throws ParseException
 	{
 //		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
 //		java.util.Date dateStr = formatter.parse(date_str);
@@ -137,12 +137,12 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 	private static PreparedStatement prepare_query_sql_statement(Connection connection, String table_name, String cmd_table_field, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range) throws SQLException
 	{
 // Generate the SQL command for querying
-		String format_cmd_select_data_tail = String.format(FORMAT_CMD_SELECT_TABLE_TAIL_FORMAT, table_name);
-		String cmd_select_data = FORMAT_CMD_SELECT_DATA_HEAD + cmd_table_field + format_cmd_select_data_tail;
+		String cmd_select_data = FORMAT_CMD_SELECT_HEAD + cmd_table_field + String.format(FORMAT_CMD_SELECT_TAIL_FORMAT, table_name);
 // Create the prepare statement
 		PreparedStatement pstmt = null;
 		if (finance_time_range != null)
 		{
+// Check the time range
 // Date type
 			if (!finance_time_range.is_month_type())
 			{
@@ -152,9 +152,9 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 				try
 				{
 					if (finance_time_range.get_start_time_str() != null)
-						sql_date_start = transform_java_sql_date_format(finance_time_range.get_start_time_str());
+						sql_date_start = transform_sql_date_format(finance_time_range.get_start_time_str());
 					if (finance_time_range.get_end_time_str() != null)
-						sql_date_end = transform_java_sql_date_format(finance_time_range.get_end_time_str());
+						sql_date_end = transform_sql_date_format(finance_time_range.get_end_time_str());
 				}
 				catch (ParseException e)
 				{
