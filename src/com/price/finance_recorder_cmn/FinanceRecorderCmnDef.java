@@ -412,7 +412,7 @@ public class FinanceRecorderCmnDef
 
 	public static enum DatabaseNotExistIngoreType {DatabaseNotExistIngore_Yes, DatabaseNotExistIngore_No,};
 
-	public static enum DatabaseCreateThreadType {atabaseCreateThread_Single, DatabaseCreateThread_Multiple,};
+	public static enum DatabaseCreateThreadType {DatabaseCreateThread_Single, DatabaseCreateThread_Multiple,};
 
 	public static enum DatabaseEnableBatchType {DatabaseEnableBatch_Yes, DatabaseEnableBatch_No,};
 
@@ -981,7 +981,8 @@ public class FinanceRecorderCmnDef
 		return cur_path;
 	}
 
-	private static String[] merge_string_array_element(String[] string_arr1, String[] string_arr2) {
+	private static String[] merge_string_array_element(String[] string_arr1, String[] string_arr2) 
+	{
 		if (string_arr1.length != string_arr2.length) 
 		{
 			assert false : String.format("The length of string_arr1 and string_arr2 are NOT equal: %d, %d", string_arr1.length, string_arr2.length);
@@ -990,7 +991,7 @@ public class FinanceRecorderCmnDef
 		int string_arr_len = string_arr1.length;
 		String[] string_arr = new String[string_arr_len];
 		for (int index = 0; index < string_arr_len; index++)
-			string_arr[index] = String.format("%s %s", string_arr1[index], tring_arr2[index]);
+			string_arr[index] = String.format("%s %s", string_arr1[index], string_arr2[index]);
 		return string_arr;
 	}
 
@@ -1060,31 +1061,31 @@ public class FinanceRecorderCmnDef
 		return date;
 	}
 
-	public static final String get_month_str(java.util.Date date) 
-	{
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(date);
-		String time_month = String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1);
-		return time_month;
-	}
+//	public static final String get_month_str(java.util.Date date) 
+//	{
+//		Calendar cal = Calendar.getInstance();
+//		cal.setTime(date);
+//		String time_month = String.format("%04d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1);
+//		return time_month;
+//	}
+//
+//	public static final String get_date_str(java.util.Date date)
+//	{
+//		Calendar cal = Calendar.getInstance();
+//		cal.setTime(date);
+//		String time_date = String.format("%04d-%02d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DATE));
+//		return time_date;
+//	}
 
-	public static final String get_date_str(java.util.Date date)
-	{
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(date);
-		String time_date = String.format("%04d-%02d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DATE));
-		return time_date;
-	}
-
-	public static final String get_time_month_today() 
-	{
-		return get_month_str(new java.util.Date());
-	}
-
-	public static final String get_time_date_today() 
-	{
-		return get_date_str(new java.util.Date());
-	}
+//	public static final String get_time_month_today() 
+//	{
+//		return get_month_str(new java.util.Date());
+//	}
+//
+//	public static final String get_time_date_today() 
+//	{
+//		return get_date_str(new java.util.Date());
+//	}
 
 	public static short copy_file(String src_filepath, String dst_filepath) 
 	{

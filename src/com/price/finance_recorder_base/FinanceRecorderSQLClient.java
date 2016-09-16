@@ -6,6 +6,9 @@ import java.util.*;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
+import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceDateRange;
+import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceMonthRange;
+import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceQuarterRange;
 
 
 public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
@@ -34,18 +37,19 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 	private static final String FORMAT_CMD_SELECT_DATE_RULE_LESS_THAN = " WHERE date < ?";
 	private static final String FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN = " WHERE date >= ?";
 	private static final String FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN = " WHERE date <= ?";
-// Month
-	private static final String FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT = " WHERE year(date) = '%d' AND month(date) BETWEEN '%d' AND '%d'";
-	private static final String FORMAT_CMD_SELECT_MONTH_RULE_GREATER_THAN_FORMAT = " WHERE year(date) = '%d' AND month(date) > '%d'";
-	private static final String FORMAT_CMD_SELECT_MONTH_RULE_LESS_THAN_FORMAT = " WHERE year(date) = '%d' AND month(date) < '%d'";
-	private static final String FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT = " WHERE year(date) = '%d' AND month(date) >= '%d'";
-	private static final String FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT = " WHERE year(date) = '%d' AND month(date) <= '%d'";
-// Quarter
-	private static final String FORMAT_CMD_SELECT_QUARTER_RULE_BETWEEN_FORMAT = " WHERE year(date) = '%d' AND quarter(date) BETWEEN '%d' AND '%d'";
-	private static final String FORMAT_CMD_SELECT_QUARTER_RULE_GREATER_THAN_FORMAT = " WHERE year(date) = '%d' AND quarter(date) > '%d'";
-	private static final String FORMAT_CMD_SELECT_QUARTER_RULE_LESS_THAN_FORMAT = " WHERE year(date) = '%d' AND quarter(date) < '%d'";
-	private static final String FORMAT_CMD_SELECT_QUARTER_RULE_GREATER_EQUAL_THAN_FORMAT = " WHERE year(date) = '%d' AND quarter(date) >= '%d'";
-	private static final String FORMAT_CMD_SELECT_QUARTER_RULE_LESS_EQUAL_THAN_FORMAT = " WHERE year(date) = '%d' AND quarter(date) <= '%d'";
+// Fail to find the mysql command in different year
+//// Month
+//	private static final String FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT = " WHERE year(date) = '%d' AND month(date) BETWEEN '%d' AND '%d'";
+//	private static final String FORMAT_CMD_SELECT_MONTH_RULE_GREATER_THAN_FORMAT = " WHERE year(date) = '%d' AND month(date) > '%d'";
+//	private static final String FORMAT_CMD_SELECT_MONTH_RULE_LESS_THAN_FORMAT = " WHERE year(date) = '%d' AND month(date) < '%d'";
+//	private static final String FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT = " WHERE year(date) = '%d' AND month(date) >= '%d'";
+//	private static final String FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT = " WHERE year(date) = '%d' AND month(date) <= '%d'";
+//// Quarter
+//	private static final String FORMAT_CMD_SELECT_QUARTER_RULE_BETWEEN_FORMAT = " WHERE year(date) = '%d' AND quarter(date) BETWEEN '%d' AND '%d'";
+//	private static final String FORMAT_CMD_SELECT_QUARTER_RULE_GREATER_THAN_FORMAT = " WHERE year(date) = '%d' AND quarter(date) > '%d'";
+//	private static final String FORMAT_CMD_SELECT_QUARTER_RULE_LESS_THAN_FORMAT = " WHERE year(date) = '%d' AND quarter(date) < '%d'";
+//	private static final String FORMAT_CMD_SELECT_QUARTER_RULE_GREATER_EQUAL_THAN_FORMAT = " WHERE year(date) = '%d' AND quarter(date) >= '%d'";
+//	private static final String FORMAT_CMD_SELECT_QUARTER_RULE_LESS_EQUAL_THAN_FORMAT = " WHERE year(date) = '%d' AND quarter(date) <= '%d'";
 
 	private static String field_array_to_string(String[] field_array)
 	{
@@ -65,13 +69,25 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		return field_string.split(FinanceRecorderCmnDef.COMMA_DATA_SPLIT);
 	}
 
-	private static java.sql.Date transform_sql_date_format(String date_str) throws ParseException
+	private static java.sql.Date get_sql_date(int[] date_value_list) throws ParseException
 	{
-//		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
-//		java.util.Date dateStr = formatter.parse(date_str);
-		java.util.Date dateStr = FinanceRecorderCmnDef.get_date(date_str);
-		return new java.sql.Date(dateStr.getTime());
+		return get_sql_date(new FinanceRecorderCmnClass.FinanceDate(date_value_list));
 	}
+	private static java.sql.Date get_sql_date(String date_str) throws ParseException
+	{
+		return get_sql_date(new FinanceRecorderCmnClass.FinanceDate(date_str));
+	}
+	private static java.sql.Date get_sql_date(FinanceRecorderCmnClass.FinanceDate finance_date) throws ParseException
+	{
+		return new java.sql.Date(FinanceRecorderCmnClass.FinanceDate.get_java_date_object(finance_date).getTime());
+	}
+//	private static java.sql.Date get_sql_date(String date_str) throws ParseException
+//	{
+////		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
+////		java.util.Date dateStr = formatter.parse(date_str);
+//		java.util.Date dateStr = FinanceRecorderCmnDef.get_date(date_str);
+//		return new java.sql.Date(dateStr.getTime());
+//	}
 
 	public static short get_sql_field_command(int source_type_index, LinkedList<Integer> field_index_list, StringBuilder field_cmd_builder)
 	{
@@ -134,7 +150,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	private static PreparedStatement prepare_query_sql_statement(Connection connection, String table_name, String cmd_table_field, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range) throws SQLException
+	private static PreparedStatement prepare_query_sql_statement(Connection connection, String table_name, String cmd_table_field, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range) throws SQLException, ParseException
 	{
 // Generate the SQL command for querying
 		String cmd_select_data = FORMAT_CMD_SELECT_HEAD + cmd_table_field + String.format(FORMAT_CMD_SELECT_TAIL_FORMAT, table_name);
@@ -142,98 +158,151 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		PreparedStatement pstmt = null;
 		if (finance_time_range != null)
 		{
-// Check the time range
-// Date type
-			if (!finance_time_range.is_month_type())
+			FinanceRecorderCmnDef.FinanceTimeUnit finance_time_unit = finance_time_range.get_time_unit();
+			FinanceRecorderCmnDef.FinanceTimeRangeType finance_time_range_type = finance_time_range.get_time_range_type();
+			FinanceRecorderCmnDef.format_error("Time rangte, unit: %d, range type: %d", finance_time_unit.value(), finance_time_range_type.value());
+			switch (finance_time_range.get_time_unit())
 			{
-//Transform the date field into SQL Date format
-				java.sql.Date sql_date_start = null;
-				java.sql.Date sql_date_end = null;
+			case FinanceTime_Date:
+			{
+// Try to create the prepared statement from date unit
 				try
 				{
-					if (finance_time_range.get_start_time_str() != null)
-						sql_date_start = transform_sql_date_format(finance_time_range.get_start_time_str());
-					if (finance_time_range.get_end_time_str() != null)
-						sql_date_end = transform_sql_date_format(finance_time_range.get_end_time_str());
-				}
-				catch (ParseException e)
-				{
-					String errmsg = String.format("Fail to transform the MySQL time format, due to: %s", e.toString());
-					FinanceRecorderCmnDef.format_error(errmsg);
-					throw new SQLException(errmsg);
-				}
-// Try to create the prepared statement
-				try
-				{
-					if (finance_time_range.get_start_time_str() != null && finance_time_range.get_end_time_str() != null)
+					switch (finance_time_range_type)
+					{
+					case FinanceTimeRange_Between:
 					{
 						cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_BETWEEN;
 						pstmt = connection.prepareStatement(cmd_select_data);
-						pstmt.setDate(1, sql_date_start);
-						pstmt.setDate(2, sql_date_end);
+						pstmt.setDate(1, get_sql_date(finance_time_range.get_time_start_value_list()));
+						pstmt.setDate(2, get_sql_date(finance_time_range.get_time_end_value_list()));
 					}
-					else if (finance_time_range.get_start_time_str() != null)
-					{
-						cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN;
-						pstmt = connection.prepareStatement(cmd_select_data);
-						pstmt.setDate(1, sql_date_start);
-					}
-					else if (finance_time_range.get_start_time_str() != null)
+					break;
+					case FinanceTimeRange_LessEqual:
 					{
 						cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN;
 						pstmt = connection.prepareStatement(cmd_select_data);
-						pstmt.setDate(1, sql_date_end);
+						pstmt.setDate(1, get_sql_date(finance_time_range.get_time_end_value_list()));
 					}
-					else
+					break;
+					case FinanceTimeRange_GreaterEqual:
 					{
+						cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN;
 						pstmt = connection.prepareStatement(cmd_select_data);
+						pstmt.setDate(1, get_sql_date(finance_time_range.get_time_start_value_list()));
+					}
+					break;
+					default:
+						throw new IllegalArgumentException(String.format("Unsupported time range: %d", finance_time_range_type.value()));
 					}
 				}
 				catch (SQLException e)
 				{
-					FinanceRecorderCmnDef.format_error("Fail to prepare MySQL command for querying data by date, due to: %s", e.toString());
+					FinanceRecorderCmnDef.format_error("Fail to prepare MySQL command for querying data in date unit, due to: %s", e.toString());
 					throw e;
 				}
 			}
-			else
+			break;
+			case FinanceTime_Month:
 			{
-// Month type
-				if (finance_time_range.get_start_time_str() != null && finance_time_range.get_end_time_str() != null)
-				{
-					int[] time_start_list = FinanceRecorderCmnClass.TimeCfg.get_month_value(finance_time_range.get_start_time_str());
-					int[] time_end_list = FinanceRecorderCmnClass.TimeCfg.get_month_value(finance_time_range.get_end_time_str());
-					if (time_start_list == null || time_end_list == null)
-						throw new IllegalArgumentException(String.format("Fail to parse the start time[%s] and end time[%s]", finance_time_range.get_start_time_str(), finance_time_range.get_end_time_str()));
-					int month_start = time_start_list[1];
-					int month_end = time_end_list[1];
-					cmd_select_data += String.format(FORMAT_CMD_SELECT_MONTH_RULE_BETWEEN_FORMAT, month_start, month_end);
-				}
-				else if (finance_time_range.get_start_time_str() != null)
-				{
-					int[] time_start_list = FinanceRecorderCmnClass.TimeCfg.get_month_value(finance_time_range.get_start_time_str());
-					if (time_start_list == null)
-						throw new IllegalArgumentException(String.format("Fail to parse the start time[%s]", finance_time_range.get_start_time_str()));
-					int month_start = time_start_list[1];
-					cmd_select_data += String.format(FORMAT_CMD_SELECT_MONTH_RULE_GREATER_EQUAL_THAN_FORMAT, month_start);
-				}
-				else if (finance_time_range.get_end_time_str() != null)
-				{
-					int[] time_end_list = FinanceRecorderCmnClass.TimeCfg.get_month_value(finance_time_range.get_end_time_str());
-					if (time_end_list == null)
-						throw new IllegalArgumentException(String.format("Fail to parse the end time[%s]", finance_time_range.get_end_time_str()));
-					int month_end = time_end_list[1];
-					cmd_select_data += String.format(FORMAT_CMD_SELECT_MONTH_RULE_LESS_EQUAL_THAN_FORMAT, month_end);
-				}
-// Try to create the prepared statement
+// Try to create the prepared statement from month unit
 				try
 				{
-					pstmt = connection.prepareStatement(cmd_select_data);
+					switch (finance_time_range_type)
+					{
+					case FinanceTimeRange_Between:
+					{
+						cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_BETWEEN;
+						pstmt = connection.prepareStatement(cmd_select_data);
+						FinanceRecorderCmnClass.FinanceMonth finance_month_start = new FinanceRecorderCmnClass.FinanceMonth(finance_time_range.get_time_start_value_list());
+						FinanceRecorderCmnClass.FinanceMonth finance_month_end = new FinanceRecorderCmnClass.FinanceMonth(finance_time_range.get_time_end_value_list());
+						pstmt.setDate(1, get_sql_date(finance_month_start.get_date_start_object()));
+						pstmt.setDate(2, get_sql_date(finance_month_end.get_date_end_object()));
+					}
+					break;
+					case FinanceTimeRange_LessEqual:
+					{
+						cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN;
+						FinanceRecorderCmnClass.FinanceMonth finance_month_end = new FinanceRecorderCmnClass.FinanceMonth(finance_time_range.get_time_end_value_list());
+						pstmt = connection.prepareStatement(cmd_select_data);
+						pstmt.setDate(1, get_sql_date(finance_month_end.get_date_end_object()));
+					}
+					break;
+					case FinanceTimeRange_GreaterEqual:
+					{
+						cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN;
+						FinanceRecorderCmnClass.FinanceMonth finance_month_start = new FinanceRecorderCmnClass.FinanceMonth(finance_time_range.get_time_start_value_list());
+						pstmt = connection.prepareStatement(cmd_select_data);
+						pstmt.setDate(1, get_sql_date(finance_month_start.get_date_start_object()));
+					}
+					break;
+					default:
+						throw new IllegalArgumentException(String.format("Unsupported time range: %d", finance_time_range_type.value()));
+					}
 				}
 				catch (SQLException e)
 				{
-					FinanceRecorderCmnDef.format_error("Fail to prepare MySQL command for querying data by month, due to: %s", e.toString());
+					FinanceRecorderCmnDef.format_error("Fail to prepare MySQL command for querying data in month unit, due to: %s", e.toString());
 					throw e;
 				}
+				catch (ParseException e)
+				{
+					FinanceRecorderCmnDef.format_error("Fail to parse mysql date in quarter unit, due to: %s", e.toString());
+					throw e;
+				}
+			}
+			break;
+			case FinanceTime_Quarter:
+			{
+// Try to create the prepared statement from quartewr unit
+				try
+				{
+					switch (finance_time_range_type)
+					{
+					case FinanceTimeRange_Between:
+					{
+						cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_BETWEEN;
+						pstmt = connection.prepareStatement(cmd_select_data);
+						FinanceRecorderCmnClass.FinanceQuarter finance_quarter_start = new FinanceRecorderCmnClass.FinanceQuarter(finance_time_range.get_time_start_value_list());
+						FinanceRecorderCmnClass.FinanceQuarter finance_quarter_end = new FinanceRecorderCmnClass.FinanceQuarter(finance_time_range.get_time_end_value_list());
+						pstmt.setDate(1, get_sql_date(finance_quarter_start.get_date_start_object()));
+						pstmt.setDate(2, get_sql_date(finance_quarter_end.get_date_end_object()));
+					}
+					break;
+					case FinanceTimeRange_LessEqual:
+					{
+						cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_LESS_EQUAL_THAN;
+						FinanceRecorderCmnClass.FinanceQuarter finance_quarter_end = new FinanceRecorderCmnClass.FinanceQuarter(finance_time_range.get_time_end_value_list());
+						pstmt = connection.prepareStatement(cmd_select_data);
+						pstmt.setDate(1, get_sql_date(finance_quarter_end.get_date_end_object()));
+					}
+					break;
+					case FinanceTimeRange_GreaterEqual:
+					{
+						cmd_select_data += FORMAT_CMD_SELECT_DATE_RULE_GREATER_EQUAL_THAN;
+						FinanceRecorderCmnClass.FinanceQuarter finance_quarter_start = new FinanceRecorderCmnClass.FinanceQuarter(finance_time_range.get_time_start_value_list());
+						pstmt = connection.prepareStatement(cmd_select_data);
+						pstmt.setDate(1, get_sql_date(finance_quarter_start.get_date_start_object()));
+					}
+					break;
+					default:
+						throw new IllegalArgumentException(String.format("Unsupported time range: %d", finance_time_range_type.value()));
+					}
+				}
+				catch (SQLException e)
+				{
+					FinanceRecorderCmnDef.format_error("Fail to prepare MySQL command for querying data in quarter unit, due to: %s", e.toString());
+					throw e;
+				}
+				catch (ParseException e)
+				{
+					FinanceRecorderCmnDef.format_error("Fail to parse mysql date in quarter unit, due to: %s", e.toString());
+					throw e;
+				}
+			}
+			break;
+			default:
+				throw new IllegalStateException(String.format("Unknow time unit: %d", finance_time_unit.value()));
 			}
 		}
 		else
@@ -641,7 +710,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		return  FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	protected short select_data(String table_name, int source_type_index, LinkedList<Integer> field_index_list, FinanceRecorderCmnClass.TimeRangeCfg finance_time_range, FinanceRecorderCmnClass.ResultSet result_set)
+	protected short select_data(String table_name, int source_type_index, LinkedList<Integer> field_index_list, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSet result_set)
 	{
 // Check if the connection is established
 		if (connection == null)
@@ -678,7 +747,11 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		{
 			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 		}
-		
+		catch (ParseException e)
+		{
+			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+		}
+
 		String[] finance_data_sql_field_definition = FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[source_type_index];
 		ResultSet rs = null;
 		try
@@ -756,7 +829,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 		}
 		return ret;
 	}
-	protected short select_data(String table_name, int source_type_index, String field_cmd, FinanceRecorderCmnClass.TimeRangeCfg finance_time_range, FinanceRecorderCmnClass.ResultSet result_set)
+	protected short select_data(String table_name, int source_type_index, String field_cmd, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSet result_set)
 	{
 // Transform the command string to related field
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
@@ -766,7 +839,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
 			return ret;
 		return select_data(table_name, source_type_index, field_index_list, finance_time_range, result_set);
 	}
-	protected short select_data(String table_name, int source_type_index, FinanceRecorderCmnClass.TimeRangeCfg finance_time_range, FinanceRecorderCmnClass.ResultSet result_set){return select_data(table_name, source_type_index, "*", finance_time_range, result_set);}
+	protected short select_data(String table_name, int source_type_index, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSet result_set){return select_data(table_name, source_type_index, "*", finance_time_range, result_set);}
 	protected short select_data(String table_name, int source_type_index, String cmd_table_field, FinanceRecorderCmnClass.ResultSet result_set){return select_data(table_name, source_type_index, cmd_table_field, null, result_set);}
 	protected short select_data(String table_name, int source_type_index, FinanceRecorderCmnClass.ResultSet result_set){return select_data(table_name, source_type_index, "*", null, result_set);}
 

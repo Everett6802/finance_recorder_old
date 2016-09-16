@@ -67,14 +67,14 @@ public class FinanceRecorderStockSQLClient extends FinanceRecorderSQLClient
 		return insert_data(table_name, csv_reader);
 	}
 
-	short select_data(int source_type_index, String company_code_number, LinkedList<Integer> field_index_list, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnClass.ResultSet result_set)
+	short select_data(int source_type_index, String company_code_number, LinkedList<Integer> field_index_list, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSet result_set)
 	{
 		String table_name = get_table_name(source_type_index, company_code_number);
-		return select_data(table_name, source_type_index, field_index_list, time_range_cfg, result_set);
+		return select_data(table_name, source_type_index, field_index_list, finance_time_range, result_set);
 	}
-	short select_data(int source_type_index, String company_code_number, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnClass.ResultSet result_set)
+	short select_data(int source_type_index, String company_code_number, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSet result_set)
 	{
 		String table_name = get_table_name(source_type_index, company_code_number);
-		return select_data(table_name, source_type_index, time_range_cfg, result_set);
+		return select_data(table_name, source_type_index, finance_time_range, result_set);
 	}
 }

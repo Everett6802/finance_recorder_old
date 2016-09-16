@@ -41,12 +41,12 @@ public class FinanceRecorderMarketSQLClient extends FinanceRecorderSQLClient
 		return insert_data(FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index], csv_reader);
 	}
 
-	short select_data(int source_type_index, LinkedList<Integer> field_index_list, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnClass.ResultSet result_set)
+	short select_data(int source_type_index, LinkedList<Integer> field_index_list, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSet result_set)
 	{
-		return select_data(FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index], source_type_index, field_index_list, time_range_cfg, result_set);
+		return select_data(FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index], source_type_index, field_index_list, finance_time_range, result_set);
 	}
-	short select_data(int source_type_index, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnClass.ResultSet result_set)
+	short select_data(int source_type_index, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSet result_set)
 	{
-		return select_data(FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index], source_type_index, time_range_cfg, result_set);
+		return select_data(FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index], source_type_index, finance_time_range, result_set);
 	}
 }

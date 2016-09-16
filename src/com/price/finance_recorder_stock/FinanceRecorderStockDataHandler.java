@@ -222,7 +222,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase impl
 		return ret;
 	}
 
-	public short read_from_sql(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnClass.ResultSetMap result_set_map)
+	public short read_from_sql(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map)
 	{
 // CAUTION: The data set in the reslt_set variable should be added before calling this function 
 // Set the mapping table of reading the specific CSV files and writing correct SQL database
@@ -255,7 +255,7 @@ OUT:
 // Query data from each source type
 					for (int source_type_index : source_type_list)
 					{
-						ret = sql_client.select_data(source_type_index, company_code_number, time_range_cfg, result_set);
+						ret = sql_client.select_data(source_type_index, company_code_number, finance_time_range, result_set);
 						if (FinanceRecorderCmnDef.CheckFailure(ret))
 							break OUT;
 					}
@@ -275,7 +275,7 @@ OUT:
 						if (FinanceRecorderCmnDef.CheckFailure(ret))
 							break OUT;
 // Query data from each source type
-						ret = sql_client.select_data(source_type_index, company_code_number, time_range_cfg, result_set);
+						ret = sql_client.select_data(source_type_index, company_code_number, finance_time_range, result_set);
 						if (FinanceRecorderCmnDef.CheckFailure(ret))
 							break OUT;
 // Keep track of the data in the designated data structure
@@ -298,9 +298,9 @@ OUT:
 
 		return ret;
 	}
-	public short read_from_sql(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, FinanceRecorderCmnClass.ResultSetMap result_set_map)
+	public short read_from_sql(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map)
 	{
-		return read_from_sql(whole_field_query_set, time_range_cfg, result_set_map);
+		return read_from_sql(whole_field_query_set, finance_time_range, result_set_map);
 	}
 
 	public short write_into_csv(FinanceRecorderCmnClass.ResultSetMap result_set_map, String csv_root_folder_path)
@@ -363,7 +363,7 @@ OUT:
 		return ret;
 	}
 
-	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String csv_backup_foldername)
+	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, String csv_backup_foldername)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
@@ -388,7 +388,7 @@ OUT:
 // Query data from each source type
 				for (int source_type_index : source_type_list)
 				{
-					ret = sql_client.select_data(source_type_index, company_code_number, time_range_cfg, result_set);
+					ret = sql_client.select_data(source_type_index, company_code_number, finance_time_range, result_set);
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						break OUT;
 					FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderStockDataHandler.get_csv_filepath(csv_backup_foldername, source_type_index, company_group_number, company_code_number));
@@ -407,9 +407,9 @@ OUT:
 		}
 		return ret;
 	}
-	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg, String backup_foldername)
+	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, String backup_foldername)
 	{
-		return transfrom_sql_to_csv(whole_field_query_set, time_range_cfg, csv_backup_foldername);
+		return transfrom_sql_to_csv(whole_field_query_set, finance_time_range, csv_backup_foldername);
 	}
 
 	public void enable_multi_thread_type(boolean enable)

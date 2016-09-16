@@ -66,7 +66,7 @@ public class FinanceRecorderWorkdayCalendar
 	};
 
 
-	private FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg = null;
+	private FinanceRecorderCmnClass.FinanceTimeRange finance_time_range = null;
 	private HashMap<Integer, ArrayList<LinkedList<Integer>>> workday_map = new HashMap<Integer, ArrayList<LinkedList<Integer>>>();
 	private ArrayList<Integer> workday_year_sort_array = new ArrayList<Integer>();
 	int workday_year_sort_array_size;
@@ -98,7 +98,7 @@ public class FinanceRecorderWorkdayCalendar
 //			{
 //				if (buf.length() == 0)
 //					continue;
-//				if (time_range_cfg == null)
+//				if (finance_time_range == null)
 //				{
 //					int index = buf.indexOf(' ');
 //					if (index == -1)
@@ -108,7 +108,7 @@ public class FinanceRecorderWorkdayCalendar
 //					}
 //					String start_time_str = buf.substring(0, index);
 //					String end_time_str = buf.substring(index + 1);
-//					time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(start_time_str, end_time_str);
+//					finance_time_range = new FinanceRecorderCmnClass.FinanceTimeRange(start_time_str, end_time_str);
 //					FinanceRecorderCmnDef.format_debug("Find the time range [%s %s] in %s", start_time_str, end_time_str, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
 //				}
 //				else
@@ -204,7 +204,7 @@ public class FinanceRecorderWorkdayCalendar
 		{
 			if (config_line.length() == 0)
 				continue;
-			if (time_range_cfg == null)
+			if (finance_time_range == null)
 			{
 // Find the time range of the workday calendar in the first line
 				int index = config_line.indexOf(' ');
@@ -215,7 +215,7 @@ public class FinanceRecorderWorkdayCalendar
 				}
 				String start_time_str = config_line.substring(0, index);
 				String end_time_str = config_line.substring(index + 1);
-				time_range_cfg = new FinanceRecorderCmnClass.TimeRangeCfg(start_time_str, end_time_str);
+				finance_time_range = new FinanceRecorderCmnClass.FinanceTimeRange(start_time_str, end_time_str);
 				FinanceRecorderCmnDef.format_debug("Find the time range [%s %s] in %s", start_time_str, end_time_str, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
 			}
 			else
@@ -280,12 +280,12 @@ public class FinanceRecorderWorkdayCalendar
 
 	private boolean check_in_range(int year, int month, int day)
 	{
-		return FinanceRecorderCmnClass.TimeRangeCfg.time_in_range(time_range_cfg, year, month, day);
+		return FinanceRecorderCmnClass.FinanceTimeRange.time_in_range(finance_time_range, year, month, day);
 	}
 
 //	private boolean check_in_range(final FinanceRecorderCmnClass.TimeCfg time_cfg)
 //	{
-//		return FinanceRecorderCmnClass.TimeRangeCfg.time_in_range(time_range_cfg, time_cfg);
+//		return FinanceRecorderCmnClass.FinanceTimeRange.time_in_range(finance_time_range, time_cfg);
 //	}
 //
 //	private boolean check_greater_than_start(int year, int month, int day)
@@ -297,9 +297,9 @@ public class FinanceRecorderWorkdayCalendar
 //
 //	private boolean check_greater_than_start(final FinanceRecorderCmnClass.TimeCfg time_cfg)
 //	{
-//		if (time_range_cfg.get_start_time() == null)
-//			throw new RuntimeException("The start time in time_range_cfg should NOT be null");
-//		return (FinanceRecorderCmnClass.TimeCfg.get_int_value(time_cfg) >= FinanceRecorderCmnClass.TimeCfg.get_int_value(time_range_cfg.get_start_time()));
+//		if (finance_time_range.get_start_time() == null)
+//			throw new RuntimeException("The start time in finance_time_range should NOT be null");
+//		return (FinanceRecorderCmnClass.TimeCfg.get_int_value(time_cfg) >= FinanceRecorderCmnClass.TimeCfg.get_int_value(finance_time_range.get_start_time()));
 //	}
 
 	private boolean check_less_than_end(int year, int month, int day)
@@ -311,9 +311,9 @@ public class FinanceRecorderWorkdayCalendar
 
 	private boolean check_less_than_end(final FinanceRecorderCmnClass.TimeCfg time_cfg)
 	{
-		if (time_range_cfg.get_end_time() == null)
-			throw new RuntimeException("The end time in time_range_cfg should NOT be null");
-		return (FinanceRecorderCmnClass.TimeCfg.get_int_value(time_cfg) <= FinanceRecorderCmnClass.TimeCfg.get_int_value(time_range_cfg.get_end_time()));
+		if (finance_time_range.get_end_time() == null)
+			throw new RuntimeException("The end time in finance_time_range should NOT be null");
+		return (FinanceRecorderCmnClass.TimeCfg.get_int_value(time_cfg) <= FinanceRecorderCmnClass.TimeCfg.get_int_value(finance_time_range.get_end_time()));
 	}
 
 	private boolean is_workday(int year, int month, int day)
@@ -331,7 +331,7 @@ public class FinanceRecorderWorkdayCalendar
 	{
 		if (!check_in_range(year, month, day))
 		{
-			FinanceRecorderCmnDef.format_error("The date [%04d-%02d-%02d] is out of range [%s]", year, month, day, time_range_cfg.toString());
+			FinanceRecorderCmnDef.format_error("The date [%04d-%02d-%02d] is out of range [%s]", year, month, day, finance_time_range.toString());
 			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 		}
 
