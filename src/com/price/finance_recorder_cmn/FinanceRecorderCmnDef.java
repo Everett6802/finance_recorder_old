@@ -1165,11 +1165,12 @@ public class FinanceRecorderCmnDef
 		return direct_string_to_output_stream(data, null);
 	}
 
-	public static short execute_shell_command(String command,
-			StringBuilder result_str_builder) {
+	public static short execute_shell_command(String command, StringBuilder result_str_builder) 
+	{
 		StringBuffer output = new StringBuffer();
 		Process p;
-		try {
+		try 
+		{
 			// In order to run the pipe command successfully
 			String[] command_list = new String[] { "bash", "-c", command };
 			p = Runtime.getRuntime().exec(command_list);
@@ -1179,15 +1180,15 @@ public class FinanceRecorderCmnDef
 			String line = "";
 			while ((line = reader.readLine()) != null)
 				output.append(line + "\n");
-		} catch (InterruptedException e) {
-			format_error(
-					"Interrupted exception occurs while running command: %s",
-					command);
+		} 
+		catch (InterruptedException e) 
+		{
+			format_error("Interrupted exception occurs while running command: %s", command);
 			return RET_FAILURE_IO_OPERATION;
-		} catch (IOException e) {
-			format_error(
-					"Exception occurs while running command: %s, due to: %s",
-					command, e.toString());
+		} 
+		catch (IOException e) 
+		{
+			format_error("Exception occurs while running command: %s, due to: %s", command, e.toString());
 			return RET_FAILURE_IO_OPERATION;
 		}
 

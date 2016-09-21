@@ -14,12 +14,7 @@ public class FinanceRecorderCmnClass
 		protected int year;
 		protected String time_description = null;
 
-		public FinanceTimeBase()
-		{
-			
-		}
-
-		protected abstract int get_value();
+		protected abstract int get_key_value();
 		public abstract int[] get_time_value_list();
 		public abstract FinanceTime get_time_object();
 		public abstract FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit();
@@ -37,6 +32,14 @@ public class FinanceRecorderCmnClass
 			FinanceRecorderCmnDef.check_month_range(month);
 // Check Month Range
 			FinanceRecorderCmnDef.check_day_range(day, year, month);
+		}
+		public static int[] get_time_value_list_from_key_value(int key_value)
+		{
+			int year = (key_value >> 12) & 0xFFFF;
+			int month = (key_value >> 8) & 0xF;
+			int day = key_value & 0x3F;
+			check_value_range(year, month, day);
+			return new int[]{year, month, day};
 		}
 		public static java.util.Date get_java_date_object(String finance_date_str) throws ParseException
 		{
@@ -63,6 +66,13 @@ public class FinanceRecorderCmnClass
 			month = time_value_list[1];
 			day = time_value_list[2];
 		}
+		public FinanceDate(int key_value)
+		{
+			int[] value = get_time_value_list_from_key_value(key_value);
+			year = value[0];
+			month = value[1];
+			day = value[2];
+		}
 		public FinanceDate(int in_year, int in_month, int in_day)
 		{
 			year = in_year;
@@ -83,7 +93,7 @@ public class FinanceRecorderCmnClass
 			day = another.day;
 		}
 
-		protected int get_value()
+		protected int get_key_value()
 		{
 			return (year << 12 | month << 8 | day);
 		}
@@ -97,6 +107,10 @@ public class FinanceRecorderCmnClass
 
 		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Date;}
 
+		public int get_year(){return year;}
+		public int get_month(){return  month;}
+		public int get_day(){return day;}
+
 		@Override
 		public String toString()
 		{
@@ -108,7 +122,7 @@ public class FinanceRecorderCmnClass
 		@Override
 		public int compareTo(Object another) 
 		{
-			return (get_value() - ((FinanceDate)another).get_value());
+			return (get_key_value() - ((FinanceDate)another).get_key_value());
 		}
 
 		@Override
@@ -144,6 +158,13 @@ public class FinanceRecorderCmnClass
 // Check Month Range
 			FinanceRecorderCmnDef.check_month_range(month);
 		}
+		public static int[] get_time_value_list_from_key_value(int key_value)
+		{
+			int year = (key_value >> 4) & 0xFFFF;
+			int month = key_value & 0xF;
+			check_value_range(year, month);
+			return new int[]{year, month};
+		}
 
 		private int month;
 
@@ -153,6 +174,12 @@ public class FinanceRecorderCmnClass
 				throw new IllegalArgumentException(String.format("The month value list should be 2, not : %d", time_value_list.length));
 			year = time_value_list[0];
 			month = time_value_list[1];
+		}
+		public FinanceMonth(int key_value)
+		{
+			int[] value = get_time_value_list_from_key_value(key_value);
+			year = value[0];
+			month = value[1];
 		}
 		public FinanceMonth(int in_year, int in_month)
 		{
@@ -171,7 +198,7 @@ public class FinanceRecorderCmnClass
 			month = another.month;
 		}
 
-		protected int get_value()
+		protected int get_key_value()
 		{
 			return (year << 4 | month);
 		}
@@ -180,6 +207,9 @@ public class FinanceRecorderCmnClass
 		{
 			return new int[]{year, month};
 		}
+
+		public int get_year(){return year;}
+		public int get_month(){return  month;}
 
 		public FinanceTime get_time_object(){return new FinanceTime(this);}
 
@@ -196,7 +226,7 @@ public class FinanceRecorderCmnClass
 		@Override
 		public int compareTo(Object another) 
 		{
-			return (get_value() - ((FinanceMonth)another).get_value());
+			return (get_key_value() - ((FinanceMonth)another).get_key_value());
 		}
 
 		@Override
@@ -231,7 +261,14 @@ public class FinanceRecorderCmnClass
 // Check Quarter Range
 			FinanceRecorderCmnDef.check_quarter_range(quarter);
 		}
-
+		public static int[] get_time_value_list_from_key_value(int key_value)
+		{
+			int year = (key_value >> 3) & 0xFFFF;
+			int quarter = key_value & 0x7;
+			check_value_range(year, quarter);
+			return new int[]{year, quarter};
+		}
+		
 		private int quarter;
 
 		public FinanceQuarter(int[] time_value_list)
@@ -240,6 +277,12 @@ public class FinanceRecorderCmnClass
 				throw new IllegalArgumentException(String.format("The quarter value list should be 2, not : %d", time_value_list.length));
 			year = time_value_list[0];
 			quarter = time_value_list[1];
+		}
+		public FinanceQuarter(int key_value)
+		{
+			int[] value = get_time_value_list_from_key_value(key_value);
+			year = value[0];
+			quarter = value[1];
 		}
 		public FinanceQuarter(int in_year, int in_quarter)
 		{
@@ -258,7 +301,7 @@ public class FinanceRecorderCmnClass
 			quarter = another.quarter;
 		}
 
-		protected int get_value()
+		protected int get_key_value()
 		{
 			return (year << 3 | quarter);
 		}
@@ -268,6 +311,9 @@ public class FinanceRecorderCmnClass
 			return new int[]{year, quarter};
 		}
 
+		public int get_year(){return year;}
+		public int get_quarter(){return quarter;}
+	
 		public FinanceTime get_time_object(){return new FinanceTime(this);}
 
 		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Quarter;}
@@ -283,7 +329,7 @@ public class FinanceRecorderCmnClass
 		@Override
 		public int compareTo(Object another) 
 		{
-			return (get_value() - ((FinanceQuarter)another).get_value());
+			return (get_key_value() - ((FinanceQuarter)another).get_key_value());
 		}
 
 		@Override
@@ -384,6 +430,31 @@ public class FinanceRecorderCmnClass
 			}
 			finance_time_unit = in_finance_time_unit;
 		}
+		public FinanceTime(int key_value, FinanceRecorderCmnDef.FinanceTimeUnit in_finance_time_unit)
+		{
+// Initialize the instance
+			switch (in_finance_time_unit)
+			{
+			case FinanceTime_Date:
+			{
+				finance_time = new FinanceDate(key_value);
+			}
+			break;
+			case FinanceTime_Month:
+			{
+				finance_time = new FinanceMonth(key_value);
+			}
+			break;
+			case FinanceTime_Quarter:
+			{
+				finance_time = new FinanceQuarter(key_value);
+			}
+			break;
+			default:
+				throw new IllegalStateException(String.format("Unknow time unit: %d", in_finance_time_unit.value()));
+			}
+			finance_time_unit = in_finance_time_unit;
+		}
 
 		public int[] get_time_value_list(){return finance_time.get_time_value_list();}
 		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return finance_time_unit;}
@@ -411,6 +482,8 @@ public class FinanceRecorderCmnClass
 		public abstract int[] get_time_range_value_list();
 		public abstract String get_time_start_string();
 		public abstract String get_time_end_string();
+		public abstract int get_time_start_key_value();
+		public abstract int get_time_end_key_value();
 		public abstract FinanceTimeRange get_time_object();
 		public abstract FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit();
 	};
@@ -510,9 +583,9 @@ public class FinanceRecorderCmnClass
 		{
 			if (!finance_time_range_type.is_time_range_exist())
 				throw new IllegalStateException("Start/End Date does NOT exist");
-			int[] start_value_list = get_time_start_value_list();
-			int[] end_value_list = get_time_end_value_list();
-			return new int[]{start_value_list[0], start_value_list[1], start_value_list[2], end_value_list[0], end_value_list[1], end_value_list[2]};
+			int[] start_key_value_list = get_time_start_value_list();
+			int[] end_key_value_list = get_time_end_value_list();
+			return new int[]{start_key_value_list[0], start_key_value_list[1], start_key_value_list[2], end_key_value_list[0], end_key_value_list[1], end_key_value_list[2]};
 		}
 		public String get_time_start_string()
 		{
@@ -525,6 +598,18 @@ public class FinanceRecorderCmnClass
 			if (!finance_time_range_type.is_time_end_exist())
 				throw new IllegalStateException("End Date does NOT exist");
 			return finance_date_end.toString();
+		}
+		public int get_time_start_key_value()
+		{
+			if (!finance_time_range_type.is_time_start_exist())
+				throw new IllegalStateException("Start Date does NOT exist");
+			return finance_date_start.get_key_value();
+		}
+		public int get_time_end_key_value()
+		{
+			if (!finance_time_range_type.is_time_end_exist())
+				throw new IllegalStateException("End Date does NOT exist");
+			return finance_date_end.get_key_value();
 		}
 
 		public FinanceTimeRange get_time_object(){return new FinanceTimeRange(finance_date_start, finance_date_end);}
@@ -639,9 +724,9 @@ public class FinanceRecorderCmnClass
 		{
 			if (!finance_time_range_type.is_time_range_exist())
 				throw new IllegalStateException("Start/End Month does NOT exist");
-			int[] start_value_list = get_time_start_value_list();
-			int[] end_value_list = get_time_end_value_list();
-			return new int[]{start_value_list[0], start_value_list[1], start_value_list[2], end_value_list[0], end_value_list[1], end_value_list[2]};
+			int[] start_key_value_list = get_time_start_value_list();
+			int[] end_key_value_list = get_time_end_value_list();
+			return new int[]{start_key_value_list[0], start_key_value_list[1], start_key_value_list[2], end_key_value_list[0], end_key_value_list[1], end_key_value_list[2]};
 		}
 		public String get_time_start_string()
 		{
@@ -654,6 +739,18 @@ public class FinanceRecorderCmnClass
 			if (!finance_time_range_type.is_time_end_exist())
 				throw new IllegalStateException("End Month does NOT exist");
 			return finance_month_end.toString();
+		}
+		public int get_time_start_key_value()
+		{
+			if (!finance_time_range_type.is_time_start_exist())
+				throw new IllegalStateException("Start Month does NOT exist");
+			return finance_month_start.get_key_value();
+		}
+		public int get_time_end_key_value()
+		{
+			if (!finance_time_range_type.is_time_end_exist())
+				throw new IllegalStateException("End Month does NOT exist");
+			return finance_month_end.get_key_value();
 		}
 
 		public FinanceTimeRange get_time_object(){return new FinanceTimeRange(finance_month_start, finance_month_end);}
@@ -768,9 +865,9 @@ public class FinanceRecorderCmnClass
 		{
 			if (!finance_time_range_type.is_time_range_exist())
 				throw new IllegalStateException("Start/End Quarter does NOT exist");
-			int[] start_value_list = get_time_start_value_list();
-			int[] end_value_list = get_time_end_value_list();
-			return new int[]{start_value_list[0], start_value_list[1], start_value_list[2], end_value_list[0], end_value_list[1], end_value_list[2]};
+			int[] start_key_value_list = get_time_start_value_list();
+			int[] end_key_value_list = get_time_end_value_list();
+			return new int[]{start_key_value_list[0], start_key_value_list[1], start_key_value_list[2], end_key_value_list[0], end_key_value_list[1], end_key_value_list[2]};
 		}
 		public String get_time_start_string()
 		{
@@ -783,6 +880,18 @@ public class FinanceRecorderCmnClass
 			if (!finance_time_range_type.is_time_end_exist())
 				throw new IllegalStateException("End Quarter does NOT exist");
 			return finance_quarter_end.toString();
+		}
+		public int get_time_start_key_value()
+		{
+			if (!finance_time_range_type.is_time_start_exist())
+				throw new IllegalStateException("Start Quarter does NOT exist");
+			return finance_quarter_start.get_key_value();
+		}
+		public int get_time_end_key_value()
+		{
+			if (!finance_time_range_type.is_time_end_exist())
+				throw new IllegalStateException("End Quarter does NOT exist");
+			return finance_quarter_end.get_key_value();
 		}
 
 		public FinanceTimeRange get_time_object(){return new FinanceTimeRange(finance_quarter_start, finance_quarter_end);}
@@ -892,9 +1001,24 @@ public class FinanceRecorderCmnClass
 				throw new IllegalStateException("End Time does NOT exist");
 			return finance_time_range.get_time_end_string();
 		}
+		public int get_time_start_key_value()
+		{
+			if (!finance_time_range_type.is_time_start_exist())
+				throw new IllegalStateException("Start Timer does NOT exist");
+			return finance_time_range.get_time_start_key_value();
+		}
+		public int get_time_end_key_value()
+		{
+			if (!finance_time_range_type.is_time_end_exist())
+				throw new IllegalStateException("End tIME does NOT exist");
+			return finance_time_range.get_time_end_key_value();
+		}
 
 		public FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit(){return finance_time_unit;}
 		public FinanceTimeRange get_time_object(){return this;}
+
+		public boolean is_time_start_exist(){return finance_time_range_type.is_time_start_exist();}
+		public boolean is_time_end_exist(){return finance_time_range_type.is_time_end_exist();}
 	};
 
 //	public static class TimeCfg

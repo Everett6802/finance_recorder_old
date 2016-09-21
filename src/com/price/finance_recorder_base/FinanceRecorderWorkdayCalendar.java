@@ -33,18 +33,24 @@ public class FinanceRecorderWorkdayCalendar
 		} 
 	}
 
-	public static class TraverseEntry implements Iterable<HashMap<Integer, ArrayList<LinkedList<Integer>>>>
+	public static class TraverseEntry implements Iterable<FinanceRecorderCmnClass.FinanceDate>
 	{
-		private HashMap<Integer, ArrayList<LinkedList<Integer>>> workday_map = null;
+		private FinanceRecorderWorkdayCalendar workday_calendar = null;
+		private int year_key; 
+		private int month_index; 
+		private int day_index;
 
-		public TraverseEntry(HashMap<Integer, ArrayList<LinkedList<Integer>>> workday_map_input)
+		public TraverseEntry(FinanceRecorderWorkdayCalendar in_workday_calendar, int start_year, int start_month, int start_day)
 		{
-			workday_map = workday_map_input;
+			workday_calendar = in_workday_calendar;
+			int[] date_index_list = new int[3];
+			short ret = workday_calendar.find_data_pos(start_year, start_month, start_day, date_index_list, TRAVERSE_SEARCH_TYPE.TRAVERSE_SEARCH_EQUAL);
+			
 		}
 		@Override
-		public Iterator<HashMap<Integer, ArrayList<LinkedList<Integer>>>> iterator()
+		public Iterator<FinanceRecorderCmnClass.FinanceDate> iterator()
 		{
-			Iterator<HashMap<Integer, ArrayList<LinkedList<Integer>>>> it = new Iterator<HashMap<Integer, ArrayList<LinkedList<Integer>>>>()
+			Iterator<FinanceRecorderCmnClass.FinanceDate> it = new Iterator<FinanceRecorderCmnClass.FinanceDate>()
 			{
 //				private int array_size = company_profile_sorted_array.size();
 				private int cur_index = 0;
@@ -54,7 +60,7 @@ public class FinanceRecorderWorkdayCalendar
 					return cur_index < array_size;
 				}
 				@Override
-				public ArrayList<String> next()
+				public FinanceRecorderCmnClass.FinanceDate next()
 				{
 					return company_profile_sorted_array.get(cur_index++).profile_element_array;
 				}
@@ -65,8 +71,7 @@ public class FinanceRecorderWorkdayCalendar
 		}
 	};
 
-
-	private FinanceRecorderCmnClass.FinanceTimeRange finance_time_range = null;
+	private FinanceRecorderCmnClass.FinanceDateRange finance_date_range = null;
 	private HashMap<Integer, ArrayList<LinkedList<Integer>>> workday_map = new HashMap<Integer, ArrayList<LinkedList<Integer>>>();
 	private ArrayList<Integer> workday_year_sort_array = new ArrayList<Integer>();
 	int workday_year_sort_array_size;
@@ -77,118 +82,6 @@ public class FinanceRecorderWorkdayCalendar
 		short ret = parse_config();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
-//		BufferedReader reader = null;
-//		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
-//		FinanceRecorderCmnDef.format_debug("Try to parse the configuration in %s", conf_filepath);
-//// Check the file exists or not
-//		File fp = new File(conf_filepath);
-//		if (!fp.exists())
-//		{
-//			FinanceRecorderCmnDef.format_error("The configration file[%s] does NOT exist", conf_filepath);
-//			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
-//		}
-//// Try to parse the content of the config file
-//		try
-//		{
-//			reader = new BufferedReader(new FileReader(fp));
-//			String buf;
-////			boolean param_start = false;
-//			OUT:
-//			while ((buf = reader.readLine()) != null)
-//			{
-//				if (buf.length() == 0)
-//					continue;
-//				if (finance_time_range == null)
-//				{
-//					int index = buf.indexOf(' ');
-//					if (index == -1)
-//					{
-//						FinanceRecorderCmnDef.format_error("Incorrect time format in %s: %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, buf);
-//						return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
-//					}
-//					String start_time_str = buf.substring(0, index);
-//					String end_time_str = buf.substring(index + 1);
-//					finance_time_range = new FinanceRecorderCmnClass.FinanceTimeRange(start_time_str, end_time_str);
-//					FinanceRecorderCmnDef.format_debug("Find the time range [%s %s] in %s", start_time_str, end_time_str, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
-//				}
-//				else
-//				{
-//					int year_end_index = buf.indexOf(']');
-//					if (year_end_index == -1)
-//					{
-//						FinanceRecorderCmnDef.format_error("Incorrect data format in %s: %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, buf);
-//						return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
-//					}
-//					int year = Integer.valueOf(buf.substring(1, year_end_index));
-//					workday_year_sort_array.add(year);
-//
-//					ArrayList<LinkedList<Integer>> month_workday_array = new ArrayList<LinkedList<Integer>>();
-//					String[] month_workday_array_str =  buf.substring(year_end_index + 1).split(";");
-//					for (int i = 0 ; i < 12 ; i++)
-//					{
-//						LinkedList<Integer> workday_day_list = new LinkedList<Integer>();
-////						workday_day_list.clear();
-//						month_workday_array.add(workday_day_list);
-//					}
-//
-//					for (String month_workday_str : month_workday_array_str)
-//					{
-//						String[] month_tmp = month_workday_str.split(":");
-//						if (month_tmp.length != 2)
-//						{
-//							FinanceRecorderCmnDef.format_error("Incorrect month workday list: %s", month_workday_str);
-//							ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
-//							break OUT;
-//						}
-//						int month = Integer.parseInt(month_tmp[0]);
-//						if (month < 1 || month > 12)
-//						{
-//							FinanceRecorderCmnDef.format_error("Incorrect month value: %d", month);
-//							ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
-//							break OUT;
-//						}
-//						String[] workday_list = month_tmp[1].split(",");
-//
-//						LinkedList<Integer> workday_day_list = month_workday_array.get(month - 1);
-//						for (String workday : workday_list)
-//						{
-//							workday_day_list.add(Integer.parseInt(workday));
-//						}
-////						if (month != month_workday_array.size())
-////						{
-////							FinanceRecorderCmnDef.format_error("Incorrect month, expected: %d, actual: %d", month, month_workday_array.size());
-////							ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
-////							break OUT;
-////						}
-//					}
-//					workday_map.put(year, month_workday_array);
-//				}
-//			}
-//		}
-//		catch (FileNotFoundException ex)
-//		{
-//			FinanceRecorderCmnDef.format_error("The config file[%s] does NOT exist", conf_filepath);
-//			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
-//		}
-//		catch (IOException ex)
-//		{
-//			FinanceRecorderCmnDef.format_error("Error occur due to %s", ex.toString());
-//			ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
-//		}
-//		finally 
-//		{
-//// Close the file
-//			if (reader != null)
-//			{
-//				try 
-//				{
-//					reader.close();
-//				}
-//				catch (IOException e){}// nothing to do here except log the exception
-//			}
-//		}
-//		Collections.sort(workday_year_sort_array);
-//		workday_year_sort_array_size = workday_year_sort_array.size();
 		return ret;
 	}
 
@@ -204,7 +97,7 @@ public class FinanceRecorderWorkdayCalendar
 		{
 			if (config_line.length() == 0)
 				continue;
-			if (finance_time_range == null)
+			if (finance_date_range == null)
 			{
 // Find the time range of the workday calendar in the first line
 				int index = config_line.indexOf(' ');
@@ -213,10 +106,10 @@ public class FinanceRecorderWorkdayCalendar
 					FinanceRecorderCmnDef.format_error("Incorrect time format in %s: %s", FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, config_line);
 					return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 				}
-				String start_time_str = config_line.substring(0, index);
-				String end_time_str = config_line.substring(index + 1);
-				finance_time_range = new FinanceRecorderCmnClass.FinanceTimeRange(start_time_str, end_time_str);
-				FinanceRecorderCmnDef.format_debug("Find the time range [%s %s] in %s", start_time_str, end_time_str, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
+				String start_date_str = config_line.substring(0, index);
+				String end_date_str = config_line.substring(index + 1);
+				finance_date_range = new FinanceRecorderCmnClass.FinanceDateRange(start_date_str, end_date_str);
+				FinanceRecorderCmnDef.format_debug("Find the time range [%s %s] in %s", start_date_str, end_date_str, FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME);
 			}
 			else
 			{
@@ -278,42 +171,32 @@ public class FinanceRecorderWorkdayCalendar
 		return ret;
 	}
 
-	private boolean check_in_range(int year, int month, int day)
-	{
-		return FinanceRecorderCmnClass.FinanceTimeRange.time_in_range(finance_time_range, year, month, day);
-	}
-
-//	private boolean check_in_range(final FinanceRecorderCmnClass.TimeCfg time_cfg)
-//	{
-//		return FinanceRecorderCmnClass.FinanceTimeRange.time_in_range(finance_time_range, time_cfg);
-//	}
-//
 //	private boolean check_greater_than_start(int year, int month, int day)
 //	{
-//		FinanceRecorderCmnClass.TimeCfg time_cfg = new FinanceRecorderCmnClass.TimeCfg(year, month, day);
-//		boolean check = check_greater_than_start(time_cfg);
+//		FinanceRecorderCmnClass.FinanceDate finance_date = new FinanceRecorderCmnClass.FinanceDate(year, month, day);
+//		boolean check = check_greater_than_start(finance_date);
 //		return check;
 //	}
 //
-//	private boolean check_greater_than_start(final FinanceRecorderCmnClass.TimeCfg time_cfg)
+//	private boolean check_greater_than_start(final FinanceRecorderCmnClass.FinanceDate finance_date)
 //	{
-//		if (finance_time_range.get_start_time() == null)
-//			throw new RuntimeException("The start time in finance_time_range should NOT be null");
-//		return (FinanceRecorderCmnClass.TimeCfg.get_int_value(time_cfg) >= FinanceRecorderCmnClass.TimeCfg.get_int_value(finance_time_range.get_start_time()));
+//		if (finance_date_range.get_start_time() == null)
+//			throw new RuntimeException("The start time in finance_date_range should NOT be null");
+//		return (FinanceRecorderCmnClass.FinanceDate.get_int_value(finance_date) >= FinanceRecorderCmnClass.FinanceDate.get_int_value(finance_date_range.get_start_time()));
 //	}
 
 	private boolean check_less_than_end(int year, int month, int day)
 	{
-		FinanceRecorderCmnClass.TimeCfg time_cfg = new FinanceRecorderCmnClass.TimeCfg(year, month, day);
-		boolean check = check_less_than_end(time_cfg);
+		FinanceRecorderCmnClass.FinanceDate finance_date = new FinanceRecorderCmnClass.FinanceDate(year, month, day);
+		boolean check = check_less_than_end(finance_date);
 		return check;
 	}
 
-	private boolean check_less_than_end(final FinanceRecorderCmnClass.TimeCfg time_cfg)
+	private boolean check_less_than_end(final FinanceRecorderCmnClass.FinanceDate finance_date)
 	{
-		if (finance_time_range.get_end_time() == null)
-			throw new RuntimeException("The end time in finance_time_range should NOT be null");
-		return (FinanceRecorderCmnClass.TimeCfg.get_int_value(time_cfg) <= FinanceRecorderCmnClass.TimeCfg.get_int_value(finance_time_range.get_end_time()));
+		if (finance_date_range.get_date_end() == null)
+			throw new RuntimeException("The end time in finance_date_range should NOT be null");
+		return finance_date.less_equal(finance_date_range.get_date_end());
 	}
 
 	private boolean is_workday(int year, int month, int day)
@@ -322,16 +205,16 @@ public class FinanceRecorderWorkdayCalendar
 		return FinanceRecorderCmnDef.CheckSuccess(find_data_pos(year, month, day, date_index_list, TRAVERSE_SEARCH_TYPE.TRAVERSE_SEARCH_EQUAL));
 	}
 
-	private boolean is_workday(final FinanceRecorderCmnClass.TimeCfg time_cfg)
+	private boolean is_workday(final FinanceRecorderCmnClass.FinanceDate finance_date)
 	{
-		return is_workday(time_cfg.get_year(), time_cfg.get_month(), time_cfg.get_day());
+		return is_workday(finance_date.get_year(), finance_date.get_month(), finance_date.get_day());
 	}
 
 	private short find_data_pos(int year, int month, int day, int[] date_index_list, TRAVERSE_SEARCH_TYPE traverse_search_type)
 	{
-		if (!check_in_range(year, month, day))
+		if (!FinanceRecorderCmnClass.FinanceDateRange.in_range(finance_date_range, year, month, day))
 		{
-			FinanceRecorderCmnDef.format_error("The date [%04d-%02d-%02d] is out of range [%s]", year, month, day, finance_time_range.toString());
+			FinanceRecorderCmnDef.format_error("The date [%04d-%02d-%02d] is out of range [%s]", year, month, day, finance_date_range.toString());
 			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 		}
 
@@ -497,19 +380,19 @@ public class FinanceRecorderWorkdayCalendar
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	private short get_date(int year_key, int month_index, int day_index, FinanceRecorderCmnClass.TimeCfg time_cfg)
+	private short get_date(int year_key, int month_index, int day_index, FinanceRecorderCmnClass.FinanceDate finance_date)
 	{
 		int[] date_list = new int[3];
 		short ret = get_date(year_key, month_index, day_index, date_list);
 		if (FinanceRecorderCmnDef.CheckSuccess(ret))
 		{
-			FinanceRecorderCmnClass.TimeCfg time_cfg_tmp = new FinanceRecorderCmnClass.TimeCfg(date_list[0], date_list[1], date_list[2]);
-			time_cfg = time_cfg_tmp;
+			FinanceRecorderCmnClass.FinanceDate finance_date_tmp = new FinanceRecorderCmnClass.FinanceDate(date_list[0], date_list[1], date_list[2]);
+			finance_date = finance_date_tmp;
 		}
 		return ret;
 	}
 
-	public short get_prev_workday_array(int year_base, int month_base, int day_base, ArrayList<FinanceRecorderCmnClass.TimeCfg> workday_array, int max_workday_amount)
+	public short get_prev_workday_array(int year_base, int month_base, int day_base, ArrayList<FinanceRecorderCmnClass.FinanceDate> workday_array, int max_workday_amount)
 	{
 		int[] start_date_index_list = new int[3];
 		FinanceRecorderCmnDef.format_debug("Try to search for the previous workday list from the date %04d-%02d-%02d......", year_base, month_base, day_base);
@@ -549,8 +432,8 @@ public class FinanceRecorderWorkdayCalendar
 				while (iter.hasPrevious()) 
 				{
 					Integer cur_day = iter.previous();
-					FinanceRecorderCmnClass.TimeCfg time_cfg = new FinanceRecorderCmnClass.TimeCfg(cur_year, cur_month, cur_day);
-					workday_array.add(time_cfg);
+					FinanceRecorderCmnClass.FinanceDate finance_date = new FinanceRecorderCmnClass.FinanceDate(cur_year, cur_month, cur_day);
+					workday_array.add(finance_date);
 					workday_array_count++;
 					if (max_workday_amount != -1 && workday_array_count == max_workday_amount)
 						break OUT;
@@ -563,13 +446,13 @@ public class FinanceRecorderWorkdayCalendar
 			}
 		}
 
-//		for (FinanceRecorderCmnClass.TimeCfg workday_cfg : workday_array)
+//		for (FinanceRecorderCmnClass.FinanceDate workday_cfg : workday_array)
 //			System.out.printf("%s ", workday_cfg.toString());
 //		System.out.printf("\n");
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short get_next_workday_array(int year_base, int month_base, int day_base, ArrayList<FinanceRecorderCmnClass.TimeCfg> workday_array, int max_workday_amount)
+	public short get_next_workday_array(int year_base, int month_base, int day_base, ArrayList<FinanceRecorderCmnClass.FinanceDate> workday_array, int max_workday_amount)
 	{
 		int[] start_date_index_list = new int[3];
 		FinanceRecorderCmnDef.format_debug("Try to search for the next workday list from the date %04d-%02d-%02d......", year_base, month_base, day_base);
@@ -610,8 +493,8 @@ public class FinanceRecorderWorkdayCalendar
 				while (iter.hasNext()) 
 				{
 					Integer cur_day = iter.next();
-					FinanceRecorderCmnClass.TimeCfg time_cfg = new FinanceRecorderCmnClass.TimeCfg(cur_year, cur_month, cur_day);
-					workday_array.add(time_cfg);
+					FinanceRecorderCmnClass.FinanceDate finance_date = new FinanceRecorderCmnClass.FinanceDate(cur_year, cur_month, cur_day);
+					workday_array.add(finance_date);
 					workday_array_count++;
 					if (max_workday_amount != -1 && workday_array_count == max_workday_amount)
 						break OUT;
@@ -623,7 +506,7 @@ public class FinanceRecorderWorkdayCalendar
 				}
 			}
 		}
-//		for (FinanceRecorderCmnClass.TimeCfg workday_cfg : workday_array)
+//		for (FinanceRecorderCmnClass.FinanceDate workday_cfg : workday_array)
 //			System.out.printf("%s ", workday_cfg.toString());
 //		System.out.printf("\n");
 		return FinanceRecorderCmnDef.RET_SUCCESS;
@@ -632,7 +515,7 @@ public class FinanceRecorderWorkdayCalendar
 	public short get_prev_workday(int year_base, int month_base, int day_base, int[] prev_date_list)
 	{
 // Find the date
-		ArrayList<FinanceRecorderCmnClass.TimeCfg> workday_array = new ArrayList<FinanceRecorderCmnClass.TimeCfg>();
+		ArrayList<FinanceRecorderCmnClass.FinanceDate> workday_array = new ArrayList<FinanceRecorderCmnClass.FinanceDate>();
 		short ret = get_prev_workday_array(year_base, month_base, day_base, workday_array, 1);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
@@ -642,22 +525,20 @@ public class FinanceRecorderWorkdayCalendar
 			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
 		}
 // Update the data
-		FinanceRecorderCmnClass.TimeCfg time_cfg = workday_array.get(0);
-		prev_date_list[0] = time_cfg.get_year();
-		prev_date_list[1] = time_cfg.get_month();
-		prev_date_list[2] = time_cfg.get_day();
+		FinanceRecorderCmnClass.FinanceDate finance_date = workday_array.get(0);
+		prev_date_list = finance_date.get_time_value_list();
 
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short get_prev_workday(final FinanceRecorderCmnClass.TimeCfg time_cfg, FinanceRecorderCmnClass.TimeCfg prev_time_cfg)
+	public short get_prev_workday(final FinanceRecorderCmnClass.FinanceDate finance_date, FinanceRecorderCmnClass.FinanceDate prev_finance_date)
 	{
 		int[] prev_date_list = new int[3];
-		short ret = get_prev_workday(time_cfg.get_year(), time_cfg.get_month(), time_cfg.get_day(), prev_date_list);
+		short ret = get_prev_workday(finance_date.get_year(), finance_date.get_month(), finance_date.get_day(), prev_date_list);
 		if (FinanceRecorderCmnDef.CheckSuccess(ret))
 		{
 			int prev_year = prev_date_list[0], prev_month = prev_date_list[1], prev_day = prev_date_list[2];
-			prev_time_cfg = new FinanceRecorderCmnClass.TimeCfg(prev_year, prev_month, prev_day);
+			prev_finance_date = new FinanceRecorderCmnClass.FinanceDate(prev_year, prev_month, prev_day);
 		}
 		return ret;
 	}
@@ -665,7 +546,7 @@ public class FinanceRecorderWorkdayCalendar
 	public short get_next_workday(int year_base, int month_base, int day_base, int[] next_date_list)
 	{
 // Find the date
-		ArrayList<FinanceRecorderCmnClass.TimeCfg> workday_array = new ArrayList<FinanceRecorderCmnClass.TimeCfg>();
+		ArrayList<FinanceRecorderCmnClass.FinanceDate> workday_array = new ArrayList<FinanceRecorderCmnClass.FinanceDate>();
 		short ret = get_next_workday_array(year_base, month_base, day_base, workday_array, 1);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
@@ -675,22 +556,20 @@ public class FinanceRecorderWorkdayCalendar
 			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
 		}
 // Update the data
-		FinanceRecorderCmnClass.TimeCfg time_cfg = workday_array.get(0);
-		next_date_list[0] = time_cfg.get_year();
-		next_date_list[1] = time_cfg.get_month();
-		next_date_list[2] = time_cfg.get_day();
+		FinanceRecorderCmnClass.FinanceDate finance_date = workday_array.get(0);
+		next_date_list = finance_date.get_time_value_list();
 
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short get_next_workday(final FinanceRecorderCmnClass.TimeCfg time_cfg, FinanceRecorderCmnClass.TimeCfg next_time_cfg)
+	public short get_next_workday(final FinanceRecorderCmnClass.FinanceDate finance_date, FinanceRecorderCmnClass.FinanceDate next_finance_date)
 	{
 		int[] next_date_list = new int[3];
-		short ret = get_prev_workday(time_cfg.get_year(), time_cfg.get_month(), time_cfg.get_day(), next_date_list);
+		short ret = get_prev_workday(finance_date.get_year(), finance_date.get_month(), finance_date.get_day(), next_date_list);
 		if (FinanceRecorderCmnDef.CheckSuccess(ret))
 		{
 			int prev_year = next_date_list[0], prev_month = next_date_list[1], prev_day = next_date_list[2];
-			next_time_cfg = new FinanceRecorderCmnClass.TimeCfg(prev_year, prev_month, prev_day);
+			next_finance_date = new FinanceRecorderCmnClass.FinanceDate(prev_year, prev_month, prev_day);
 		}
 		return ret;
 	}
@@ -713,12 +592,12 @@ public class FinanceRecorderWorkdayCalendar
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short get_first_workday(FinanceRecorderCmnClass.TimeCfg first_time_cfg)
+	public short get_first_workday(FinanceRecorderCmnClass.FinanceDate first_finance_date)
 	{
 		int[] first_date_list = new int[3];
 		short ret = get_first_workday(first_date_list);
 		if (FinanceRecorderCmnDef.CheckSuccess(ret))
-			first_time_cfg = new FinanceRecorderCmnClass.TimeCfg(first_date_list[0], first_date_list[1], first_date_list[2]);
+			first_finance_date = new FinanceRecorderCmnClass.FinanceDate(first_date_list[0], first_date_list[1], first_date_list[2]);
 		return ret;
 	}
 
@@ -740,12 +619,12 @@ public class FinanceRecorderWorkdayCalendar
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short get_last_workday(FinanceRecorderCmnClass.TimeCfg last_time_cfg)
+	public short get_last_workday(FinanceRecorderCmnClass.FinanceDate last_finance_date)
 	{
 		int[] last_date_list = new int[3];
 		short ret = get_last_workday(last_date_list);
 		if (FinanceRecorderCmnDef.CheckSuccess(ret))
-			last_time_cfg = new FinanceRecorderCmnClass.TimeCfg(last_date_list[0], last_date_list[1], last_date_list[2]);
+			last_finance_date = new FinanceRecorderCmnClass.FinanceDate(last_date_list);
 		return ret;
 	}
 }

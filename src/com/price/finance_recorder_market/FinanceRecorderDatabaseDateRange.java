@@ -46,10 +46,10 @@ public class FinanceRecorderDatabaseDateRange
 			instance = null;
 	}
 
-	private ArrayList<FinanceRecorderCmnClass.TimeRangeCfg> database_time_range_array = null; 
+	private ArrayList<FinanceRecorderCmnClass.FinanceTimeRange> database_time_range_array = null; 
 	private short initialize()
 	{
-		database_time_range_array = new ArrayList<FinanceRecorderCmnClass.TimeRangeCfg>();
+		database_time_range_array = new ArrayList<FinanceRecorderCmnClass.FinanceTimeRange>();
 //// Open the file
 //		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 //		BufferedReader reader = null;
@@ -90,7 +90,7 @@ public class FinanceRecorderDatabaseDateRange
 //				source_type_index_count++;
 //				String time_array[] = data_array[1].split(":");
 //// Find the start/end time string
-//				database_time_range_array.add(new FinanceRecorderCmnClass.TimeRangeCfg(time_array[0], time_array[1]));
+//				database_time_range_array.add(new FinanceRecorderCmnClass.FinanceTimeRange(time_array[0], time_array[1]));
 //			}
 //		}
 //		catch (IOException ex)
@@ -132,12 +132,12 @@ public class FinanceRecorderDatabaseDateRange
 			source_type_index_count++;
 			String time_array[] = data_array[1].split(":");
 // Find the start/end time string
-			database_time_range_array.add(new FinanceRecorderCmnClass.TimeRangeCfg(time_array[0], time_array[1]));
+			database_time_range_array.add(new FinanceRecorderCmnClass.FinanceTimeRange(time_array[0], time_array[1]));
 		}
 		return ret;
 	}
 
-	short restrict_time_range(final HashSet<Integer> source_type_index_set, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg)
+	FinanceRecorderCmnClass.FinanceTimeRange find_database_time_range(final HashSet<Integer> source_type_index_set)
 	{
 		assert !source_type_index_set.isEmpty() : "source_type_index_set should NOT be empty";
 // Search for the max start time and min end time to make sure the MySQL data is NOT out of range
@@ -148,36 +148,62 @@ public class FinanceRecorderDatabaseDateRange
 // Find the max start time and min end time in the current selection
 		for (Integer source_type_index : source_type_index_set)
 		{
-			int time_int_value = FinanceRecorderCmnClass.TimeCfg.get_int_value(database_time_range_array.get(source_type_index).get_start_time());
-			if (max_start_time_source_type_index == -1 || time_int_value > max_start_time_int_value)
+			int start_time_int_value = database_time_range_array.get(source_type_index).get_time_start_key_value();
+			if (max_start_time_source_type_index == -1 || start_time_int_value > max_start_time_int_value)
 			{
 				max_start_time_source_type_index = source_type_index;
-				max_start_time_int_value = time_int_value;
+				max_start_time_int_value = start_time_int_value;
 			}
-			if (min_end_time_source_type_index == -1 || time_int_value < min_end_time_int_value)
+			int end_time_int_value = database_time_range_array.get(source_type_index).get_time_start_key_value();
+			if (min_end_time_source_type_index == -1 || end_time_int_value < min_end_time_int_value)
 			{
 				min_end_time_source_type_index = source_type_index;
-				min_end_time_int_value = time_int_value;
+				min_end_time_int_value = end_time_int_value;
 			}
 		}
-		FinanceRecorderCmnDef.format_debug("The available search time range:%s %s", database_time_range_array.get(max_start_time_source_type_index).get_start_time().toString(), database_time_range_array.get(min_end_time_source_type_index).get_end_time().toString());
-// Check the start time boundary
-		if (FinanceRecorderCmnClass.TimeCfg.get_int_value(database_time_range_array.get(max_start_time_source_type_index).get_start_time()) > FinanceRecorderCmnClass.TimeCfg.get_int_value(time_range_cfg.get_start_time()))
-		{
-			FinanceRecorderCmnDef.format_warn("Start search time out of range, restrict from %s to %s", time_range_cfg.get_start_time().toString(), database_time_range_array.get(max_start_time_source_type_index).get_start_time().toString());
-			 time_range_cfg.set_start_time(database_time_range_array.get(max_start_time_source_type_index).get_start_time());
-		}
-// Check the end time boundary
-		if (FinanceRecorderCmnClass.TimeCfg.get_int_value(database_time_range_array.get(min_end_time_source_type_index).get_end_time()) < FinanceRecorderCmnClass.TimeCfg.get_int_value(time_range_cfg.get_end_time()))
-		{
-			FinanceRecorderCmnDef.format_warn("End search time out of range, restrict from %s to %s", time_range_cfg.get_end_time().toString(), database_time_range_array.get(min_end_time_source_type_index).get_end_time().toString());
-			time_range_cfg.set_end_time(database_time_range_array.get(min_end_time_source_type_index).get_end_time());
-		}
-
-		return FinanceRecorderCmnDef.RET_SUCCESS;
+		FinanceRecorderCmnDef.format_debug("The datebase search time range:%s %s", database_time_range_array.get(max_start_time_source_type_index).get_time_start_string(), database_time_range_array.get(min_end_time_source_type_index).get_time_end_string());
+		return new FinanceRecorderCmnClass.FinanceTimeRange(database_time_range_array.get(max_start_time_source_type_index).get_time_start_string(), database_time_range_array.get(min_end_time_source_type_index).get_time_end_string());
 	}
 
-	final FinanceRecorderCmnClass.TimeRangeCfg get_source_type_time_range(int finance_source_type_index)
+	FinanceRecorderCmnClass.FinanceTimeRange get_restricted_time_range(final HashSet<Integer> source_type_index_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
+	{
+		FinanceRecorderCmnClass.FinanceTimeRange database_finance_time_range = find_database_time_range(source_type_index_set);
+		boolean need_update_start_time = false, need_update_end_time = false;
+// Check the start time boundary
+//		if (FinanceRecorderCmnClass.TimeCfg.get_int_value(database_time_range_array.get(max_start_time_source_type_index).get_start_time()) > FinanceRecorderCmnClass.TimeCfg.get_int_value(finance_time_range.get_start_time()))
+		if (finance_time_range.is_time_start_exist() && database_finance_time_range.get_time_start_key_value() > finance_time_range.get_time_start_key_value())
+		{
+			FinanceRecorderCmnDef.format_warn("Start search time out of range, restrict from %s to %s", finance_time_range.get_time_start_string(), database_finance_time_range.get_time_start_string());
+			need_update_start_time = true;
+		}
+// Check the end time boundary
+//		if (FinanceRecorderCmnClass.TimeCfg.get_int_value(database_time_range_array.get(min_end_time_source_type_index).get_end_time()) < FinanceRecorderCmnClass.TimeCfg.get_int_value(finance_time_range.get_end_time()))
+		if (finance_time_range.is_time_end_exist() && database_finance_time_range.get_time_end_key_value() < finance_time_range.get_time_end_key_value())
+		{
+			FinanceRecorderCmnDef.format_warn("End search time out of range, restrict from %s to %s", finance_time_range.get_time_end_string(), database_finance_time_range.get_time_end_string());
+			need_update_end_time = true;
+		}
+// Modify the time range if necessary
+		FinanceRecorderCmnClass.FinanceTimeRange restricted_finance_time_range = null;
+		if (need_update_start_time || need_update_end_time)
+		{
+			restricted_finance_time_range = new FinanceRecorderCmnClass.FinanceTimeRange(
+				(need_update_start_time ? database_finance_time_range.get_time_start_string() : (finance_time_range.is_time_start_exist() ? finance_time_range.get_time_start_string() : null)),
+				(need_update_end_time ? database_finance_time_range.get_time_end_string() : (finance_time_range.is_time_end_exist() ? finance_time_range.get_time_end_string() : null))
+			);
+		}
+		else
+			restricted_finance_time_range = finance_time_range;
+		return restricted_finance_time_range;
+	}
+	FinanceRecorderCmnClass.FinanceTimeRange get_restricted_time_range(int source_type_index, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
+	{
+		HashSet<Integer> source_type_index_set = new HashSet<Integer>();
+		source_type_index_set.add(source_type_index);
+		return get_restricted_time_range(source_type_index_set, finance_time_range);
+	}
+
+	final FinanceRecorderCmnClass.FinanceTimeRange get_source_type_time_range(int finance_source_type_index)
 	{
 		if (finance_source_type_index < 0 || finance_source_type_index >= FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE)
 		{
@@ -189,14 +215,7 @@ public class FinanceRecorderDatabaseDateRange
 		return database_time_range_array.get(finance_source_type_index);
 	}
 
-	short restrict_time_range(int source_type_index, FinanceRecorderCmnClass.TimeRangeCfg time_range_cfg)
-	{
-		HashSet<Integer> source_type_index_set = new HashSet<Integer>();
-		source_type_index_set.add(source_type_index);
-		return restrict_time_range(source_type_index_set, time_range_cfg);
-	}
-
-	short get_all_source_type_time_range(HashMap<Integer,FinanceRecorderCmnClass.TimeRangeCfg> time_range_table)
+	short get_all_source_type_time_range(HashMap<Integer,FinanceRecorderCmnClass.FinanceTimeRange> time_range_table)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		for (int i = 0 ; i < FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE ; i++)
