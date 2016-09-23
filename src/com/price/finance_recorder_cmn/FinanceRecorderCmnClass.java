@@ -3,7 +3,7 @@ package com.price.finance_recorder_cmn;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Matcher;
+//import java.util.regex.Matcher;
 //import java.util.regex.Pattern;
 
 
@@ -16,6 +16,7 @@ public class FinanceRecorderCmnClass
 
 		protected abstract int get_key_value();
 		public abstract int[] get_time_value_list();
+		public abstract void update_time_value_list(int[] time_value_list);
 		public abstract FinanceTime get_time_object();
 		public abstract FinanceRecorderCmnDef.FinanceTimeUnit get_time_unit();
 	};
@@ -41,6 +42,18 @@ public class FinanceRecorderCmnClass
 			check_value_range(year, month, day);
 			return new int[]{year, month, day};
 		}
+		public static int get_key_value_from_time_value(int year, int month, int day)
+		{
+			check_value_range(year, month, day);
+			return (year << 12 | month << 8 | day);
+		}
+		public static int get_key_value_from_time_value_list(int[] time_value_list)
+		{
+			if (time_value_list.length != 3)
+				throw new IllegalArgumentException(String.format("The date value list should be 3, not : %d", time_value_list.length));
+			return get_key_value_from_time_value(time_value_list[0], time_value_list[1], time_value_list[2]);
+		}
+// For MySQL
 		public static java.util.Date get_java_date_object(String finance_date_str) throws ParseException
 		{
 			java.util.Date java_date = date_formatter.parse(finance_date_str);
@@ -95,12 +108,21 @@ public class FinanceRecorderCmnClass
 
 		protected int get_key_value()
 		{
-			return (year << 12 | month << 8 | day);
+			return get_key_value_from_time_value(year, month, day);
 		}
 
 		public int[] get_time_value_list()
 		{
 			return new int[]{year, month, day};
+		}
+
+		public void update_time_value_list(int[] time_value_list)
+		{
+			if (time_value_list.length != 3)
+				throw new IllegalArgumentException(String.format("The date value list should be 3, not : %d", time_value_list.length));
+			time_value_list[0] = year;
+			time_value_list[1] = month;
+			time_value_list[2] = day;
 		}
 
 		public FinanceTime get_time_object(){return new FinanceTime(this);}
@@ -165,12 +187,23 @@ public class FinanceRecorderCmnClass
 			check_value_range(year, month);
 			return new int[]{year, month};
 		}
+		public static int get_key_value_from_time_value(int year, int month)
+		{
+			check_value_range(year, month);
+			return (year << 4 | month);
+		}
+		public static int get_key_value_from_time_value_list(int[] time_value_list)
+		{
+			if (time_value_list.length != 2)
+				throw new IllegalArgumentException(String.format("The month value list should be 2, not : %d", time_value_list.length));
+			return get_key_value_from_time_value(time_value_list[0], time_value_list[1]);
+		}
 
 		private int month;
 
 		public FinanceMonth(int[] time_value_list)
 		{
-			if (time_value_list.length != 3)
+			if (time_value_list.length != 2)
 				throw new IllegalArgumentException(String.format("The month value list should be 2, not : %d", time_value_list.length));
 			year = time_value_list[0];
 			month = time_value_list[1];
@@ -200,12 +233,20 @@ public class FinanceRecorderCmnClass
 
 		protected int get_key_value()
 		{
-			return (year << 4 | month);
+			return get_key_value_from_time_value(year, month);
 		}
 
 		public int[] get_time_value_list()
 		{
 			return new int[]{year, month};
+		}
+
+		public void update_time_value_list(int[] time_value_list)
+		{
+			if (time_value_list.length != 2)
+				throw new IllegalArgumentException(String.format("The month value list should be 2, not : %d", time_value_list.length));
+			time_value_list[0] = year;
+			time_value_list[1] = month;
 		}
 
 		public int get_year(){return year;}
@@ -268,7 +309,18 @@ public class FinanceRecorderCmnClass
 			check_value_range(year, quarter);
 			return new int[]{year, quarter};
 		}
-		
+		public static int get_key_value_from_time_value(int year, int quarter)
+		{
+			check_value_range(year, quarter);
+			return (year << 3 | quarter);
+		}
+		public static int get_key_value_from_time_value_list(int[] time_value_list)
+		{
+			if (time_value_list.length != 2)
+				throw new IllegalArgumentException(String.format("The quarter value list should be 2, not : %d", time_value_list.length));
+			return get_key_value_from_time_value(time_value_list[0], time_value_list[1]);
+		}
+
 		private int quarter;
 
 		public FinanceQuarter(int[] time_value_list)
@@ -303,12 +355,20 @@ public class FinanceRecorderCmnClass
 
 		protected int get_key_value()
 		{
-			return (year << 3 | quarter);
+			return get_key_value_from_time_value(year, quarter);
 		}
 
 		public int[] get_time_value_list()
 		{
 			return new int[]{year, quarter};
+		}
+
+		public void update_time_value_list(int[] time_value_list)
+		{
+			if (time_value_list.length != 2)
+				throw new IllegalArgumentException(String.format("The quarter value list should be 2, not : %d", time_value_list.length));
+			time_value_list[0] = year;
+			time_value_list[1] = quarter;
 		}
 
 		public int get_year(){return year;}
