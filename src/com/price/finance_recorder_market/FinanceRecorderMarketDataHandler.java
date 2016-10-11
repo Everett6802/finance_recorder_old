@@ -4,12 +4,12 @@ import java.util.*;
 import com.price.finance_recorder_base.FinanceRecorderCSVHandler;
 import com.price.finance_recorder_base.FinanceRecorderCSVHandlerMap;
 import com.price.finance_recorder_base.FinanceRecorderDataHandlerInf;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnBase;
+import com.price.finance_recorder_cmn.FinanceRecorderClassBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 
-public class FinanceRecorderMarketDataHandler extends FinanceRecorderCmnBase implements FinanceRecorderDataHandlerInf
+public class FinanceRecorderMarketDataHandler extends FinanceRecorderClassBase implements FinanceRecorderDataHandlerInf
 {
 	private static FinanceRecorderCmnClass.QuerySet whole_field_query_set = null;
 	private static String get_csv_filepath(String csv_folderpath, int source_type_index)

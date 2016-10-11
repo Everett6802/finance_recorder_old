@@ -2,15 +2,19 @@ package com.price.finance_recorder;
 
 import java.io.*;
 import java.util.*;
+
+import com.price.finance_recorder_base.FinanceRecorderMgrInf;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 //import com.price.finance_recorder_stock.FinanceRecorderCmnClassCompanyProfile;
+import com.price.finance_recorder_market.FinanceRecorderMarketMgr;
+import com.price.finance_recorder_stock.FinanceRecorderStockMgr;
 
 
 public class FinanceRecorder 
 {
 	enum ActionType{Action_None, Action_Read, Action_Write, Action_ReadWrite};
 	static final String PARAM_SPLIT = ",";
-	static FinanceRecorderMgr finance_recorder_mgr = new FinanceRecorderMgr();
+	static FinanceRecorderMgrInf finance_recorder_mgr = null;
 
 	public static void main(String args[])
 	{
@@ -224,6 +228,18 @@ public class FinanceRecorder
 		}
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Allocate the manager class
+		if (FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE)
+		{
+			finance_recorder_mgr = new FinanceRecorderMarketMgr();
+		}
+		else if (FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
+		{
+			finance_recorder_mgr = new FinanceRecorderStockMgr();
+		}
+		else
+			throw new IllegalStateException("Unknown finance mode");
+ 
 		ret = finance_recorder_mgr.initialize();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Faiil to initialize the Manager class, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));

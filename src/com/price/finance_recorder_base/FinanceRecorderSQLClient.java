@@ -3,7 +3,8 @@ package com.price.finance_recorder_base;
 import java.sql.*;
 import java.text.*;
 import java.util.*;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnBase;
+
+import com.price.finance_recorder_cmn.FinanceRecorderClassBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceDateRange;
@@ -11,7 +12,7 @@ import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceMonthRange;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceQuarterRange;
 
 
-public class FinanceRecorderSQLClient extends FinanceRecorderCmnBase
+public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 {
 	private static final String DEF_SERVER = "localhost";
 	private static final String DEF_USERNAME = "root";

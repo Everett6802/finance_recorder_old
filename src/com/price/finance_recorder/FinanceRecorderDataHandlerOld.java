@@ -10,13 +10,13 @@ import java.util.regex.Pattern;
 
 import com.price.finance_recorder_base.FinanceRecorderCSVHandler;
 import com.price.finance_recorder_base.FinanceRecorderSQLClient;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnBase;
+import com.price.finance_recorder_cmn.FinanceRecorderClassBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.TimeCfg;
 
 
-public class FinanceRecorderDataHandlerOld extends FinanceRecorderCmnBase implements FinanceRecorderCmnDef.FinanceObserverInf
+public class FinanceRecorderDataHandlerOld extends FinanceRecorderClassBase implements FinanceRecorderCmnDef.FinanceObserverInf
 {
 	// private static final String CSV_FILE_FOLDER = "/var/tmp/finance";
 	private static final boolean IgnoreErrorIfCSVNotExist = true;

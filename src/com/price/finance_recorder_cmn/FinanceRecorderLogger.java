@@ -87,25 +87,25 @@ public class FinanceRecorderLogger
 	}
 
 //Write the Error message
-	public void write_error_msg(String msg)
+	void write_error_msg(String msg)
 	{
 		MsgDumper.write_msg(MsgDumperCmnDef.MSG_DUMPER_SEVIRITY_ERROR, msg);
 	}
 
 //Write the Warning message
-	public void write_warn_msg(String msg)
+	void write_warn_msg(String msg)
 	{
 		MsgDumper.write_msg(MsgDumperCmnDef.MSG_DUMPER_SEVIRITY_WARN, msg);
 	}
 
 //Write the Info message
-	public void write_info_msg(String msg)
+	void write_info_msg(String msg)
 	{
 		MsgDumper.write_msg(MsgDumperCmnDef.MSG_DUMPER_SEVIRITY_INFO, msg);
 	}
 
 //Write the Debug message
-	public void write_debug_msg(String msg)
+	void write_debug_msg(String msg)
 	{
 		MsgDumper.write_msg(MsgDumperCmnDef.MSG_DUMPER_SEVIRITY_DEBUG, msg);
 	}

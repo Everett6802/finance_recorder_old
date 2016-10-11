@@ -4,12 +4,14 @@ import java.io.*;
 import java.nio.file.*;
 import java.text.SimpleDateFormat;
 //import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 //import java.util.TreeMap;
 import java.util.regex.*;
 import java.text.*;
+
 
 public class FinanceRecorderCmnDef 
 {
@@ -108,6 +110,8 @@ public class FinanceRecorderCmnDef
 	public static final int DEF_END_MONTH = 12;
 	public static final int DEF_START_DAY = 1;
 
+	public static final String FINANCE_MARKET_MODE_DESCRIPTION = "market";
+	public static final String FINANCE_STOCK_MODE_DESCRIPTION = "stock";
 	public static final String CSV_ROOT_FOLDERPATH = "/var/tmp/finance";
 	public static final String COPY_BACKUP_FOLDERPATH = "/var/www/finance";
 	public static final String CSV_MARKET_FOLDERNAME = "market";
@@ -439,6 +443,18 @@ public class FinanceRecorderCmnDef
 		"三大法人選擇權賣權買權比",
 		"十大交易人及特定法人期貨資訊" 
 	};
+	public static final String[] FINANCE_DATA_FOLDER_MAPPING = new String[] 
+	{
+		"market",
+		"market",
+		"market",
+		"market",
+		"market",
+		"market",
+		"market",
+		"market",
+		"stock",
+	};
 	public static final String[] FINANCE_DATA_SQL_FIELD_LIST = new String[] 
 	{
 		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION)),
@@ -494,6 +510,12 @@ public class FinanceRecorderCmnDef
 		FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION.length,
 		FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION.length 
 	};
+
+// Semi-open interval
+	public static final int FINANCE_DATA_SOURCE_MARKET_START = 0;
+	public static final int FINANCE_DATA_SOURCE_MARKET_END = Arrays.asList(FINANCE_DATA_FOLDER_MAPPING).indexOf("stock");
+	public static final int FINANCE_DATA_SOURCE_STOCK_START = FINANCE_DATA_SOURCE_MARKET_END;
+	public static final int FINANCE_DATA_SOURCE_STOCK_END = FINANCE_DATA_FOLDER_MAPPING.length;
 
 	// Setter and Getter
 	// Allow to assign the variable only once
@@ -590,6 +612,62 @@ public class FinanceRecorderCmnDef
 	private static boolean is_stock_mode() 
 	{
 		return get_finance_analysis_mode() == FinanceAnalysisMode.FinanceAnalysis_Stock;
+	}
+
+	public static String get_finance_mode_description()
+	{
+		if (IS_FINANCE_MARKET_MODE)
+			return FINANCE_MARKET_MODE_DESCRIPTION;
+		else if (IS_FINANCE_STOCK_MODE)
+			return FINANCE_STOCK_MODE_DESCRIPTION;
+		else
+			throw new IllegalStateException("Unknown finance mode");
+	}
+
+	public static boolean check_source_type_index_in_range(int source_type_index)
+	{
+		if (IS_FINANCE_MARKET_MODE)
+		{
+			if (source_type_index >= FINANCE_DATA_SOURCE_MARKET_START && source_type_index < FINANCE_DATA_SOURCE_MARKET_END)
+				return true;
+			else
+				return false;
+		}
+		else if (IS_FINANCE_STOCK_MODE)
+		{
+			if (source_type_index >= FINANCE_DATA_SOURCE_STOCK_START && source_type_index < FINANCE_DATA_SOURCE_STOCK_END)
+				return true;
+			else
+				return false;
+		}
+		throw new IllegalStateException("Unknown finance mode");
+	}
+
+	public static int[] get_source_type_index_range()
+	{
+		int[] source_type_index_list = new int[2];
+		if (IS_FINANCE_MARKET_MODE)
+		{
+			source_type_index_list[0] = FINANCE_DATA_SOURCE_MARKET_START;
+			source_type_index_list[1] = FINANCE_DATA_SOURCE_MARKET_END;
+		}
+		else if (IS_FINANCE_STOCK_MODE)
+		{
+			source_type_index_list[0] = FINANCE_DATA_SOURCE_STOCK_START;
+			source_type_index_list[1] = FINANCE_DATA_SOURCE_STOCK_END;
+		}
+		else
+			throw new IllegalStateException("Unknown finance mode");
+		return source_type_index_list;
+	}
+
+	public static LinkedList<Integer> get_all_source_type_index_list()
+	{
+		int[] source_type_index_range = get_source_type_index_range();
+		LinkedList<Integer> source_type_index_list = new LinkedList<Integer>();
+		for (int index = source_type_index_range[0] ; index < source_type_index_range[1] ; index++)
+			source_type_index_list.add(index);
+		return source_type_index_list;
 	}
 
 	public static int get_source_key(int source_type_index) 
@@ -903,7 +981,7 @@ public class FinanceRecorderCmnDef
 
 	private static final String get_code_position() 
 	{
-		return String.format("%s:%d", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__());
+		return String.format("%s:%d", FinanceRecorderClassBase.__FILE__(), FinanceRecorderClassBase.__LINE__());
 	}
 
 	// public static String field_array_to_string(String[] field_array)
@@ -927,42 +1005,42 @@ public class FinanceRecorderCmnDef
 
 	public static void debug(String msg) 
 	{
-		finance_recorder_logger.write_debug_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), msg));
+		finance_recorder_logger.write_debug_msg(String.format("[%s:%d] %s", FinanceRecorderClassBase.__FILE__(), FinanceRecorderClassBase.__LINE__(), msg));
 	}
 
 	public static void info(String msg) 
 	{
-		finance_recorder_logger.write_info_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), msg));
+		finance_recorder_logger.write_info_msg(String.format("[%s:%d] %s", FinanceRecorderClassBase.__FILE__(), FinanceRecorderClassBase.__LINE__(), msg));
 	}
 
 	public static void warn(String msg) 
 	{
-		finance_recorder_logger.write_warn_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), msg));
+		finance_recorder_logger.write_warn_msg(String.format("[%s:%d] %s", FinanceRecorderClassBase.__FILE__(), FinanceRecorderClassBase.__LINE__(), msg));
 	}
 
 	public static void error(String msg) 
 	{
-		finance_recorder_logger.write_error_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), msg));
+		finance_recorder_logger.write_error_msg(String.format("[%s:%d] %s", FinanceRecorderClassBase.__FILE__(), FinanceRecorderClassBase.__LINE__(), msg));
 	}
 
 	public static void format_debug(String format, Object... arguments) 
 	{
-		finance_recorder_logger.write_debug_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), String.format(format, arguments)));
+		finance_recorder_logger.write_debug_msg(String.format("[%s:%d] %s", FinanceRecorderClassBase.__FILE__(), FinanceRecorderClassBase.__LINE__(), String.format(format, arguments)));
 	}
 
 	public static void format_info(String format, Object... arguments) 
 	{
-		finance_recorder_logger.write_info_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), String.format(format, arguments)));
+		finance_recorder_logger.write_info_msg(String.format("[%s:%d] %s", FinanceRecorderClassBase.__FILE__(), FinanceRecorderClassBase.__LINE__(), String.format(format, arguments)));
 	}
 
 	public static void format_warn(String format, Object... arguments)
 	{
-		finance_recorder_logger.write_warn_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), String.format(format, arguments)));
+		finance_recorder_logger.write_warn_msg(String.format("[%s:%d] %s", FinanceRecorderClassBase.__FILE__(), FinanceRecorderClassBase.__LINE__(), String.format(format, arguments)));
 	}
 
 	public static void format_error(String format, Object... arguments) 
 	{
-		finance_recorder_logger.write_error_msg(String.format("[%s:%d] %s", FinanceRecorderCmnBase.__FILE__(), FinanceRecorderCmnBase.__LINE__(), String.format(format, arguments)));
+		finance_recorder_logger.write_error_msg(String.format("[%s:%d] %s", FinanceRecorderClassBase.__FILE__(), FinanceRecorderClassBase.__LINE__(), String.format(format, arguments)));
 	}
 
 	public static String get_current_path() 

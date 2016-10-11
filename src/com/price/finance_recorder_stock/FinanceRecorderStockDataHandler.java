@@ -5,12 +5,12 @@ import com.price.finance_recorder_base.FinanceRecorderCSVHandler;
 import com.price.finance_recorder_base.FinanceRecorderCSVHandlerMap;
 import com.price.finance_recorder_base.FinanceRecorderDataHandlerInf;
 //import com.price.finance_recorder_base.FinanceRecorderSQLClient;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnBase;
+import com.price.finance_recorder_cmn.FinanceRecorderClassBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 
-public class FinanceRecorderStockDataHandler extends FinanceRecorderCmnBase implements FinanceRecorderDataHandlerInf
+public class FinanceRecorderStockDataHandler extends FinanceRecorderClassBase implements FinanceRecorderDataHandlerInf
 {
 //	private static FinanceRecorderCmnClassCompanyProfile company_profile = FinanceRecorderCmnClassCompanyProfile.get_instance();
 	private static FinanceRecorderCmnClass.QuerySet whole_field_query_set = null;

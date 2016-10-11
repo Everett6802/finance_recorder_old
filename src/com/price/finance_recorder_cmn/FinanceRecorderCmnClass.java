@@ -550,15 +550,15 @@ public class FinanceRecorderCmnClass
 
 	public static class FinanceDateRange extends FinanceTimeRangeBase
 	{
-		public static boolean in_range(FinanceDateRange finance_date_range, int year, int month, int day)
+		public static boolean is_in_range(FinanceDateRange finance_date_range, int year, int month, int day)
 		{
-			return in_range(finance_date_range, new FinanceDate(year, month, day));
+			return is_in_range(finance_date_range, new FinanceDate(year, month, day));
 		}
-		public static boolean in_range(FinanceDateRange finance_date_range, String cur_finance_date_str)
+		public static boolean is_in_range(FinanceDateRange finance_date_range, String cur_finance_date_str)
 		{
-			return in_range(finance_date_range, new FinanceDate(cur_finance_date_str));
+			return is_in_range(finance_date_range, new FinanceDate(cur_finance_date_str));
 		}
-		public static boolean in_range(FinanceDateRange finance_date_range, FinanceDate cur_finance_date)
+		public static boolean is_in_range(FinanceDateRange finance_date_range, FinanceDate cur_finance_date)
 		{
 			switch (finance_date_range.finance_time_range_type)
 			{
@@ -573,6 +573,25 @@ public class FinanceRecorderCmnClass
 			}
 //// Should not reach
 //			return false;
+		}
+
+		public static boolean is_overlap(FinanceDateRange finance_date_range1, FinanceDateRange finance_date_range2)
+		{
+			boolean check_overlap1 = true;
+			if (finance_date_range1.finance_time_range_type.is_time_start_exist() && finance_date_range2.finance_time_range_type.is_time_end_exist())
+			{
+				FinanceDate finance_date1_start = finance_date_range1.get_date_start();
+				FinanceDate finance_date2_end = finance_date_range2.get_date_end();
+				check_overlap1 = finance_date1_start.less_equal(finance_date2_end);
+			}
+			boolean check_overlap2 = true;
+			if (finance_date_range2.finance_time_range_type.is_time_start_exist() && finance_date_range1.finance_time_range_type.is_time_end_exist())
+			{
+				FinanceDate finance_date2_start = finance_date_range2.get_date_start();
+				FinanceDate finance_date1_end = finance_date_range1.get_date_end();
+				check_overlap2 = finance_date2_start.less_equal(finance_date1_end);
+			}
+			return (check_overlap1 && check_overlap2);
 		}
 
 		private FinanceDate finance_date_start = null;
@@ -693,15 +712,15 @@ public class FinanceRecorderCmnClass
 
 	public static class FinanceMonthRange extends FinanceTimeRangeBase
 	{
-		public static boolean in_range(FinanceMonthRange finance_month_range, int year, int month)
+		public static boolean is_in_range(FinanceMonthRange finance_month_range, int year, int month)
 		{
-			return in_range(finance_month_range, new FinanceMonth(year, month));
+			return is_in_range(finance_month_range, new FinanceMonth(year, month));
 		}
-		public static boolean in_range(FinanceMonthRange finance_month_range, String cur_finance_month_str)
+		public static boolean is_in_range(FinanceMonthRange finance_month_range, String cur_finance_month_str)
 		{
-			return in_range(finance_month_range, new FinanceMonth(cur_finance_month_str));
+			return is_in_range(finance_month_range, new FinanceMonth(cur_finance_month_str));
 		}
-		public static boolean in_range(FinanceMonthRange finance_month_range, FinanceMonth cur_finance_month)
+		public static boolean is_in_range(FinanceMonthRange finance_month_range, FinanceMonth cur_finance_month)
 		{
 			switch (finance_month_range.finance_time_range_type)
 			{
@@ -714,6 +733,25 @@ public class FinanceRecorderCmnClass
 			default:
 				throw new IllegalArgumentException(String.format("Unsupported month range: %d", finance_month_range.finance_time_range_type.value()));
 			}
+		}
+
+		public static boolean is_overlap(FinanceMonthRange finance_month_range1, FinanceMonthRange finance_month_range2)
+		{
+			boolean check_overlap1 = true;
+			if (finance_month_range1.finance_time_range_type.is_time_start_exist() && finance_month_range2.finance_time_range_type.is_time_end_exist())
+			{
+				FinanceMonth finance_month1_start = finance_month_range1.get_month_start();
+				FinanceMonth finance_month2_end = finance_month_range2.get_month_end();
+				check_overlap1 = finance_month1_start.less_equal(finance_month2_end);
+			}
+			boolean check_overlap2 = true;
+			if (finance_month_range2.finance_time_range_type.is_time_start_exist() && finance_month_range1.finance_time_range_type.is_time_end_exist())
+			{
+				FinanceMonth finance_month2_start = finance_month_range2.get_month_start();
+				FinanceMonth finance_month1_end = finance_month_range1.get_month_end();
+				check_overlap2 = finance_month2_start.less_equal(finance_month1_end);
+			}
+			return (check_overlap1 && check_overlap2);
 		}
 
 		private FinanceMonth finance_month_start = null;
@@ -834,15 +872,15 @@ public class FinanceRecorderCmnClass
 
 	public static class FinanceQuarterRange extends FinanceTimeRangeBase
 	{
-		public static boolean in_range(FinanceQuarterRange finance_quarter_range, int year, int month)
+		public static boolean is_in_range(FinanceQuarterRange finance_quarter_range, int year, int month)
 		{
-			return in_range(finance_quarter_range, new FinanceQuarter(year, month));
+			return is_in_range(finance_quarter_range, new FinanceQuarter(year, month));
 		}
-		public static boolean in_range(FinanceQuarterRange finance_quarter_range, String cur_finance_quarter_str)
+		public static boolean is_in_range(FinanceQuarterRange finance_quarter_range, String cur_finance_quarter_str)
 		{
-			return in_range(finance_quarter_range, new FinanceQuarter(cur_finance_quarter_str));
+			return is_in_range(finance_quarter_range, new FinanceQuarter(cur_finance_quarter_str));
 		}
-		public static boolean in_range(FinanceQuarterRange finance_quarter_range, FinanceQuarter cur_finance_quarter)
+		public static boolean is_in_range(FinanceQuarterRange finance_quarter_range, FinanceQuarter cur_finance_quarter)
 		{
 			switch (finance_quarter_range.finance_time_range_type)
 			{
@@ -855,6 +893,25 @@ public class FinanceRecorderCmnClass
 			default:
 				throw new IllegalArgumentException(String.format("Unsupported quarter range: %d", finance_quarter_range.finance_time_range_type.value()));
 			}
+		}
+
+		public static boolean is_overlap(FinanceQuarterRange finance_quarter_range1, FinanceQuarterRange finance_quarter_range2)
+		{
+			boolean check_overlap1 = true;
+			if (finance_quarter_range1.finance_time_range_type.is_time_start_exist() && finance_quarter_range2.finance_time_range_type.is_time_end_exist())
+			{
+				FinanceQuarter finance_quarter1_start = finance_quarter_range1.get_quarter_start();
+				FinanceQuarter finance_quarter2_end = finance_quarter_range2.get_quarter_end();
+				check_overlap1 = finance_quarter1_start.less_equal(finance_quarter2_end);
+			}
+			boolean check_overlap2 = true;
+			if (finance_quarter_range2.finance_time_range_type.is_time_start_exist() && finance_quarter_range1.finance_time_range_type.is_time_end_exist())
+			{
+				FinanceQuarter finance_quarter2_start = finance_quarter_range2.get_quarter_start();
+				FinanceQuarter finance_quarter1_end = finance_quarter_range1.get_quarter_end();
+				check_overlap2 = finance_quarter2_start.less_equal(finance_quarter1_end);
+			}
+			return (check_overlap1 && check_overlap2);
 		}
 
 		private FinanceQuarter finance_quarter_start = null;
@@ -975,6 +1032,25 @@ public class FinanceRecorderCmnClass
 
 	public static class FinanceTimeRange extends FinanceTimeRangeBase
 	{
+		public static boolean is_overlap(FinanceTimeRange finance_time_range1, FinanceTimeRange finance_time_range2)
+		{
+			boolean check_overlap1 = true;
+			if (finance_time_range1.finance_time_range_type.is_time_start_exist() && finance_time_range2.finance_time_range_type.is_time_end_exist())
+			{
+				int finance_time1_start_value = finance_time_range1.get_time_start_key_value();
+				int finance_time2_end_value = finance_time_range2.get_time_end_key_value();
+				check_overlap1 = finance_time1_start_value <= finance_time2_end_value;
+			}
+			boolean check_overlap2 = true;
+			if (finance_time_range2.finance_time_range_type.is_time_start_exist() && finance_time_range1.finance_time_range_type.is_time_end_exist())
+			{
+				int finance_time2_start_value = finance_time_range2.get_time_start_key_value();
+				int finance_time1_end_value = finance_time_range1.get_time_end_key_value();
+				check_overlap2 = finance_time2_start_value <= finance_time1_end_value;
+			}
+			return (check_overlap1 && check_overlap2);
+		}
+
 		private FinanceTimeRangeBase finance_time_range = null;
 		private FinanceRecorderCmnDef.FinanceTimeUnit finance_time_unit = FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Undefined;
 		private FinanceRecorderCmnDef.FinanceTimeRangeType finance_time_range_type = FinanceRecorderCmnDef.FinanceTimeRangeType.FinanceTimeRange_Undefined;

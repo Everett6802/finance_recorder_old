@@ -2,6 +2,7 @@ package com.price.finance_recorder_base;
 
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 
+
 public interface FinanceRecorderDataHandlerInf 
 {
 	public short read_from_csv(FinanceRecorderCSVHandlerMap csv_data_map);
