@@ -13,7 +13,7 @@ import java.util.TreeMap;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 
-public class FinanceRecorderCmnClassCompanyProfile
+public class FinanceRecorderCompanyProfile
 {
 // Some constants related to the company profile entry
 	static final public int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER = 0;
@@ -93,11 +93,11 @@ public class FinanceRecorderCmnClassCompanyProfile
 		}
 	};
 
-	private FinanceRecorderCmnClassCompanyProfile(){}
+	private FinanceRecorderCompanyProfile(){}
 	public Object clone() throws CloneNotSupportedException {throw new CloneNotSupportedException();}
 
-	private static FinanceRecorderCmnClassCompanyProfile instance = null;
-	public static FinanceRecorderCmnClassCompanyProfile get_instance()
+	private static FinanceRecorderCompanyProfile instance = null;
+	public static FinanceRecorderCompanyProfile get_instance()
 	{
 		if (instance == null)
 			allocate();
@@ -107,7 +107,7 @@ public class FinanceRecorderCmnClassCompanyProfile
 	{
 		if (instance == null)
 		{
-			instance = new FinanceRecorderCmnClassCompanyProfile();
+			instance = new FinanceRecorderCompanyProfile();
 			short ret = instance.initialize();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 			{

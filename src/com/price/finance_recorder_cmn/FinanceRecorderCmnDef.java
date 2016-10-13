@@ -123,12 +123,14 @@ public class FinanceRecorderCmnDef
 	public static final String CONF_FOLDERNAME = "conf";
 	public static final String BACKUP_FOLDERNAME = ".backup";
 	public static final String WORKDAY_CANLENDAR_CONF_FILENAME = ".workday_canlendar.conf";
-	public static final String DATABASE_TIME_RANGE_CONF_FILENAME = ".database_time_range.conf";
+	public static final String MARKET_DATABASE_TIME_RANGE_CONF_FILENAME = ".market_database_time_range.conf";
+	public static final String STOCK_DATABASE_TIME_RANGE_CONF_FOLDERNAME = ".stock_database_time_range";
+	public static final String STOCK_DATABASE_TIME_RANGE_CONF_FILENAME_FORMAT = "%s.conf";
 	public static final String COMPANY_PROFILE_CONF_FILENAME = ".company_profile.conf";
 	public static final String COMPANY_GROUP_CONF_FILENAME = ".company_group.conf";
 	public static final String MARKET_STOCK_SWITCH_CONF_FILENAME = "market_stock_switch.conf";
 	public static final String FINANCE_RECORDER_CONF_FILENAME = "finance_recorder.conf";
-	public static final String BACKUP_FILENAME = "backup.conf";
+	public static final String BACKUP_CONF_FILENAME = "backup.conf";
 
 	public static final String FINANCE_DATE_REGEX_STRING_FORMAT = "([\\d]{4})-([\\d]{1,2})-([\\d]{1,2})";
 	public static final String FINANCE_MONTH_REGEX_STRING_FORMAT = "([\\d]{4})-([\\d]{1,2})";
@@ -265,6 +267,16 @@ public class FinanceRecorderCmnDef
 		public static boolean is_stock_source_type(int source_type_index) 
 		{
 			return (source_type_index >= FinanceSource_StockStart.value && source_type_index < FinanceSource_StockEnd.value);
+		}
+
+		public static int get_market_source_type_amount()
+		{
+			return (FinanceSource_MarketEnd.value - FinanceSource_MarketStart.value);
+		}
+
+		public static int get_stock_source_type_amount()
+		{
+			return (FinanceSource_StockEnd.value - FinanceSource_StockStart.value);
 		}
 	};
 
@@ -661,6 +673,14 @@ public class FinanceRecorderCmnDef
 		return source_type_index_list;
 	}
 
+	public static int get_source_type_index_from_description(String source_type_description)
+	{
+		int source_type_index = Arrays.asList(FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST).indexOf(source_type_description);
+		if (source_type_index == -1)
+			FinanceRecorderCmnDef.format_warn("Unknown source type description: %s", source_type_description);
+		return source_type_index;
+	}
+
 	public static LinkedList<Integer> get_all_source_type_index_list()
 	{
 		int[] source_type_index_range = get_source_type_index_range();
@@ -885,7 +905,7 @@ public class FinanceRecorderCmnDef
 // Impossible to reach
 		return 0;
 	}
-	
+
 	public static short get_config_file_lines(String filename, LinkedList<String> config_line_list) 
 	{
 		String current_path = get_current_path();

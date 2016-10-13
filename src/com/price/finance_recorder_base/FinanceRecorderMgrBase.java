@@ -5,19 +5,20 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
-import com.price.finance_recorder_market.FinanceRecorderDatabaseDateRange;
-import com.price.finance_recorder_market.FinanceRecorderMarketDataHandler;
+import com.price.finance_recorder_market.FinanceRecorderDatabaseTimeRange;
+
 
 public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 {
 	private static FinanceRecorderWorkdayCalendar workday_calendar = null;// FinanceRecorderWorkdayCalendar.get_instance();
-	private static FinanceRecorderDatabaseDateRange database_time_range = null; //FinanceRecorderDatabaseTimeRange.get_instance();
+	private static FinanceRecorderDatabaseTimeRange database_time_range = null; //FinanceRecorderDatabaseTimeRange.get_instance();
 
 //	private HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg> finance_source_time_range_table = null;
 //	private HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg> finance_backup_source_time_range_table = null;
 //	private HashMap<Integer, LinkedList<Integer>> finance_backup_source_field_table = null;
 	private LinkedList<String> email_address_list = new LinkedList<String>();
 	protected LinkedList<Integer> source_type_index_list = new LinkedList<Integer>();
+	protected LinkedList<FinanceRecorderCmnClass.FinanceTimeRangeBase> source_time_range_list = new LinkedList<FinanceRecorderCmnClass.FinanceTimeRangeBase>();
 	private boolean setup_param_done = false;
 
 	protected abstract FinanceRecorderDataHandlerInf get_data_handler();
@@ -58,7 +59,7 @@ OUT:
 				return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 			}
 //Get the type of data source
-			int source_type_index = Arrays.asList(FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST).indexOf(entry_arr[0]);
+			int source_type_index = FinanceRecorderCmnDef.get_source_type_index_from_description(entry_arr[0]);
 			if (source_type_index == -1)
 			{
 				FinanceRecorderCmnDef.format_error("Unknown data source type[%s] in config file", entry_arr[0]);

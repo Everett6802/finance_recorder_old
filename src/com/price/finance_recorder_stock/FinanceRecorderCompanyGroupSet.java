@@ -3,30 +3,30 @@ package com.price.finance_recorder_stock;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.HashMap;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 
 public class FinanceRecorderCompanyGroupSet implements Iterable<Map.Entry<Integer, ArrayList<String>>>
 {
-	private static TreeMap<Integer, ArrayList<String>> whole_company_number_in_group_map;
-	private TreeMap<Integer, ArrayList<String>> company_number_in_group_map = null;
-	private TreeMap<Integer, ArrayList<String>> altered_company_number_in_group_map = null;
+	private static HashMap<Integer, ArrayList<String>> whole_company_number_in_group_map;
+	private HashMap<Integer, ArrayList<String>> company_number_in_group_map = null;
+	private HashMap<Integer, ArrayList<String>> altered_company_number_in_group_map = null;
 	private boolean is_add_done = false;
 
 	static void init_whole_company_number_in_group_map()
 	{
 		assert whole_company_number_in_group_map == null : "whole_company_number_in_group_map is NOT null";
 
-		FinanceRecorderCmnClassCompanyProfile company_profile = FinanceRecorderCmnClassCompanyProfile.get_instance();
-		whole_company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
+		FinanceRecorderCompanyProfile company_profile = FinanceRecorderCompanyProfile.get_instance();
+		whole_company_number_in_group_map = new HashMap<Integer, ArrayList<String>>();
 		int company_group_size = company_profile.get_company_group_size();
 		for (int i = 0 ; i < company_group_size ; i++)
 		{
-			FinanceRecorderCmnClassCompanyProfile.TraverseEntry traverse_entry = company_profile.group_entry(i);
+			FinanceRecorderCompanyProfile.TraverseEntry traverse_entry = company_profile.group_entry(i);
 			ArrayList<String> company_number_array = new ArrayList<String>();
 			for (ArrayList<String> entry : traverse_entry)
-				company_number_array.add(entry.get(FinanceRecorderCmnClassCompanyProfile.COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER));
+				company_number_array.add(entry.get(FinanceRecorderCompanyProfile.COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER));
 			whole_company_number_in_group_map.put(i, company_number_array);
 		}
 	}
@@ -76,7 +76,7 @@ public class FinanceRecorderCompanyGroupSet implements Iterable<Map.Entry<Intege
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 		if (company_number_in_group_map == null)
-			company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
+			company_number_in_group_map = new HashMap<Integer, ArrayList<String>>();
 		if (!company_number_in_group_map.containsKey(company_group_number))
 		{
 			ArrayList<String> company_number_deque = new ArrayList<String>();
@@ -118,7 +118,7 @@ public class FinanceRecorderCompanyGroupSet implements Iterable<Map.Entry<Intege
 		}
 
 		if (company_number_in_group_map == null)
-			company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
+			company_number_in_group_map = new HashMap<Integer, ArrayList<String>>();
 
 		if (company_number_in_group_map.containsKey(company_group_number))
 		{
@@ -166,7 +166,7 @@ public class FinanceRecorderCompanyGroupSet implements Iterable<Map.Entry<Intege
 			altered_company_number_in_group_map = whole_company_number_in_group_map;
 		else
 		{
-			altered_company_number_in_group_map = new TreeMap<Integer, ArrayList<String>>();
+			altered_company_number_in_group_map = new HashMap<Integer, ArrayList<String>>();
 			for (Map.Entry<Integer, ArrayList<String>> entry : company_number_in_group_map.entrySet())
 				altered_company_number_in_group_map.put(entry.getKey(), (entry.getValue() != null) ? entry.getValue() : whole_company_number_in_group_map.get(entry.getKey()));
 		}

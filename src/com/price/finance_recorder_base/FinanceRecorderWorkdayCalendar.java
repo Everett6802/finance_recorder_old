@@ -314,7 +314,7 @@ public class FinanceRecorderWorkdayCalendar
 
 	private short find_data_pos(int year, int month, int day, int[] date_index_list, TRAVERSE_SEARCH_TYPE traverse_search_type)
 	{
-		if (!FinanceRecorderCmnClass.FinanceDateRange.in_range(finance_date_range, year, month, day))
+		if (!FinanceRecorderCmnClass.FinanceDateRange.is_in_range(finance_date_range, year, month, day))
 		{
 			FinanceRecorderCmnDef.format_error("The date [%04d-%02d-%02d] is out of range [%s]", year, month, day, finance_date_range.toString());
 			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;

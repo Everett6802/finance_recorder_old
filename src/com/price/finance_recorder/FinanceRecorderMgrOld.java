@@ -14,7 +14,7 @@ import com.price.finance_recorder_base.FinanceRecorderSQLClient;
 import com.price.finance_recorder_base.FinanceRecorderWorkdayCalendar;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
-import com.price.finance_recorder_market.FinanceRecorderDatabaseDateRange;
+import com.price.finance_recorder_market.FinanceRecorderDatabaseTimeRange;
 import com.price.finance_recorder_market.FinanceRecorderMarketDataHandler;
 import com.price.finance_recorder_stock.FinanceRecorderStockBackupSQLTask;
 import com.price.finance_recorder_stock.FinanceRecorderStockWriteSQLTask;
@@ -23,7 +23,7 @@ import com.price.finance_recorder_stock.FinanceRecorderStockWriteSQLTask;
 public class FinanceRecorderMgrOld implements FinanceRecorderCmnDef.FinanceObserverInf
 {
 	private static FinanceRecorderWorkdayCalendar workday_calendar = null;// FinanceRecorderWorkdayCalendar.get_instance();
-	private static FinanceRecorderDatabaseDateRange database_time_range = null; //FinanceRecorderDatabaseTimeRange.get_instance();
+	private static FinanceRecorderDatabaseTimeRange database_time_range = null; //FinanceRecorderDatabaseTimeRange.get_instance();
 
 	enum ConfigFieldType
 	{
@@ -801,7 +801,7 @@ OUT:
 			FinanceRecorderCmnDef.error("The database time range object has already been initialized");
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
-		database_time_range = FinanceRecorderDatabaseDateRange.get_instance();
+		database_time_range = FinanceRecorderDatabaseTimeRange.get_instance();
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
