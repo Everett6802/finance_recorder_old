@@ -906,10 +906,14 @@ public class FinanceRecorderCmnDef
 		return 0;
 	}
 
-	public static short get_config_file_lines(String filename, LinkedList<String> config_line_list) 
+	public static short get_config_file_lines(String filename, String conf_folderpath, LinkedList<String> config_line_list) 
 	{
 		String current_path = get_current_path();
-		String conf_filepath = String.format("%s/%s/%s", current_path, CONF_FOLDERNAME, filename);
+		String conf_filepath = null;
+		if (conf_folderpath == null)
+			conf_filepath = String.format("%s/%s/%s", current_path, CONF_FOLDERNAME, filename);
+		else
+			conf_filepath = String.format("%s/%s", conf_folderpath, filename);
 		debug(String.format("Check the config file[%s] exist", conf_filepath));
 		File f = new File(conf_filepath);
 		if (!f.exists()) 
@@ -970,6 +974,11 @@ public class FinanceRecorderCmnDef
 			}
 		}
 		return ret;
+	}
+
+	public static short get_config_file_lines(String filename, LinkedList<String> config_line_list) 
+	{
+		return get_config_file_lines(filename, null, config_line_list);
 	}
 
 	private static FinanceFieldType[] TransformFieldTypeString2Enum(String[] field_type_string_list) 
@@ -1298,6 +1307,16 @@ public class FinanceRecorderCmnDef
 	{
 		File file = new File(filepath);
 		return file.exists();
+	}
+
+	public static boolean check_config_file_exist(final String config_filename, String conf_folderpath) 
+	{
+		String conf_filepath = null;
+		if (conf_folderpath == null)
+			conf_filepath = String.format("%s/%s/%s", get_current_path(), CONF_FOLDERNAME, config_filename);
+		else
+			conf_filepath = String.format("%s/%s", conf_folderpath, config_filename);
+		return check_file_exist(conf_filepath);
 	}
 
 	public static boolean check_config_file_exist(final String config_filename) 

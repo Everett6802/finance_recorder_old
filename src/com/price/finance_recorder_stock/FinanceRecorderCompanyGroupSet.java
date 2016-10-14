@@ -9,16 +9,19 @@ import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 public class FinanceRecorderCompanyGroupSet implements Iterable<Map.Entry<Integer, ArrayList<String>>>
 {
+	private static FinanceRecorderCompanyProfile company_profile = null;
 	private static HashMap<Integer, ArrayList<String>> whole_company_number_in_group_map;
+	private static ArrayList<String> whole_company_number_list = null;
 	private HashMap<Integer, ArrayList<String>> company_number_in_group_map = null;
 	private HashMap<Integer, ArrayList<String>> altered_company_number_in_group_map = null;
 	private boolean is_add_done = false;
 
-	static void init_whole_company_number_in_group_map()
+	private static void init_whole_company_number_in_group_map()
 	{
 		assert whole_company_number_in_group_map == null : "whole_company_number_in_group_map is NOT null";
 
-		FinanceRecorderCompanyProfile company_profile = FinanceRecorderCompanyProfile.get_instance();
+		if (company_profile == null)
+			company_profile = FinanceRecorderCompanyProfile.get_instance();
 		whole_company_number_in_group_map = new HashMap<Integer, ArrayList<String>>();
 		int company_group_size = company_profile.get_company_group_size();
 		for (int i = 0 ; i < company_group_size ; i++)
@@ -31,8 +34,42 @@ public class FinanceRecorderCompanyGroupSet implements Iterable<Map.Entry<Intege
 		}
 	}
 
-	static public FinanceRecorderCompanyGroupSet get_whole_company_group_set()
+	private static void init_whole_company_number_list()
 	{
+		assert whole_company_number_list == null : "whole_company_number_list is NOT null";
+// Initialize the whole company number in group map first
+		if (whole_company_number_in_group_map == null)
+		init_whole_company_number_in_group_map();
+		if (company_profile == null)
+			company_profile = FinanceRecorderCompanyProfile.get_instance();
+		whole_company_number_list = new ArrayList<String>();
+		int company_group_size = company_profile.get_company_group_size();
+		for (int i = 0 ; i < company_group_size ; i++)
+		{
+			FinanceRecorderCompanyProfile.TraverseEntry traverse_entry = company_profile.group_entry(i);
+			for (ArrayList<String> entry : traverse_entry)
+				whole_company_number_list.add(entry.get(FinanceRecorderCompanyProfile.COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER));
+		}
+	}
+
+	public static final HashMap<Integer, ArrayList<String>> get_whole_company_number_in_group_map()
+	{
+		if (whole_company_number_in_group_map == null)
+			init_whole_company_number_in_group_map();
+		return whole_company_number_in_group_map;
+	}
+
+	public static final ArrayList<String> get_whole_company_number_list()
+	{
+		if (whole_company_number_list == null)
+			init_whole_company_number_list();
+		return whole_company_number_list;
+	}
+
+	public static FinanceRecorderCompanyGroupSet get_whole_company_group_set()
+	{
+		if (whole_company_number_in_group_map == null)
+			init_whole_company_number_in_group_map();
 		FinanceRecorderCompanyGroupSet company_group_set = new FinanceRecorderCompanyGroupSet();
 		company_group_set.add_done();
 		return company_group_set;
