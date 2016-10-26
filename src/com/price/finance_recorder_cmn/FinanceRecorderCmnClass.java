@@ -6,6 +6,8 @@ import java.util.*;
 //import java.util.regex.Matcher;
 //import java.util.regex.Pattern;
 
+import com.price.finance_recorder_cmn.FinanceRecorderCmnDef.FinanceTimeUnit;
+
 
 public class FinanceRecorderCmnClass 
 {
@@ -620,6 +622,12 @@ public class FinanceRecorderCmnClass
 			if (finance_date_end_str != null)
 				finance_date_end = new FinanceDate(finance_date_end_str);
 		}
+		public FinanceDateRange(FinanceDateRange another)
+		{
+			this.finance_time_range_type = another.finance_time_range_type;
+			this.finance_date_start = new FinanceDate(another.finance_date_start);
+			this.finance_date_end = new FinanceDate(another.finance_date_end);
+		}
 
 		@Override
 		public String toString() 
@@ -779,6 +787,12 @@ public class FinanceRecorderCmnClass
 				finance_month_start = new FinanceMonth(finance_month_start_str);
 			if (finance_month_end_str != null)
 				finance_month_end = new FinanceMonth(finance_month_end_str);
+		}
+		public FinanceMonthRange(FinanceMonthRange another)
+		{
+			this.finance_time_range_type = another.finance_time_range_type;
+			this.finance_month_start = new FinanceMonth(another.finance_month_start);
+			this.finance_month_end = new FinanceMonth(another.finance_month_end);
 		}
 
 		@Override
@@ -940,6 +954,12 @@ public class FinanceRecorderCmnClass
 			if (finance_quarter_end_str != null)
 				finance_quarter_end = new FinanceQuarter(finance_quarter_end_str);
 		}
+		public FinanceQuarterRange(FinanceQuarterRange another)
+		{
+			this.finance_time_range_type = another.finance_time_range_type;
+			this.finance_quarter_start = new FinanceQuarter(another.finance_quarter_start);
+			this.finance_quarter_end = new FinanceQuarter(another.finance_quarter_end);
+		}
 
 		@Override
 		public String toString() 
@@ -1030,7 +1050,7 @@ public class FinanceRecorderCmnClass
 		}
 	};
 
-	public static class FinanceTimeRange extends FinanceTimeRangeBase
+	public static class FinanceTimeRange// extends FinanceTimeRangeBase
 	{
 		public static boolean is_overlap(FinanceTimeRange finance_time_range1, FinanceTimeRange finance_time_range2)
 		{
@@ -1072,7 +1092,7 @@ public class FinanceRecorderCmnClass
 		}
 		public FinanceTimeRange(String in_finance_time_start, String in_finance_time_end)
 		{
-			finance_time_range_type = get_time_range_type(in_finance_time_start, in_finance_time_end);
+			finance_time_range_type = FinanceTimeRangeBase.get_time_range_type(in_finance_time_start, in_finance_time_end);
 			switch (finance_time_range_type)
 			{
 			case FinanceTimeRange_Between:
@@ -1121,7 +1141,13 @@ public class FinanceRecorderCmnClass
 				throw new IllegalStateException(String.format("Unknow time unit: %d", finance_time_unit.value()));
 			}
 		}
+		public FinanceTimeRange(FinanceTimeRange another)
+		{
+			this(another.get_time_start_string(), another.get_time_end_string());
+		}
 
+		public FinanceRecorderCmnDef.FinanceTimeRangeType get_time_range_type(){return finance_time_range_type;}
+		
 		public int[] get_time_start_value_list(){return finance_time_range.get_time_start_value_list();}
 		public int[] get_time_end_value_list(){return finance_time_range.get_time_end_value_list();}
 		public int[] get_time_range_value_list(){return finance_time_range.get_time_range_value_list();}
@@ -1155,6 +1181,78 @@ public class FinanceRecorderCmnClass
 
 		public boolean is_time_start_exist(){return finance_time_range_type.is_time_start_exist();}
 		public boolean is_time_end_exist(){return finance_time_range_type.is_time_end_exist();}
+	};
+
+	public static class SourceTypeTimeRange implements Comparable<SourceTypeTimeRange>
+	{
+		public static LinkedList<SourceTypeTimeRange> get_whole_source_type_time_range_list()
+		{
+			LinkedList<SourceTypeTimeRange> source_type_time_range_list = new LinkedList<SourceTypeTimeRange>();
+			for(int source_type_index : FinanceRecorderCmnDef.get_all_source_type_index_list())
+			{
+				source_type_time_range_list.add(new SourceTypeTimeRange(source_type_index));
+			}
+			return source_type_time_range_list;
+		}
+		private int source_type_index;
+		private FinanceTimeRange finance_time_range = null;
+
+		public SourceTypeTimeRange(int in_source_type_index, FinanceTimeRange in_finance_time_range)
+		{
+			source_type_index = in_source_type_index;
+			finance_time_range = new FinanceTimeRange(in_finance_time_range);
+		}
+
+		public SourceTypeTimeRange(int in_source_type_index, FinanceDate finance_date_start, FinanceDate finance_date_end)
+		{
+			this(in_source_type_index, new FinanceTimeRange(finance_date_start, finance_date_end));
+//			this.source_type_index = in_source_type_index;
+//			this.finance_time_range = new FinanceTimeRange(finance_date_start, finance_date_end);
+		}
+		public SourceTypeTimeRange(int in_source_type_index, FinanceMonth finance_month_start, FinanceMonth finance_month_end)
+		{
+			this(in_source_type_index, new FinanceTimeRange(finance_month_start, finance_month_end));
+//			this.source_type_index = in_source_type_index;
+//			this.finance_time_range = new FinanceTimeRange(finance_month_start, finance_month_end);
+		}
+		public SourceTypeTimeRange(int in_source_type_index, FinanceQuarter finance_quarter_start, FinanceQuarter finance_quarter_end)
+		{
+			this(in_source_type_index, new FinanceTimeRange(finance_quarter_start, finance_quarter_end));
+//			this.source_type_index = in_source_type_index;
+//			this.finance_time_range = new FinanceTimeRange(finance_quarter_start, finance_quarter_end);
+		}
+		public SourceTypeTimeRange(int in_source_type_index, String in_finance_time_start, String in_finance_time_end)
+		{
+			this.source_type_index = in_source_type_index;
+			this.finance_time_range = new FinanceTimeRange(in_finance_time_start, in_finance_time_end);
+		}
+
+		public SourceTypeTimeRange(SourceTypeTimeRange another)
+		{
+			this.source_type_index = another.source_type_index;
+			this.finance_time_range = new FinanceTimeRange(another.finance_time_range);
+		}
+
+		public SourceTypeTimeRange(int in_source_type_index)
+		{
+//			super(in_source_type_index, new FinanceTimeRange(finance_quarter_start, finance_quarter_end));
+			this.source_type_index = in_source_type_index;
+			this.finance_time_range = new FinanceTimeRange(FinanceRecorderCmnDef.DEF_START_DATE_STR, FinanceRecorderCmnDef.DEF_END_DATE_STR);
+		}
+
+		@Override
+		public int compareTo(SourceTypeTimeRange other) 
+		{
+			return (source_type_index - other.source_type_index);
+		}
+
+		public int get_source_type_index(){return source_type_index;}
+		public FinanceRecorderCmnDef.FinanceTimeRangeType get_time_range_type(){return finance_time_range.get_time_range_type();}
+		public FinanceTimeUnit get_time_unit(){return finance_time_range.get_time_unit();}
+		public String get_time_start_string(){return finance_time_range.get_time_start_string();}
+		public String get_time_end_string(){return finance_time_range.get_time_end_string();}
+		public int[] get_time_start_value_list(){return finance_time_range.get_time_start_value_list();}
+		public int[] get_time_end_value_list(){return finance_time_range.get_time_end_value_list();}
 	};
 
 //	public static class TimeCfg

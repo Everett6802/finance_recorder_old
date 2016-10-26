@@ -15,7 +15,7 @@ public class FinanceRecorderStockQuerySet extends QuerySet
 
 	public short add_company_list(int company_group_number, final ArrayList<String> company_code_number_in_group_array)
 	{
-		return company_group_set.add_company_list(company_group_number, company_code_number_in_group_array);
+		return company_group_set.add_company_in_group_list(company_group_number, company_code_number_in_group_array);
 	}
 
 	public short add_company(int company_group_number, String company_code_number)

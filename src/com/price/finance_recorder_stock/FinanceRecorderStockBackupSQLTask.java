@@ -15,13 +15,13 @@ public class FinanceRecorderStockBackupSQLTask implements Callable<Integer>
 	private String csv_backup_folderpath = null;
 	FinanceRecorderCmnClass.FinanceTimeRange csv_finance_time_range = null;
 
-	public FinanceRecorderStockBackupSQLTask(final LinkedList<Integer> source_type_list, final FinanceRecorderCompanyGroupSet company_group_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, String backup_folderpath)
+	public FinanceRecorderStockBackupSQLTask(final LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange> source_type_time_range_list, final FinanceRecorderCompanyGroupSet company_group_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, String backup_folderpath)
 	{
-		this(source_type_list, company_group_set, finance_time_range, backup_folderpath, String.format("StockBackupSQLThread:%d", ++thread_count));
+		this(source_type_time_range_list, company_group_set, finance_time_range, backup_folderpath, String.format("StockBackupSQLThread:%d", ++thread_count));
 	}
-	public FinanceRecorderStockBackupSQLTask(final LinkedList<Integer> source_type_list, final FinanceRecorderCompanyGroupSet company_group_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, String backup_folderpath, String description)
+	public FinanceRecorderStockBackupSQLTask(final LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange> source_type_time_range_list, final FinanceRecorderCompanyGroupSet company_group_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, String backup_folderpath, String description)
 	{
-		data_handler = FinanceRecorderStockDataHandler.get_data_handler(source_type_list, company_group_set);
+		data_handler = FinanceRecorderStockDataHandler.get_data_handler(source_type_time_range_list, company_group_set);
 		thread_description = description;
 		csv_backup_folderpath = backup_folderpath;
 		csv_finance_time_range = finance_time_range;

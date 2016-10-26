@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.concurrent.Callable;
 //import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_base.FinanceRecorderDataHandlerInf;
+import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 
@@ -13,13 +14,13 @@ public class FinanceRecorderStockWriteSQLTask implements Callable<Integer>
 	private FinanceRecorderDataHandlerInf writer = null;
 	private String thread_description = null;
 
-	public FinanceRecorderStockWriteSQLTask(final LinkedList<Integer> source_type_list, final FinanceRecorderCompanyGroupSet company_group_set)
+	public FinanceRecorderStockWriteSQLTask(final LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange> source_type_time_range_list, final FinanceRecorderCompanyGroupSet company_group_set)
 	{
-		this(source_type_list, company_group_set, String.format("StockWriteSQLThread:%d", ++thread_count));
+		this(source_type_time_range_list, company_group_set, String.format("StockWriteSQLThread:%d", ++thread_count));
 	}
-	public FinanceRecorderStockWriteSQLTask(final LinkedList<Integer> source_type_list, final FinanceRecorderCompanyGroupSet company_group_set, String description)
+	public FinanceRecorderStockWriteSQLTask(final LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange> source_type_time_range_list, final FinanceRecorderCompanyGroupSet company_group_set, String description)
 	{
-		writer = FinanceRecorderStockDataHandler.get_data_handler(source_type_list, company_group_set);
+		writer = FinanceRecorderStockDataHandler.get_data_handler(source_type_time_range_list, company_group_set);
 		thread_description = description;
 	}
 

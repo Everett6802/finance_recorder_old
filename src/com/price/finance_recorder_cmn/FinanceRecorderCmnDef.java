@@ -104,6 +104,8 @@ public class FinanceRecorderCmnDef
 
 	public static final int DEF_START_YEAR = 2000;
 	public static final int DEF_END_YEAR = 2100;
+	public static final String DEF_START_DATE_STR = String.format("%d-01-01", DEF_START_YEAR);
+	public static final String DEF_END_DATE_STR = String.format("%d-01-01", DEF_END_YEAR);
 	public static final int DEF_START_QUARTER = 1;
 	public static final int DEF_END_QUARTER = 4;
 	public static final int DEF_START_MONTH = 1;
@@ -751,7 +753,7 @@ public class FinanceRecorderCmnDef
 		return String.format("%dq%d", year_value, quarter_value);
 	}
 
-	static Matcher get_regex_matcher(String search_pattern, String data)
+	public static Matcher get_regex_matcher(String search_pattern, String data)
 	{
 		Pattern pattern = Pattern.compile(search_pattern);
 		Matcher matcher = pattern.matcher(data);
@@ -760,7 +762,7 @@ public class FinanceRecorderCmnDef
 		return matcher;
 	}
 
-	static Matcher get_finance_time_regex_matcher(FinanceTimeUnit finance_time_unit, String time_string)
+	public static Matcher get_finance_time_regex_matcher(FinanceTimeUnit finance_time_unit, String time_string)
 	{
 		return get_regex_matcher(FINANCE_TIME_REGEX_STRING_FORMAT_ARRAY[finance_time_unit.value()], time_string);
 	}
