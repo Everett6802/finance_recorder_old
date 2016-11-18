@@ -15,7 +15,7 @@ public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 	private FinanceRecorderCompanyGroupSet company_group_set = null;
 	private FinanceRecorderDatabaseTimeRange database_time_range = null;
 
-	protected FinanceRecorderDataHandlerInf get_data_handler(){return FinanceRecorderStockDataHandler.get_data_handler(source_type_time_range_list, company_group_set);}
+	protected FinanceRecorderDataHandlerInf get_data_handler(){return FinanceRecorderStockDataHandler.get_data_handler(source_type_index_list, company_group_set);}
 
 	private short transform_company_list_to_group_set(List<String> company_number_list)
 	{

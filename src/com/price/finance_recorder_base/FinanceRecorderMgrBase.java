@@ -20,13 +20,14 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 //	private HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg> finance_backup_source_time_range_table = null;
 //	private HashMap<Integer, LinkedList<Integer>> finance_backup_source_field_table = null;
 	private LinkedList<String> email_address_list = new LinkedList<String>();
-	protected LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange> source_type_time_range_list = new LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange>();
-//	protected LinkedList<FinanceRecorderCmnClass.FinanceTimeRangeBase> source_time_range_list = new LinkedList<FinanceRecorderCmnClass.FinanceTimeRangeBase>();
+	protected LinkedList<Integer> source_type_index_list = new LinkedList<Integer>();
 	protected boolean setup_param_done = false;
+	String finance_root_folerpath = FinanceRecorderCmnDef.CSV_ROOT_FOLDERPATH;
+	String finance_root_backup_folerpath = FinanceRecorderCmnDef.BACKUP_CSV_ROOT_FOLDERPATH ;
 
 	protected abstract FinanceRecorderDataHandlerInf get_data_handler();
 
-	public short set_source_type_time_range_from_file(String filename)
+	public short set_source_type_from_file(String filename)
 	{
 		if (setup_param_done)
 		{
@@ -40,10 +41,6 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 		ret = FinanceRecorderCmnDef.get_config_file_lines(filename, config_line_list);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
-
-		String finance_time_start_str = null;
-		String finance_time_end_str = null;
-//		String finance_time_today_str = null;
 OUT:
 		for (String line : config_line_list)
 		{
@@ -68,31 +65,9 @@ OUT:
 				ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
 				break OUT;
 			}
-//Get the time of start time
-			if (entry_arr.length >= 2)
-				finance_time_start_str = entry_arr[1];
-			else
-				finance_time_start_str = FinanceRecorderCmnDef.DEF_START_DATE_STR;
-//Get the time of end time
-			if (entry_arr.length >= 3)
-				finance_time_end_str = entry_arr[2];
-			else
-				finance_time_end_str = FinanceRecorderCmnDef.DEF_END_DATE_STR;
-			source_type_time_range_list.add(new FinanceRecorderCmnClass.SourceTypeTimeRange(source_type_index, finance_time_start_str, finance_time_end_str));
+			source_type_index_list.add(source_type_index);
 		}
 		return ret;
-	}
-
-	public short set_source_type_time_range(List<FinanceRecorderCmnClass.SourceTypeTimeRange> in_source_type_time_range_list)
-	{
-		if (setup_param_done)
-		{
-			FinanceRecorderCmnDef.error("The manager class has been initialized....");
-			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
-		}
-		for (FinanceRecorderCmnClass.SourceTypeTimeRange source_type_time_range : in_source_type_time_range_list)
-			source_type_time_range_list.add(new FinanceRecorderCmnClass.SourceTypeTimeRange(source_type_time_range));
-		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	public short set_source_type(List<Integer> in_source_type_index_list)
@@ -103,7 +78,7 @@ OUT:
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 		for (Integer source_type_index : in_source_type_index_list)
-			source_type_time_range_list.add(new FinanceRecorderCmnClass.SourceTypeTimeRange(source_type_index));
+			source_type_index_list.add(source_type_index);
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
@@ -119,6 +94,9 @@ OUT:
 		throw new RuntimeException("Unsupported method !!!");
 	}
 
+	public void set_finance_folderpath(String finance_folderpath){finance_root_folerpath = finance_folderpath;}
+	public void set_finance_backup_folderpath(String finance_backup_folderpath){finance_root_backup_folerpath = finance_backup_folderpath;}
+
 	public short initialize()
 	{
 /////////////////////////////////////////////////////////////
@@ -129,8 +107,8 @@ OUT:
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 // Check each parameter setting
-		if (source_type_time_range_list == null)
-			source_type_time_range_list = FinanceRecorderCmnClass.SourceTypeTimeRange.get_whole_source_type_time_range_list();
+		if (source_type_index_list == null)
+			source_type_index_list = FinanceRecorderCmnDef.get_all_source_type_index_list();
 
 		setup_param_done = true;
 		return FinanceRecorderCmnDef.RET_SUCCESS;
@@ -143,6 +121,20 @@ OUT:
 		return ret;
 	}
 
+	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
+	{
+		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
+		short ret = finance_recorder_data_handler.transfrom_sql_to_csv(query_set, finance_time_range);
+		return ret;
+	}
+
+	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
+	{
+		FinanceRecorderCmnClass.QuerySet query_set = new FinanceRecorderCmnClass.QuerySet();
+		for (Integer source_type_index : source_type_index_list)
+			query_set.add_query(source_type_index);
+		return transfrom_sql_to_csv(query_set, finance_time_range);
+	}
 
 //	private short update_backup_by_config_file(String filename, HashMap<Integer,FinanceRecorderCmnClass.TimeRangeCfg> time_range_table, HashMap<Integer, LinkedList<Integer>> source_field_table)
 //	{

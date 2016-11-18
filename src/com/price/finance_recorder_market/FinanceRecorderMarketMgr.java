@@ -8,7 +8,7 @@ public class FinanceRecorderMarketMgr extends FinanceRecorderMgrBase
 {
 	private FinanceRecorderDatabaseTimeRange database_time_range = null;
 
-	protected FinanceRecorderDataHandlerInf get_data_handler(){return FinanceRecorderMarketDataHandler.get_data_handler(source_type_time_range_list);}
+	protected FinanceRecorderDataHandlerInf get_data_handler(){return FinanceRecorderMarketDataHandler.get_data_handler(source_type_index_list);}
 
 	public short initialize()
 	{

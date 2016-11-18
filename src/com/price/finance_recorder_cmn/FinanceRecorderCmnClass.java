@@ -1247,6 +1247,7 @@ public class FinanceRecorderCmnClass
 		}
 
 		public int get_source_type_index(){return source_type_index;}
+		public FinanceTimeRange get_time_range(){return finance_time_range;}
 		public FinanceRecorderCmnDef.FinanceTimeRangeType get_time_range_type(){return finance_time_range.get_time_range_type();}
 		public FinanceTimeUnit get_time_unit(){return finance_time_range.get_time_unit();}
 		public String get_time_start_string(){return finance_time_range.get_time_start_string();}
@@ -1596,14 +1597,15 @@ public class FinanceRecorderCmnClass
 
 	public static class QuerySet
 	{
-		private ArrayList<LinkedList<Integer>> query_array;
+		private HashMap<Integer, LinkedList<Integer>> query_map;
+		private LinkedList<Integer> query_source_type_index_list = null;
 		private boolean add_done;
 
 		public QuerySet()
 		{
-			query_array = new ArrayList<LinkedList<Integer>>();
-			for (int i = 0 ; i < FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE ; i++)
-				query_array.add(new LinkedList<Integer>());
+			query_map = new HashMap<Integer, LinkedList<Integer>>();
+//			for (int i = 0 ; i < FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE ; i++)
+//				query_array.add(new LinkedList<Integer>());
 		}
 
 		public short add_query(int source_type_index, int field_index)
@@ -1615,7 +1617,7 @@ public class FinanceRecorderCmnClass
 			}
 
 // Check if the index is out of range
-			if(source_type_index < 0 && source_type_index >= FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE)
+			if(!FinanceRecorderCmnDef.check_source_type_index_in_range(source_type_index))
 			{
 				FinanceRecorderCmnDef.error("source_type_index is out of range in QuerySet");
 				return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
@@ -1630,23 +1632,28 @@ public class FinanceRecorderCmnClass
 					return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				}
 			}
+			if (!query_map.containsKey(source_type_index))
+				query_map.put(source_type_index, new LinkedList<Integer>());
+			else
+			{
 // Check the index is duplicate
-			if (query_array.get(source_type_index).indexOf(field_index) != -1)
-			{
-				FinanceRecorderCmnDef.format_warn("Duplicate index: %d in %s", field_index, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index]);
-				return FinanceRecorderCmnDef.RET_WARN_INDEX_DUPLICATE;
-			}
+				if (query_map.get(source_type_index).indexOf(field_index) != -1)
+				{
+					FinanceRecorderCmnDef.format_warn("Duplicate index: %d in %s", field_index, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index]);
+					return FinanceRecorderCmnDef.RET_WARN_INDEX_DUPLICATE;
+				}
 // If all fields are selected, it's no need to add extra index
-			if (!query_array.get(source_type_index).isEmpty() && query_array.get(source_type_index).get(0) == -1)
-			{
-				FinanceRecorderCmnDef.format_warn("Ignore index: %d in %s", field_index, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index]);
-				return FinanceRecorderCmnDef.RET_WARN_INDEX_IGNORE;
+				if (!query_map.get(source_type_index).isEmpty() && query_map.get(source_type_index).get(0) == -1)
+				{
+					FinanceRecorderCmnDef.format_warn("Ignore index: %d in %s", field_index, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index]);
+					return FinanceRecorderCmnDef.RET_WARN_INDEX_IGNORE;
+				}
+// Clear the old index if all data are selected
+				if (field_index == -1)
+					query_map.get(source_type_index).clear();
 			}
-
 // Add the index
-			if (field_index == -1)
-				query_array.get(source_type_index).clear();
-			query_array.get(source_type_index).add(field_index);
+			query_map.get(source_type_index).add(field_index);
 			return FinanceRecorderCmnDef.RET_SUCCESS;
 		}
 		public short add_query(int source_type_index){return add_query(source_type_index, -1);}
@@ -1658,16 +1665,21 @@ public class FinanceRecorderCmnClass
 				FinanceRecorderCmnDef.error("Fail to add another data");
 				return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 			}
-			for (int i = 0 ; i < FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE ; i++)
+			for(Map.Entry<Integer, LinkedList<Integer>> entry : query_map.entrySet())
+//			for (int i = 0 ; i < FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE ; i++)
 			{
-				if (query_array.get(i).isEmpty())
+				int source_type_index = entry.getKey();
+				if (FinanceRecorderCmnDef.check_source_type_index_in_range(source_type_index))
+					throw new IllegalStateException(String.format("Unsupported source type index: %d", source_type_index));
+				LinkedList<Integer> field_list = entry.getValue();
+				if (field_list.isEmpty())
 					continue;
 //				WRITE_FORMAT_DEBUG("Transform the query data[source_type_index: %d]", i);
-				if (query_array.get(i).get(0) == -1)
+				if (field_list.get(0) == -1)
 				{
-					query_array.get(i).clear();
-					for (int field_index = 1 ; field_index < FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[i] ; field_index++) // Caution: Don't include the "date" field
-						query_array.get(i).add(field_index);
+					field_list.clear();
+					for (int field_index = 1 ; field_index < FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index] ; field_index++) // Caution: Don't include the "date" field
+						field_list.add(field_index);
 				}
 			}
 			add_done = true;
@@ -1676,15 +1688,32 @@ public class FinanceRecorderCmnClass
 
 		public boolean is_add_query_done() {return add_done;}
 
-		public final LinkedList<Integer> get_index(int index)
+		public final LinkedList<Integer> get_source_type_index_list()
 		{
-			if (index < 0 || index >= FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE)
+			if (query_source_type_index_list == null)
 			{
-				String errmsg = String.format("The index[%d] is out of range(0, %d)", index , FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE - 1);
+				query_source_type_index_list = new LinkedList<Integer>();
+				for(Map.Entry<Integer, LinkedList<Integer>> entry : query_map.entrySet())
+				{
+					int source_type_index = entry.getKey();
+					if (FinanceRecorderCmnDef.check_source_type_index_in_range(source_type_index))
+						throw new IllegalStateException(String.format("Unsupported source type index: %d", source_type_index));
+					query_source_type_index_list.add(source_type_index);
+				}
+			}
+			return query_source_type_index_list;
+		}
+
+		public final LinkedList<Integer> get_field_index_list(int source_type_index)
+		{
+			int[] index_array = FinanceRecorderCmnDef.get_source_type_index_range();
+			if (source_type_index < index_array[0] || source_type_index >= index_array[1])
+			{
+				String errmsg = String.format("The index[%d] is out of range(0, %d)", source_type_index , index_array[1] - 1);
 				FinanceRecorderCmnDef.error(errmsg);
 				throw new IndexOutOfBoundsException(errmsg);
 			}
-			return query_array.get(index);
+			return (query_map.containsKey(source_type_index) ? query_map.get(source_type_index) : null);
 		}
 	};
 
@@ -1903,6 +1932,7 @@ public class FinanceRecorderCmnClass
 		private static short get_lower_subindex(short x) {return (short)(x & 0xFF);}
 
 		private HashMap<Integer, Integer> data_set_mapping;
+		private LinkedList<Integer> source_type_index_list = null;
 		private FinanceStringDataArray date_data;
 		private ArrayList<FinanceIntDataArray> int_data_set;
 		private ArrayList<FinanceLongDataArray> long_data_set;
@@ -1917,6 +1947,7 @@ public class FinanceRecorderCmnClass
 		public ResultSet()
 		{
 			data_set_mapping = new HashMap<Integer, Integer>();
+			source_type_index_list = new LinkedList<Integer>();
 //			date_data = new FinanceStringDataArray();
 //			int_data_set = new ArrayList<FinanceIntDataArray>();
 //			long_data_set = new ArrayList<FinanceLongDataArray>();
@@ -1946,7 +1977,7 @@ public class FinanceRecorderCmnClass
 
 		public short add_set(int source_type_index, int field_index)
 		{
-			if(source_type_index < 0 && source_type_index >= FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE)
+			if(!FinanceRecorderCmnDef.check_source_type_index_in_range(source_type_index))
 			{
 				FinanceRecorderCmnDef.error("source_type_index is out of range in ResultSet");
 				return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
@@ -2007,6 +2038,9 @@ public class FinanceRecorderCmnClass
 				FinanceRecorderCmnDef.format_debug("ResultSet Map: %d, %d", key, value);
 				data_set_mapping.put(Integer.valueOf(key), Integer.valueOf(value));
 			}
+// Keep track of the source type index
+			if (source_type_index_list.indexOf(source_type_index) == -1)
+				source_type_index_list.add(source_type_index);
 			return FinanceRecorderCmnDef.RET_SUCCESS;
 		}
 
@@ -2185,6 +2219,11 @@ public class FinanceRecorderCmnClass
 				}
 			}
 			return FinanceRecorderCmnDef.RET_SUCCESS;
+		}
+
+		public final LinkedList<Integer> get_source_type_index_list()
+		{
+			return source_type_index_list;
 		}
 
 		public short show_data()

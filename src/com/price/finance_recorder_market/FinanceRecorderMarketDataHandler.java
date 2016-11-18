@@ -4,13 +4,16 @@ import java.util.*;
 
 import com.price.finance_recorder_base.FinanceRecorderCSVHandler;
 import com.price.finance_recorder_base.FinanceRecorderCSVHandlerMap;
+import com.price.finance_recorder_base.FinanceRecorderDataHandlerBase;
 import com.price.finance_recorder_base.FinanceRecorderDataHandlerInf;
 import com.price.finance_recorder_cmn.FinanceRecorderClassBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
+import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceTimeRange;
+import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.QuerySet;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 
-public class FinanceRecorderMarketDataHandler extends FinanceRecorderClassBase implements FinanceRecorderDataHandlerInf
+public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandlerBase
 {
 	private static FinanceRecorderCmnClass.QuerySet whole_field_query_set = null;
 	private static String get_csv_filepath(String csv_folderpath, int source_type_index)
@@ -28,38 +31,37 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderClassBase i
 //		return FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index];
 //	}
 
-	public static FinanceRecorderDataHandlerInf get_data_handler(final LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange> source_type_time_range_list)
+	public static FinanceRecorderDataHandlerInf get_data_handler(final LinkedList<Integer> source_type_index_list)
 	{
 		if (!FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE)
 		{
 			String errmsg = "It's NOT Market mode";
 			throw new IllegalStateException(errmsg);
 		}
-		for (FinanceRecorderCmnClass.SourceTypeTimeRange source_type_time_range : source_type_time_range_list)
+		FinanceRecorderMarketDataHandler data_handler_obj = new FinanceRecorderMarketDataHandler();
+		for (Integer source_type_index : source_type_index_list)
 		{
-			int source_type_index = source_type_time_range.get_source_type_index();
 			if (!FinanceRecorderCmnDef.FinanceSourceType.is_market_source_type(source_type_index))
 			{
 				String errmsg = String.format("The data source[%d] is NOT Market source type", source_type_index);
 				throw new IllegalArgumentException(errmsg);
 			}
 		}
-		FinanceRecorderMarketDataHandler data_handler_obj = new FinanceRecorderMarketDataHandler();
-		data_handler_obj.source_type_time_range_list = source_type_time_range_list;
+		data_handler_obj.source_type_index_list = source_type_index_list;
 		return data_handler_obj;
 	}
 	public static FinanceRecorderDataHandlerInf get_data_handler_whole()
 	{
-		LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange> source_type_time_range_list = new LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange>();
+		LinkedList<Integer> source_type_index_list = new LinkedList<Integer>();
 		int start_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_MarketStart.value();
 		int end_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_MarketEnd.value();
 		for (int source_type_index = start_index ; source_type_index < end_index ; source_type_index++)
-			source_type_time_range_list.add(new FinanceRecorderCmnClass.SourceTypeTimeRange(source_type_index));
-		return get_data_handler(source_type_time_range_list);
+			source_type_index_list.add(source_type_index);
+		return get_data_handler(source_type_index_list);
 	}
 
-	private LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange> source_type_time_range_list = null;
-	private String csv_backup_foldername = FinanceRecorderCmnDef.COPY_BACKUP_FOLDERPATH;
+//	private LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange> source_type_time_range_list = null;
+//	private String finance_root_backup_folerpath = FinanceRecorderCmnDef.BACKUP_CSV_ROOT_FOLDERPATH;
 
 	private FinanceRecorderMarketDataHandler()
 	{
@@ -77,9 +79,8 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderClassBase i
 	public short read_from_csv(FinanceRecorderCSVHandlerMap csv_data_map)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		for (FinanceRecorderCmnClass.SourceTypeTimeRange source_type_time_range : source_type_time_range_list)
+		for (Integer source_type_index : source_type_index_list)
 		{
-			int source_type_index = source_type_time_range.get_source_type_index();
 			FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderMarketDataHandler.get_csv_filepath(FinanceRecorderCmnDef.CSV_FOLDERPATH, source_type_index));
 			ret = csv_reader.read();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -98,9 +99,8 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderClassBase i
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 		OUT:
-		for (FinanceRecorderCmnClass.SourceTypeTimeRange source_type_time_range : source_type_time_range_list)
+		for (Integer source_type_index : source_type_index_list)
 		{
-			int source_type_index = source_type_time_range.get_source_type_index();
 // Check data exist
 			Integer source_key = FinanceRecorderCmnDef.get_source_key(source_type_index);
 			if (!csv_data_map.containsKey(source_key))
@@ -148,9 +148,8 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderClassBase i
 			return ret;
 		OUT:
 // For each source type
-		for (FinanceRecorderCmnClass.SourceTypeTimeRange source_type_time_range : source_type_time_range_list)
+		for (Integer source_type_index : source_type_index_list)
 		{
-			int source_type_index = source_type_time_range.get_source_type_index();
 // Read data from CSV
 			FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderMarketDataHandler.get_csv_filepath(FinanceRecorderCmnDef.CSV_FOLDERPATH, source_type_index));
 			ret = csv_reader.read();
@@ -189,17 +188,17 @@ OUT:
 		{
 			result_set = new FinanceRecorderCmnClass.ResultSet();
 // Add query set
-			for (FinanceRecorderCmnClass.SourceTypeTimeRange source_type_time_range : source_type_time_range_list)
+//			for (FinanceRecorderCmnClass.SourceTypeTimeRange source_type_time_range : source_type_time_range_list)
+			for (Integer source_type_index : query_set.get_source_type_index_list())
 			{
-				int source_type_index = source_type_time_range.get_source_type_index();
-				ret = result_set.add_set(source_type_index, query_set.get_index(source_type_index));
+//				int source_type_index = source_type_time_range.get_source_type_index();
+				ret = result_set.add_set(source_type_index, query_set.get_field_index_list(source_type_index));
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					break OUT;
 			}
 // Query data from each source type
-			for (FinanceRecorderCmnClass.SourceTypeTimeRange source_type_time_range : source_type_time_range_list)
+			for (Integer source_type_index : source_type_index_list)
 			{
-				int source_type_index = source_type_time_range.get_source_type_index();
 				ret = sql_client.select_data(source_type_index, finance_time_range, result_set);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					break OUT;
@@ -212,12 +211,11 @@ OUT:
 		break;
 		case ResultSetDataUnit_SourceType:
 		{
-			for (FinanceRecorderCmnClass.SourceTypeTimeRange source_type_time_range : source_type_time_range_list)
+			for (Integer source_type_index : source_type_index_list)
 			{
-				int source_type_index = source_type_time_range.get_source_type_index();
 				result_set = new FinanceRecorderCmnClass.ResultSet();
 // Add query set
-				ret = result_set.add_set(source_type_index, query_set.get_index(source_type_index));
+				ret = result_set.add_set(source_type_index, query_set.get_field_index_list(source_type_index));
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					break OUT;
 // Query data from each source type
@@ -246,7 +244,7 @@ OUT:
 		return read_from_sql(whole_field_query_set, finance_time_range, result_set_map);
 	}
 
-	public short write_into_csv(FinanceRecorderCmnClass.ResultSetMap result_set_map, String csv_root_folder_path)
+	public short write_into_csv(FinanceRecorderCmnClass.ResultSetMap result_set_map)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		FinanceRecorderCmnDef.ResultSetDataUnit data_unit = result_set_map.get_data_unit();
@@ -266,10 +264,9 @@ OUT:
 				ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 				break OUT;
 			}
-			for (FinanceRecorderCmnClass.SourceTypeTimeRange source_type_time_range : source_type_time_range_list)
+			for (Integer source_type_index : source_type_index_list)
 			{
-				int source_type_index = source_type_time_range.get_source_type_index();
-				FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderMarketDataHandler.get_csv_filepath(csv_root_folder_path, source_type_index));
+				FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderMarketDataHandler.get_csv_filepath(finance_root_backup_folerpath, source_type_index));
 //Assemble the data and write into CSV
 				ArrayList<String> csv_data_list = result_set.to_string_array(source_type_index);
 				csv_writer.set_write_data(csv_data_list);
@@ -284,7 +281,7 @@ OUT:
 //				FinanceRecorderCmnClass.ResultSet result_set = entry.getValue();
 //				for (int source_type_time_range.get_source_type_index() : source_type_time_range_list)
 //				{
-//					FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderMarketDataHandler.get_csv_filepath(csv_backup_foldername, source_type_index));
+//					FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderMarketDataHandler.get_csv_filepath(finance_root_backup_folerpath, source_type_index));
 //// Assemble the data and write into CSV
 //					ArrayList<String> csv_data_list = result_set.to_string_array(source_type_index);
 //					csv_writer.set_write_data(csv_data_list);
@@ -298,9 +295,8 @@ OUT:
 		break;
 		case ResultSetDataUnit_SourceType:
 		{
-			for (FinanceRecorderCmnClass.SourceTypeTimeRange source_type_time_range : source_type_time_range_list)
+			for (Integer source_type_index : source_type_index_list)
 			{
-				int source_type_index = source_type_time_range.get_source_type_index();
 				int source_key = FinanceRecorderCmnDef.get_source_key(source_type_index);
 				FinanceRecorderCmnClass.ResultSet result_set = null;
 				try
@@ -313,7 +309,7 @@ OUT:
 					ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 					break OUT;
 				}
-				FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderMarketDataHandler.get_csv_filepath(csv_backup_foldername, source_type_index));
+				FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderMarketDataHandler.get_csv_filepath(finance_root_backup_folerpath, source_type_index));
 //Assemble the data and write into CSV
 				ArrayList<String> csv_data_list = result_set.to_string_array(source_type_index);
 				csv_writer.set_write_data(csv_data_list);
@@ -332,17 +328,16 @@ OUT:
 		return ret;
 	}
 
-	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, String csv_backup_foldername)
+	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
 	{
 // CAUTION: The data set in the reslt_set variable should be added before calling this function 
 // Set the mapping table of reading the specific CSV files and writing correct SQL database
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		FinanceRecorderCmnClass.ResultSet result_set = new FinanceRecorderCmnClass.ResultSet();
 // Add query set
-		for (FinanceRecorderCmnClass.SourceTypeTimeRange source_type_time_range : source_type_time_range_list)
+		for (Integer source_type_index : source_type_index_list)
 		{
-			int source_type_index = source_type_time_range.get_source_type_index();
-			ret = result_set.add_set(source_type_index, query_set.get_index(source_type_index));
+			ret = result_set.add_set(source_type_index, query_set.get_field_index_list(source_type_index));
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 		}
@@ -353,14 +348,13 @@ OUT:
 			return ret;
 OUT:
 		{
-			for (FinanceRecorderCmnClass.SourceTypeTimeRange source_type_time_range : source_type_time_range_list)
+			for (Integer source_type_index : source_type_index_list)
 			{
-				int source_type_index = source_type_time_range.get_source_type_index();
 // Query data from each source type
 				ret = sql_client.select_data(source_type_index, finance_time_range, result_set);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					break OUT;
-				FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderMarketDataHandler.get_csv_filepath(csv_backup_foldername, source_type_index));
+				FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderMarketDataHandler.get_csv_filepath(finance_root_backup_folerpath, source_type_index));
 //Assemble the data and write into CSV
 				ArrayList<String> csv_data_list = result_set.to_string_array(source_type_index);
 				csv_writer.set_write_data(csv_data_list);
@@ -373,10 +367,8 @@ OUT:
 		sql_client.disconnect_mysql();
 		return ret;
 	}
-	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, String backup_foldername)
+	public short transfrom_whole_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
 	{
-		return transfrom_sql_to_csv(whole_field_query_set, finance_time_range, csv_backup_foldername);
+		return transfrom_sql_to_csv(whole_field_query_set, finance_time_range);
 	}
-
-	public void set_csv_backup_foldername(String backup_foldername){csv_backup_foldername = backup_foldername;}
 }

@@ -115,7 +115,7 @@ public class FinanceRecorderCmnDef
 	public static final String FINANCE_MARKET_MODE_DESCRIPTION = "market";
 	public static final String FINANCE_STOCK_MODE_DESCRIPTION = "stock";
 	public static final String CSV_ROOT_FOLDERPATH = "/var/tmp/finance";
-	public static final String COPY_BACKUP_FOLDERPATH = "/var/www/finance";
+	public static final String BACKUP_CSV_ROOT_FOLDERPATH = "/var/www/finance";
 	public static final String CSV_MARKET_FOLDERNAME = "market";
 	public static final String CSV_STOCK_FOLDERNAME = "stock";
 	public static final String CSV_FOLDERPATH = String.format("%s/%s", CSV_ROOT_FOLDERPATH, (IS_FINANCE_MARKET_MODE ? CSV_MARKET_FOLDERNAME : CSV_STOCK_FOLDERNAME));
@@ -124,6 +124,8 @@ public class FinanceRecorderCmnDef
 	public static final String RESULT_FOLDERNAME = "result";
 	public static final String CONF_FOLDERNAME = "conf";
 	public static final String BACKUP_FOLDERNAME = ".backup";
+	public static final String MARKET_ALL_CONFIG_FILENAME = "market_all.conf";
+	public static final String STOCK_ALL_CONFIG_FILENAME = "stock_all.conf";
 	public static final String WORKDAY_CANLENDAR_CONF_FILENAME = ".workday_canlendar.conf";
 	public static final String MARKET_DATABASE_TIME_RANGE_CONF_FILENAME = ".market_database_time_range.conf";
 	public static final String STOCK_DATABASE_TIME_RANGE_CONF_FOLDERNAME = ".stock_database_time_range";
@@ -138,7 +140,7 @@ public class FinanceRecorderCmnDef
 	public static final String FINANCE_MONTH_REGEX_STRING_FORMAT = "([\\d]{4})-([\\d]{1,2})";
 	public static final String FINANCE_QUARTER_REGEX_STRING_FORMAT = "([\\d]{4})[Qq]([\\d]{1})";
 	public static final String[] FINANCE_TIME_REGEX_STRING_FORMAT_ARRAY = new String[] {FINANCE_DATE_REGEX_STRING_FORMAT, FINANCE_MONTH_REGEX_STRING_FORMAT, FINANCE_QUARTER_REGEX_STRING_FORMAT };
-	
+
 	public static final String CSV_FILE_ROOT_FOLDERPATH = "/var/tmp/finance";
 	public static final String COMMA_DATA_SPLIT = ",";
 	public static final String SPACE_DATA_SPLIT = " ";
@@ -534,7 +536,7 @@ public class FinanceRecorderCmnDef
 	// Setter and Getter
 	// Allow to assign the variable only once
 	private static boolean set_show_console = false;
-	private static boolean show_console = false;
+	private static boolean show_console = true;
 
 	public static void enable_show_console(boolean show) 
 	{
@@ -673,6 +675,16 @@ public class FinanceRecorderCmnDef
 		else
 			throw new IllegalStateException("Unknown finance mode");
 		return source_type_index_list;
+	}
+
+	public static int get_source_type_size()
+	{
+		if (IS_FINANCE_MARKET_MODE)
+			return FinanceSourceType.get_market_source_type_amount();
+		else if (IS_FINANCE_STOCK_MODE)
+			return FinanceSourceType.get_stock_source_type_amount();
+		else
+			throw new IllegalStateException("Unknown finance mode");
 	}
 
 	public static int get_source_type_index_from_description(String source_type_description)

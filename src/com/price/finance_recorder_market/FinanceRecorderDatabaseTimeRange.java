@@ -182,22 +182,23 @@ public class FinanceRecorderDatabaseTimeRange
 		return get_restricted_time_range(source_type_index_set, finance_time_range);
 	}
 
-	final FinanceRecorderCmnClass.FinanceTimeRange get_source_type_time_range(int finance_source_type_index)
+	final FinanceRecorderCmnClass.FinanceTimeRange get_source_type_time_range(int source_type_index)
 	{
-		if (finance_source_type_index < 0 || finance_source_type_index >= FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE)
+		if (!FinanceRecorderCmnDef.check_source_type_index_in_range(source_type_index))
 		{
-			FinanceRecorderCmnDef.format_error("The index[%d] is out of range [0, %d)", finance_source_type_index, FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE);
+			FinanceRecorderCmnDef.format_error("The index[%d] is out of range", source_type_index);
 			throw new IllegalArgumentException();
 //			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 		}
 
-		return database_time_range_list.get(finance_source_type_index);
+		return database_time_range_list.get(source_type_index);
 	}
 
 	short get_all_source_type_time_range(HashMap<Integer,FinanceRecorderCmnClass.FinanceTimeRange> time_range_table)
 	{
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		for (int i = 0 ; i < FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE ; i++)
+//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		int[] source_type_index_array = FinanceRecorderCmnDef.get_source_type_index_range();
+		for (int i = source_type_index_array[0] ; i < source_type_index_array[1] ; i++)
 			time_range_table.put(i, database_time_range_list.get(i));
 
 		return FinanceRecorderCmnDef.RET_SUCCESS;
