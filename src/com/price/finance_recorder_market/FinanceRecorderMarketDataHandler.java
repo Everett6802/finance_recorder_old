@@ -169,6 +169,26 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		return ret;
 	}
 
+	public short cleanup_sql()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Establish the connection to the MySQL
+		FinanceRecorderMarketSQLClient sql_client = new FinanceRecorderMarketSQLClient();
+		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+			if (FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
+				return FinanceRecorderCmnDef.RET_SUCCESS;
+		}
+		else
+			return ret;
+// Delete the database
+		ret = sql_client.delete_database();
+// Destroy the connection to the MySQL
+		sql_client.disconnect_mysql();
+		return ret;
+	}
+
 	public short read_from_sql(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map)
 	{
 // CAUTION: The data set in the reslt_set variable should be added before calling this function 

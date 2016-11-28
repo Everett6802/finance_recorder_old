@@ -16,4 +16,5 @@ public interface FinanceRecorderMgrInf
 	short transfrom_csv_to_sql();
 	short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range);
 	short transfrom_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range);
+	short cleanup_sql();
 }

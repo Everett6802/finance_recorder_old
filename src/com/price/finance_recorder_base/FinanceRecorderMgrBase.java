@@ -136,6 +136,12 @@ OUT:
 		return transfrom_sql_to_csv(query_set, finance_time_range);
 	}
 
+	public short cleanup_sql()
+	{
+		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
+		short ret = finance_recorder_data_handler.cleanup_sql();
+		return ret;
+	}
 //	private short update_backup_by_config_file(String filename, HashMap<Integer,FinanceRecorderCmnClass.TimeRangeCfg> time_range_table, HashMap<Integer, LinkedList<Integer>> source_field_table)
 //	{
 //		short ret = FinanceRecorderCmnDef.RET_SUCCESS;

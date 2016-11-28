@@ -3,8 +3,7 @@ package com.price.finance_recorder;
 //import java.io.*;
 //import java.util.*;
 import java.util.LinkedList;
-import java.util.List;
-
+//import java.util.List;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 import com.price.finance_recorder_base.FinanceRecorderMgrInf;
@@ -19,11 +18,7 @@ public class FinanceRecorder
 	private static final byte DATABASE_OPERATION_WRITE_MASK = 0x1;
 	private static final byte DATABASE_OPERATION_BACKUP_MASK = 0x1 << 1;
 
-//	private static String csv_root_folderpath = null;
-//	private static String source_type_index_list_from_filepath = null;
-//	private static LinkedList<Integer> source_type_index_list = null;
-//	private static FinanceRecorderCmnClass.FinanceTimeRange finance_time_range = null; 
-
+	private static boolean help_param = false;
 	private static String finance_folderpath_param = null;
 	private static String finance_backup_folderpath_param = null;
 	private static String source_from_file_param = null;
@@ -64,11 +59,21 @@ public class FinanceRecorder
 		while(index < args_len)
 		{
 			String option = args[index];
-			if (option.equals("-h") || option.equals("--help"))
+			if (option.equals("--market_mode"))
+			{
+				FinanceRecorderCmnDef.FINANCE_MODE = FinanceRecorderCmnDef.FinanceAnalysisMode.FinanceAnalysis_Market;
+				index_offset = 1;
+			}
+			else if (option.equals("--stock_mode"))
+			{
+				FinanceRecorderCmnDef.FINANCE_MODE = FinanceRecorderCmnDef.FinanceAnalysisMode.FinanceAnalysis_Stock;
+				index_offset = 1;
+			}
+			else if (option.equals("-h") || option.equals("--help"))
 			{
 				FinanceRecorderCmnDef.enable_show_console(true);
-				show_usage();
-				System.exit(0);
+				help_param = true;
+				index_offset = 1;
 			}
 			else if (option.equals("--silent"))
 			{
@@ -299,13 +304,6 @@ public class FinanceRecorder
 	private static short setup_param()
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-// Allocate the manager class
-		if (FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE)
-			finance_recorder_mgr = new FinanceRecorderMarketMgr();
-		else if (FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
-			finance_recorder_mgr = new FinanceRecorderStockMgr();
-		else
-			throw new IllegalStateException("Unknown finance mode");
 		String errmsg = null;
 // Set source type
 		if (source_from_file_param != null)
@@ -510,6 +508,52 @@ public class FinanceRecorder
 // Transfer the command line to config and setup the parameters of the manager class
 		if (FinanceRecorderCmnDef.CheckFailure(parse_param(args)))
 			show_error_and_exit("Fail to parse the parameters ......");
+
+// Determine the mode and initializ//		FinanceRecorderCmnClassCompanyProfile lookup = FinanceRecorderCmnClassCompanyProfile.get_instance();
+//		for (ArrayList<String> data : lookup.entry())
+//		{
+//			System.out.printf("%s\n", data.get(FinanceRecorderCompanyProfileLookup.COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER));
+//		}
+//		for (int i = 0 ; i < lookup.get_company_group_size() ; i++)
+//		{
+//			System.out.printf("======================== Group: %d, %s ========================\n", i, lookup.get_company_group_description(i));
+//			for (ArrayList<String> data : lookup.group_entry(i))
+//			{
+//				System.out.printf("%s\n", data.get(FinanceRecorderCompanyProfileLookup.COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER));
+//			}
+//		}
+
+// Determine the finance mode
+		if (FinanceRecorderCmnDef.FINANCE_MODE == null)
+		{
+			FinanceRecorderCmnDef.FINANCE_MODE = FinanceRecorderCmnDef.get_finance_analysis_mode();
+			FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE = (FinanceRecorderCmnDef.FINANCE_MODE == FinanceRecorderCmnDef.FinanceAnalysisMode.FinanceAnalysis_Market);
+			FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE = (FinanceRecorderCmnDef.FINANCE_MODE == FinanceRecorderCmnDef.FinanceAnalysisMode.FinanceAnalysis_Stock);
+		}
+		else if (FinanceRecorderCmnDef.FINANCE_MODE == FinanceRecorderCmnDef.FinanceAnalysisMode.FinanceAnalysis_Market)
+		{
+			FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE = true;
+			FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE = false;
+		}
+		else if (FinanceRecorderCmnDef.FINANCE_MODE == FinanceRecorderCmnDef.FinanceAnalysisMode.FinanceAnalysis_Stock)
+		{
+			FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE = false;
+			FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE = true;
+		}
+		else
+			throw new RuntimeException("Unknown mode !!!");
+
+// Create the instance of manager class
+		if (FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE)
+			finance_recorder_mgr = new FinanceRecorderMarketMgr();
+		else if (FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
+			finance_recorder_mgr = new FinanceRecorderStockMgr();
+		else
+			throw new IllegalStateException("Unknown finance mode");
+
+		if (help_param)
+			show_usage_and_exit();
+
 		if (FinanceRecorderCmnDef.CheckFailure(check_param()))
 			show_error_and_exit("Fail to check the parameters ......");
 		if (FinanceRecorderCmnDef.CheckFailure(setup_param()))
@@ -553,7 +597,7 @@ public class FinanceRecorder
 		System.exit(1);
 	}
 
-	private static void show_usage()
+	private static void show_usage_and_exit()
 	{
 		if (!FinanceRecorderCmnDef.is_show_console())
 		{
@@ -601,8 +645,8 @@ public class FinanceRecorder
 //		System.out.println("--multi_thread\nDescription: Write into MySQL database by using multiple threads");
 //		System.out.println("--check_error\nDescription: Check if the data in the MySQL database is correct");
 //		System.out.println("--run_daily\nDescription: Run daily data\nCaution: Executed after writing MySQL data if set");
-//		System.out.println("--show_console\nDescription: Print the runtime info on STDOUT/STDERR");
 		System.out.println("===================================================");
+		System.exit(0);
 	}
 
 //	private static boolean need_read(ActionType type){return (type == ActionType.Action_Read || type == ActionType.Action_ReadWrite) ? true : false;}
@@ -629,7 +673,7 @@ public class FinanceRecorder
 //	}
 //
 //	private static short setup_time_range_table(String filename)
-//	{
+//	{clear_multi
 //		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 //		ret = finance_recorder_mgr.setup_time_range_table_by_config_file(filename);
 //		if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -668,18 +712,18 @@ public class FinanceRecorder
 //		return ret;
 //	}
 //
-//	private static short delete_sql(LinkedList<Integer> source_type_index_list)
-//	{
-//		if(FinanceRecorderCmnDef.is_show_console())
-//			System.out.println("Delete old MySQL data......");
-//
-//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-//		ret = finance_recorder_mgr.clear_multi(source_type_index_list);
-//		if (FinanceRecorderCmnDef.CheckFailure(ret))
-//			show_error_and_exit(String.format("Fail to remove the old MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-//
-//		return ret;
-//	}
+	private static short delete_sql(LinkedList<Integer> source_type_index_list)
+	{
+		if(FinanceRecorderCmnDef.is_show_console())
+			System.out.println("Delete old MySQL data......");
+
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		ret = finance_recorder_mgr.cleanup_sql();
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			show_error_and_exit(String.format("Fail to remove the old MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+
+		return ret;
+	}
 //
 //	private static short backup_sql(boolean copy_backup_folder)
 //	{

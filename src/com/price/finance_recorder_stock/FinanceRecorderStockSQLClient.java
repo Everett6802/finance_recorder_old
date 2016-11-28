@@ -9,7 +9,7 @@ import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 public class FinanceRecorderStockSQLClient extends FinanceRecorderSQLClient
 {
-	protected static String get_database_name(int company_group_number)
+	public static String get_database_name(int company_group_number)
 	{
 		if (!FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
 		{
@@ -19,7 +19,7 @@ public class FinanceRecorderStockSQLClient extends FinanceRecorderSQLClient
 		return String.format("%s%02d", FinanceRecorderCmnDef.SQL_STOCK_DATABASE_NAME, company_group_number);
 	}
 
-	protected static String get_table_name(int source_type_index, String company_code_number)
+	public static String get_table_name(int source_type_index, String company_code_number)
 	{
 		if (!FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
 		{

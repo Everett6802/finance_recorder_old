@@ -7,9 +7,9 @@ import java.util.*;
 import com.price.finance_recorder_cmn.FinanceRecorderClassBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceDateRange;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceMonthRange;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceQuarterRange;
+//import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceDateRange;
+//import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceMonthRange;
+//import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceQuarterRange;
 
 
 public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
@@ -24,6 +24,8 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 // Create Table command format
 	private static final String FORMAT_CMD_CREATE_TABLE_HEAD_FORMAT = "CREATE TABLE IF NOT EXISTS %s (";
 	private static final String FORMAT_CMD_CREATE_TABLE_TAIL = ")";
+// Create Table command format
+	private static final String FORMAT_CMD_DELETE_TABLE_FORMAT = "DROP TABLE IF EXISTS %s";
 //	private static final String format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
 // Insert Data command format
 	private static final String FORMAT_CMD_INSERT_TABLE_HEAD_FORMAT = "INSERT INTO %s VALUES(";
@@ -502,6 +504,42 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 			Statement s = connection.createStatement();
 			FinanceRecorderCmnDef.format_debug("Try to create table[%s] by command: %s", table_name, cmd_create_table);
 			s.executeUpdate(cmd_create_table);
+		}
+		catch(SQLException ex) //有可能會產生sql exception
+		{
+			if (ex.getErrorCode() == 1050)
+				FinanceRecorderCmnDef.format_info("The table[%s] has already existed", table_name);
+			else
+			{
+				FinanceRecorderCmnDef.format_error("Fails to create table[%s], due to: %s", table_name, ex.getMessage());
+				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+			}
+		}
+
+		FinanceRecorderCmnDef.format_debug("Try to open the MySQL table[%s]...... Successfully", table_name);
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	protected short delete_table(String table_name)
+	{
+// Check if the connection is established
+		if (connection == null)
+		{
+			FinanceRecorderCmnDef.error("The connection is NOT established");
+			return  FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
+//		table_name = table;
+		FinanceRecorderCmnDef.format_debug("Try to delete the MySQL table[%s]...... ", table_name);
+		String cmd_delete_table = String.format(FORMAT_CMD_DELETE_TABLE_FORMAT, table_name);
+// Create table
+		FinanceRecorderCmnDef.format_debug("Delete table by command: %s", cmd_delete_table);
+
+// Create the SQL command list and then execute
+		try
+		{
+			Statement s = connection.createStatement();
+			FinanceRecorderCmnDef.format_debug("Try to create table[%s] by command: %s", table_name, cmd_delete_table);
+			s.executeUpdate(cmd_delete_table);
 		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{

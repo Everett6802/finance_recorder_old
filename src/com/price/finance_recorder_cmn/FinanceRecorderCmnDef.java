@@ -16,8 +16,9 @@ import java.text.*;
 public class FinanceRecorderCmnDef 
 {
 	private static FinanceRecorderLogger finance_recorder_logger = FinanceRecorderLogger.get_instance();
-	public static final boolean IS_FINANCE_MARKET_MODE = is_market_mode();
-	public static final boolean IS_FINANCE_STOCK_MODE = !IS_FINANCE_MARKET_MODE;
+	public static FinanceAnalysisMode FINANCE_MODE = null; // Will be determined after argument setting in main
+	public static boolean IS_FINANCE_MARKET_MODE;// = is_market_mode(); // Will be determined after argument setting in main
+	public static boolean IS_FINANCE_STOCK_MODE;// = !IS_FINANCE_MARKET_MODE; // Will be determined after argument setting in main
 
 	// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Return values
@@ -440,16 +441,24 @@ public class FinanceRecorderCmnDef
 
 	public static final String[] FINANCE_DATA_NAME_LIST = new String[] 
 	{
+// Market Start
 		"stock_exchange_and_volume",
 		"stock_top3_legal_persons_net_buy_or_sell",
 		"stock_margin_trading_and_short_selling",
 		"future_and_option_top3_legal_persons_open_interest",
 		"future_or_option_top3_legal_persons_open_interest",
 		"option_top3_legal_persons_buy_and_sell_option_open_interest",
-		"option_put_call_ratio", "future_top10_dealers_and_legal_persons" 
+		"option_put_call_ratio", 
+		"future_top10_dealers_and_legal_persons",
+// Market End
+		///////////////////////////////////////////////////////////
+// Stock Start
+		"company_depository_shareholder_distribution_table",
+// Stock End
 	};
 	public static final String[] FINANCE_DATA_DESCRIPTION_LIST = new String[] 
 	{
+// Market Start
 		"臺股指數及成交量", 
 		"三大法人現貨買賣超", 
 		"現貨融資融券餘額", 
@@ -457,7 +466,12 @@ public class FinanceRecorderCmnDef
 		"三大法人期貨或選擇權留倉淨額", 
 		"三大法人選擇權買賣權留倉淨額", 
 		"三大法人選擇權賣權買權比",
-		"十大交易人及特定法人期貨資訊" 
+		"十大交易人及特定法人期貨資訊",
+// Market End
+		///////////////////////////////////////////////////////////
+// Stock Start
+		"個股集保戶股權分散表",
+// Stock End
 	};
 	public static final String[] FINANCE_DATA_FOLDER_MAPPING = new String[] 
 	{
@@ -473,6 +487,7 @@ public class FinanceRecorderCmnDef
 	};
 	public static final String[] FINANCE_DATA_SQL_FIELD_LIST = new String[] 
 	{
+// Market Start
 		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION)),
 		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION)),
 		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION)),
@@ -480,10 +495,16 @@ public class FinanceRecorderCmnDef
 		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION)),
 		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION)),
 		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION)),
-		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION)) 
+		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION, FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION)),
+// Market End
+		///////////////////////////////////////////////////////////
+// Stock Start
+		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefStockDatabase.COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_TABLE_FIELD_DEFINITION, FinanceRecorderCmnDefStockDatabase.COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_TABLE_FIELD_TYPE_DEFINITION)),
+// Stock End
 	};
 	public static final String[][] FINANCE_DATA_SQL_FIELD_DEFINITION_LIST = new String[][] 
 	{
+// Market Start
 		FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_DEFINITION,
 		FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_DEFINITION,
 		FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_DEFINITION,
@@ -491,10 +512,16 @@ public class FinanceRecorderCmnDef
 		FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_DEFINITION,
 		FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_DEFINITION,
 		FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_DEFINITION,
-		FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION 
+		FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_DEFINITION,
+// Market End
+		///////////////////////////////////////////////////////////
+// Stock Start
+		FinanceRecorderCmnDefStockDatabase.COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_TABLE_FIELD_DEFINITION,
+// Stock End
 	};
 	public static final String[][] FINANCE_DATA_SQL_FIELD_TYPE_DEFINITION_LIST = new String[][] 
 	{
+// Market Start
 		FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION,
 		FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION,
 		FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION,
@@ -502,10 +529,16 @@ public class FinanceRecorderCmnDef
 		FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
 		FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION,
 		FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION,
-		FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION 
+		FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION,
+// Market End
+		///////////////////////////////////////////////////////////
+// Stock Start
+		FinanceRecorderCmnDefStockDatabase.COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_TABLE_FIELD_TYPE_DEFINITION,
+// Stock End
 		};
 	public static final FinanceFieldType[][] FINANCE_DATABASE_FIELD_TYPE_LIST = new FinanceFieldType[][] 
 	{
+// Market Start
 		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION),
 		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION),
 		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION),
@@ -513,10 +546,16 @@ public class FinanceRecorderCmnDef
 		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION),
 		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION),
 		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION),
-		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION) 
+		TransformFieldTypeString2Enum(FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION),
+// Market End
+		///////////////////////////////////////////////////////////
+// Stock Start
+		TransformFieldTypeString2Enum(FinanceRecorderCmnDefStockDatabase.COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_TABLE_FIELD_TYPE_DEFINITION),
+// Stock End
 	};
 	public static final int FINANCE_DATABASE_FIELD_AMOUNT_LIST[] = 
 	{
+// Market Start
 		FinanceRecorderCmnDefMarketDatabase.STOCK_EXCHANGE_AND_VALUE_FIELD_TYPE_DEFINITION.length,
 		FinanceRecorderCmnDefMarketDatabase.STOCK_TOP3_LEGAL_PERSONS_NET_BUY_OR_SELL_FIELD_TYPE_DEFINITION.length,
 		FinanceRecorderCmnDefMarketDatabase.STOCK_MARGIN_TRADING_AND_SHORT_SELLING_FIELD_TYPE_DEFINITION.length,
@@ -524,7 +563,12 @@ public class FinanceRecorderCmnDef
 		FinanceRecorderCmnDefMarketDatabase.FUTURE_OR_OPTION_TOP3_LEGAL_PERSONS_OPEN_INTEREST_FIELD_TYPE_DEFINITION.length,
 		FinanceRecorderCmnDefMarketDatabase.OPTION_TOP3_LEGAL_PERSONS_BUY_AND_SELL_OPTION_OPEN_INTEREST_FIELD_TYPE_DEFINITION.length,
 		FinanceRecorderCmnDefMarketDatabase.OPTION_PUT_CALL_RATIO_FIELD_TYPE_DEFINITION.length,
-		FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION.length 
+		FinanceRecorderCmnDefMarketDatabase.FUTURE_TOP10_DEALERS_AND_LEGAL_PERSONS_FIELD_TYPE_DEFINITION.length,
+// Market End
+		///////////////////////////////////////////////////////////
+// Stock Start
+		FinanceRecorderCmnDefStockDatabase.COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_TABLE_FIELD_TYPE_DEFINITION.length,
+// Stock End
 	};
 
 // Semi-open interval
@@ -557,46 +601,10 @@ public class FinanceRecorderCmnDef
 	// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Functions
 
-	private static FinanceAnalysisMode get_finance_analysis_mode() 
+	public static FinanceAnalysisMode get_finance_analysis_mode() 
 	{
 		FinanceAnalysisMode mode = null;
 		String errmsg;
-		//
-		// // Open the file
-		// // short ret = RET_SUCCESS;
-		// BufferedReader reader = null;
-		// String conf_filepath = String.format("%s/%s/%s", get_current_path(),
-		// CONF_FOLDERNAME, MARKET_STOCK_SWITCH_CONF_FILENAME);
-		// format_debug("Try to parse the configuration in %s", conf_filepath);
-		// // Check the file exists or not
-		// File fp = new File(conf_filepath);
-		// if (!fp.exists())
-		// {
-		// errmsg = String.format("The configration file[%s] does NOT exist",
-		// conf_filepath);
-		// throw new RuntimeException(errmsg);
-		// }
-		// String buf = null;
-		// // Try to parse the content of the config file
-		// try
-		// {
-		// reader = new BufferedReader(new FileReader(fp));
-		// buf = reader.readLine();
-		// }
-		// catch (IOException ex)
-		// {
-		// errmsg = String.format("Error occur due to %s", ex.toString());
-		// throw new RuntimeException(errmsg);
-		// }
-		// finally
-		// {
-		// // Close the file
-		// if (reader != null)
-		// {
-		// try {reader.close();}
-		// catch (IOException e){}// nothing to do here except log the exception
-		// }
-		// }
 		// Read the data from the config file
 		LinkedList<String> config_line_list = new LinkedList<String>();
 		short res = get_config_file_lines(MARKET_STOCK_SWITCH_CONF_FILENAME, config_line_list);
@@ -619,16 +627,16 @@ public class FinanceRecorderCmnDef
 		}
 		return mode;
 	}
-
-	private static boolean is_market_mode() 
-	{
-		return get_finance_analysis_mode() == FinanceAnalysisMode.FinanceAnalysis_Market;
-	}
-
-	private static boolean is_stock_mode() 
-	{
-		return get_finance_analysis_mode() == FinanceAnalysisMode.FinanceAnalysis_Stock;
-	}
+//
+//	public static boolean is_market_mode() 
+//	{
+//		return (FINANCE_MODE !=  null ? IS_FINANCE_MARKET_MODE : get_finance_analysis_mode() == FinanceAnalysisMode.FinanceAnalysis_Market);
+//	}
+//
+//	public static boolean is_stock_mode() 
+//	{
+//		return (FINANCE_MODE !=  null ? IS_FINANCE_STOCK_MODE : get_finance_analysis_mode() == FinanceAnalysisMode.FinanceAnalysis_Stock);
+//	}
 
 	public static String get_finance_mode_description()
 	{
