@@ -14,7 +14,6 @@ public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 {
 	private FinanceRecorderCompanyGroupSet company_group_set = null;
 	private FinanceRecorderDatabaseTimeRange database_time_range = null;
-	private FinanceRecorderCmnDef.DeleteSQLAccurancyType delete_sql_accurancy_type = FinanceRecorderCmnDef.DeleteSQLAccurancyType.DeleteSQLAccurancyType_SOURCE_TYPE_ONLY;
 
 	protected FinanceRecorderDataHandlerInf get_data_handler(){return FinanceRecorderStockDataHandler.get_data_handler(source_type_index_list, company_group_set);}
 

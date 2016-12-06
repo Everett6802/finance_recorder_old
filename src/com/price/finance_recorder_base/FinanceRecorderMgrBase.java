@@ -24,13 +24,12 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 	protected boolean setup_param_done = false;
 	String finance_root_folerpath = FinanceRecorderCmnDef.CSV_ROOT_FOLDERPATH;
 	String finance_root_backup_folerpath = FinanceRecorderCmnDef.BACKUP_CSV_ROOT_FOLDERPATH ;
+	protected FinanceRecorderCmnDef.DeleteSQLAccurancyType delete_sql_accurancy_type = FinanceRecorderCmnDef.DeleteSQLAccurancyType.DeleteSQLAccurancyType_SOURCE_TYPE_ONLY;
 
 	protected abstract FinanceRecorderDataHandlerInf get_data_handler();
 
 	public void set_finance_folderpath(String finance_folderpath){finance_root_folerpath = finance_folderpath;}
 	public void set_finance_backup_folderpath(String finance_backup_folderpath){finance_root_backup_folerpath = finance_backup_folderpath;}
-
-	public void set_delete_sql_accuracy(FinanceRecorderCmnDef.DeleteSQLAccurancyType accurancy_type){throw new RuntimeException("Unsupport finance mode !!!");}
 
 	public short set_source_type_from_file(String filename)
 	{
@@ -138,20 +137,33 @@ OUT:
 		return transfrom_sql_to_csv(query_set, finance_time_range);
 	}
 
+	public short delete_sql()
+	{
+		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		switch (delete_sql_accurancy_type)
+		{
+		case DeleteSQLAccurancyType_SOURCE_TYPE_ONLY:
+			ret = finance_recorder_data_handler.delete_sql_by_source_type();
+			break;
+		case DeleteSQLAccurancyType_COMPANY_ONLY:
+			ret = finance_recorder_data_handler.delete_sql_by_company();
+			break;
+		case DeleteSQLAccurancyType_SOURCE_TYPE_AND_COMPANY:
+			ret = finance_recorder_data_handler.delete_sql_by_source_type_and_company();
+			break;
+		default:
+			throw new IllegalStateException(String.format("Unknown delete sql accurancy type: %d", delete_sql_accurancy_type.value()));
+		}
+		return ret;
+	}
+
 	public short cleanup_sql()
 	{
 		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
 		short ret = finance_recorder_data_handler.cleanup_sql();
 		return ret;
 	}
-
-	public short delete_sql()
-	{
-		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
-		short ret = finance_recorder_data_handler.cleanup_sql();
-		return ret;
-	}
-
 //	private short update_backup_by_config_file(String filename, HashMap<Integer,FinanceRecorderCmnClass.TimeRangeCfg> time_range_table, HashMap<Integer, LinkedList<Integer>> source_field_table)
 //	{
 //		short ret = FinanceRecorderCmnDef.RET_SUCCESS;

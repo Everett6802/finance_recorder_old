@@ -10,6 +10,8 @@ public class FinanceRecorderMarketMgr extends FinanceRecorderMgrBase
 
 	protected FinanceRecorderDataHandlerInf get_data_handler(){return FinanceRecorderMarketDataHandler.get_data_handler(source_type_index_list);}
 
+	public void set_delete_sql_accuracy(FinanceRecorderCmnDef.DeleteSQLAccurancyType accurancy_type){throw new RuntimeException("Unsupport finance mode !!!");}
+
 	public short initialize()
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
