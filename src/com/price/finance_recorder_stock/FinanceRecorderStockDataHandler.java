@@ -13,6 +13,7 @@ import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.ResultSetMap;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 //import com.price.finance_recorder_market.FinanceRecorderStockDataHandler;
 //import com.price.finance_recorder_market.FinanceRecorderStockSQLClient;
+import com.price.finance_recorder_market.FinanceRecorderMarketSQLClient;
 
 
 public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerBase
@@ -235,35 +236,6 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 		return ret;
 	}
 
-	public short cleanup_sql()
-	{
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-// Establish the connection to the MySQL
-		
-		int company_group_size = get_company_profile().get_company_group_size();
-OUT:
-		for (int i = 0 ; i < company_group_size ; i++)
-		{
-			String database_name = FinanceRecorderStockSQLClient.get_database_name(i);
-			FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
-			ret = sql_client.try_connect_mysql(database_name, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
-			if (FinanceRecorderCmnDef.CheckFailure(ret))
-			{
-				if (FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
-					continue;
-			}
-			else
-				return ret;
-// Delete the database
-			ret = sql_client.delete_database(i);
-// Destroy the connection to the MySQL
-			sql_client.disconnect_mysql();
-			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				break OUT;
-		}
-		return ret;
-	}
-
 	public short read_from_sql(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map)
 	{
 // CAUTION: The data set in the reslt_set variable should be added before calling this function 
@@ -450,6 +422,78 @@ OUT:
 	public short transfrom_whole_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
 	{
 		return transfrom_sql_to_csv(whole_field_query_set, finance_time_range);
+	}
+
+	private short delete_sql_table_by_source_type_and_company(List<Integer> in_source_type_index_list, FinanceRecorderCompanyGroupSet in_company_group_set)
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		for (Map.Entry<Integer, ArrayList<String>> company_code_entry : in_company_group_set)
+		{
+			FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
+			int company_group_number = company_code_entry.getKey();
+// Establish the connection to the MySQL
+			ret = sql_client.try_connect_mysql(company_group_number, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				return ret;
+OUT:
+			for(String company_code_number : company_code_entry.getValue())
+			{
+// Delete each table
+				for (Integer source_type_index : in_source_type_index_list)
+				{
+					ret = sql_client.delete_table(source_type_index, company_code_number);
+					if (FinanceRecorderCmnDef.CheckFailure(ret))
+						return ret;
+				}
+			}
+// Destroy the connection to the MySQL
+			sql_client.disconnect_mysql();
+		}
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	public short delete_sql_by_source_type()
+	{
+		return delete_sql_table_by_source_type_and_company(source_type_index_list, FinanceRecorderCompanyGroupSet.get_whole_company_group_set());
+	}
+
+	public short delete_sql_by_company() // Only useful in stock mode
+	{
+		return delete_sql_table_by_source_type_and_company(FinanceRecorderCmnDef.get_all_source_type_index_list(), company_group_set);
+	} 
+
+	public short delete_sql_by_source_type_and_company() // Only useful in stock mode
+	{
+		return delete_sql_table_by_source_type_and_company(source_type_index_list, company_group_set);
+	} 
+
+	public short cleanup_sql()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Establish the connection to the MySQL
+		
+		int company_group_size = get_company_profile().get_company_group_size();
+OUT:
+		for (int i = 0 ; i < company_group_size ; i++)
+		{
+			String database_name = FinanceRecorderStockSQLClient.get_database_name(i);
+			FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
+			ret = sql_client.try_connect_mysql(database_name, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+			{
+				if (FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
+					continue;
+			}
+			else
+				return ret;
+// Delete the database
+			ret = sql_client.delete_database(i);
+// Destroy the connection to the MySQL
+			sql_client.disconnect_mysql();
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				break OUT;
+		}
+		return ret;
 	}
 
 	public void enable_multi_thread_type(boolean enable)

@@ -1,6 +1,7 @@
 package com.price.finance_recorder_base;
 
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
+import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 
 public interface FinanceRecorderDataHandlerInf 
@@ -12,7 +13,6 @@ public interface FinanceRecorderDataHandlerInf
 	short read_from_csv(FinanceRecorderCSVHandlerMap csv_data_map);
 	short write_into_sql(final FinanceRecorderCSVHandlerMap csv_data_map);
 	short transfrom_csv_to_sql();
-	short cleanup_sql();
 // SQL -> CSV related function
 //	For transforming data from SQL into CSV, I assumed the time range of each SQL data source should be identical
 	short read_from_sql(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map);
@@ -20,4 +20,10 @@ public interface FinanceRecorderDataHandlerInf
 	short write_into_csv(FinanceRecorderCmnClass.ResultSetMap result_set_map);
 	short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range);
 	short transfrom_whole_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range);
+// Delete SQL
+	short delete_sql_by_source_type();
+	short delete_sql_by_company(); // Only useful in stock mode
+	short delete_sql_by_source_type_and_company(); // Only useful in stock mode
+// Cleanup SQL
+	short cleanup_sql();
 }

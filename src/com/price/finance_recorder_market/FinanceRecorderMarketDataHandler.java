@@ -169,26 +169,6 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		return ret;
 	}
 
-	public short cleanup_sql()
-	{
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-// Establish the connection to the MySQL
-		FinanceRecorderMarketSQLClient sql_client = new FinanceRecorderMarketSQLClient();
-		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
-		{
-			if (FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
-				return FinanceRecorderCmnDef.RET_SUCCESS;
-		}
-		else
-			return ret;
-// Delete the database
-		ret = sql_client.delete_database();
-// Destroy the connection to the MySQL
-		sql_client.disconnect_mysql();
-		return ret;
-	}
-
 	public short read_from_sql(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map)
 	{
 // CAUTION: The data set in the reslt_set variable should be added before calling this function 
@@ -390,5 +370,58 @@ OUT:
 	public short transfrom_whole_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
 	{
 		return transfrom_sql_to_csv(whole_field_query_set, finance_time_range);
+	}
+
+	public short delete_sql_by_source_type()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Establish the connection to the MySQL
+		FinanceRecorderMarketSQLClient sql_client = new FinanceRecorderMarketSQLClient();
+		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+			if (FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
+				return FinanceRecorderCmnDef.RET_SUCCESS;
+		}
+// Delete each table
+		for (Integer source_type_index : source_type_index_list)
+		{
+			ret = sql_client.delete_table(source_type_index);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				return ret;
+		}
+// Destroy the connection to the MySQL
+		sql_client.disconnect_mysql();
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	public short delete_sql_by_company() // Only useful in stock mode
+	{
+		throw new IllegalStateException("Logfile cannot be read-only");
+	} 
+
+	public short delete_sql_by_source_type_and_company() // Only useful in stock mode
+	{
+		throw new IllegalStateException("Logfile cannot be read-only");
+	} 
+
+	public short cleanup_sql()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Establish the connection to the MySQL
+		FinanceRecorderMarketSQLClient sql_client = new FinanceRecorderMarketSQLClient();
+		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+			if (FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
+				return FinanceRecorderCmnDef.RET_SUCCESS;
+		}
+		else
+			return ret;
+// Delete the database
+		ret = sql_client.delete_database();
+// Destroy the connection to the MySQL
+		sql_client.disconnect_mysql();
+		return ret;
 	}
 }

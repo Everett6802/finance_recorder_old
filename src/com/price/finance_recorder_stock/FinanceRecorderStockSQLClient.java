@@ -61,6 +61,12 @@ public class FinanceRecorderStockSQLClient extends FinanceRecorderSQLClient
 		return create_table(table_name, FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_LIST[source_type_index]);
 	}
 
+	short delete_table(int source_type_index, String company_code_number)
+	{
+		String table_name = get_table_name(source_type_index, company_code_number);
+		return delete_table(table_name);
+	}
+
 	short insert_data(int source_type_index, String company_code_number, final FinanceRecorderCSVHandler csv_reader)
 	{
 		String table_name = get_table_name(source_type_index, company_code_number);

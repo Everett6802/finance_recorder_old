@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.text.SimpleDateFormat;
 //import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.LinkedList;
@@ -428,6 +429,40 @@ public class FinanceRecorderCmnDef
 				return true;
 			}
 			return false;
+		}
+	};
+
+	public static enum DeleteSQLAccurancyType // Only useful for stock mode
+	{
+		DeleteSQLAccurancyType_SOURCE_TYPE_ONLY(0), 
+		DeleteSQLAccurancyType_COMPANY_ONLY(1), 
+		DeleteSQLAccurancyType_SOURCE_TYPE_AND_COMPANY(2);
+
+		private int value = 0;
+
+		private DeleteSQLAccurancyType(int value) 
+		{
+			this.value = value;
+		}
+
+		public static DeleteSQLAccurancyType valueOf(int value) 
+		{
+			switch (value) 
+			{
+			case 0:
+				return DeleteSQLAccurancyType_SOURCE_TYPE_ONLY;
+			case 1:
+				return DeleteSQLAccurancyType_COMPANY_ONLY;
+			case 2:
+				return DeleteSQLAccurancyType_SOURCE_TYPE_AND_COMPANY;
+			default:
+				return null;
+			}
+		}
+
+		public int value() 
+		{
+			return this.value;
 		}
 	};
 
