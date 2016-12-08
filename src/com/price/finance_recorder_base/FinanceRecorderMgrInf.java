@@ -9,7 +9,10 @@ public interface FinanceRecorderMgrInf
 {
 	void set_finance_folderpath(String finance_folderpath);
 	void set_finance_backup_folderpath(String finance_backup_folderpath);
+	void set_finance_restore_folderpath(String finance_restore_folderpath);
 	void set_delete_sql_accuracy(FinanceRecorderCmnDef.DeleteSQLAccurancyType accurancy_type); // Only work in stock mode
+	short get_backup_foldername_list(List<String> sorted_sub_foldername_list);
+	short get_restore_foldername_list(List<String> sorted_sub_foldername_list);
 	short set_source_type_from_file(String filename);
 	short set_source_type(List<Integer> in_source_type_index_list);
 	short set_company_from_file(String filename);

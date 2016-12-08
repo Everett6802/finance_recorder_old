@@ -24,13 +24,16 @@ public class FinanceRecorder
 	private static boolean help_param = false;
 	private static String finance_folderpath_param = null;
 	private static String finance_backup_folderpath_param = null;
+	private static String finance_restore_folderpath_param = null;
+	private static boolean show_finance_backup_foldername_param = false;
+	private static boolean show_finance_restore_foldername_param = false;
+	private static String delete_sql_accurancy_param = null;
+	private static String database_operation_param = null;
 	private static String source_from_file_param = null;
 	private static String source_param = null;
 	private static String time_range_param = null;
 	private static String company_from_file_param = null;
 	private static String company_param = null;
-	private static String delete_sql_accurancy_param = null;
-	private static String database_operation_param = null;
 
 	private static FinanceRecorderMgrInf finance_recorder_mgr = null;
 	private static byte database_operation = 0x0;
@@ -105,6 +108,13 @@ public class FinanceRecorder
 				finance_backup_folderpath_param = args[index + 1];
 				index_offset = 2;
 			}
+			else if (option.equals("--finance_restore_folderpath"))
+			{
+				if (index + 1 >= args_len)
+					show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
+				finance_restore_folderpath_param = args[index + 1];
+				index_offset = 2;
+			}
 			else if (option.equals("--delete_sql_accurancy"))
 			{
 				if (index + 1 >= args_len)
@@ -113,6 +123,23 @@ public class FinanceRecorder
 					FinanceRecorderCmnDef.warn("The delete_sql_accurancy arguemnt is ignored in the Market mode");
 				else
 					delete_sql_accurancy_param = args[index + 1];
+				index_offset = 2;
+			}
+			else if (option.equals("--show_finance_backup_foldername"))
+			{
+				show_finance_backup_foldername_param = true;
+				index_offset = 1;
+			}
+			else if (option.equals("--show_finance_restore_foldername"))
+			{
+				show_finance_restore_foldername_param = true;
+				index_offset = 1;
+			}
+			else if (option.equals("-o") || option.equals("--operation"))
+			{
+				if (index + 1 >= args_len)
+					show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
+				database_operation_param = args[index + 1];
 				index_offset = 2;
 			}
 			else if (option.equals("--source_from_file"))
@@ -156,27 +183,6 @@ public class FinanceRecorder
 					company_param = args[index + 1];
 				index_offset = 2;
 			}
-//			else if (option.equals("-r") || option.equals("--delete"))
-//			{
-//				if (index + 1 >= args_len)
-//					show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
-//				if (delete_database_list != null)
-//					show_error_and_exit(String.format("The option[%s] is duplicate", option));
-//
-//				delete_database_list = new LinkedList<Integer>();
-//				String[] data_source_array = args[index + 1].split(PARAM_SPLIT);
-//				for (String data_source : data_source_array)
-//					delete_database_list.addLast(Integer.valueOf(data_source));
-//				index_offset = 2;
-//			}
-//			else if (option.equals("-f") || option.equals("--file"))
-//			{
-//				if (index + 1 >= args_len)
-//					show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
-//
-//				conf_filename = args[index + 1];
-//				index_offset = 2;
-//			}
 //			else if (option.equals("--restore"))
 //			{
 //				if (index + 1 >= args_len)
@@ -200,14 +206,6 @@ public class FinanceRecorder
 //
 //				restore_database = true;
 //				index_offset = 1;
-//			}
-//			else if (option.equals("--restore_path"))
-//			{
-//				if (index + 1 >= args_len)
-//					show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
-//
-//				restore_folderpath = args[index + 1];
-//				index_offset = 2;
 //			}
 //			else if (option.equals("--delete_old"))
 //			{
@@ -252,11 +250,11 @@ public class FinanceRecorder
 //				action_param = args[index + 1];
 //				index_offset = 2;
 //			}
-			else if (option.equals("--show_console"))
-			{
-				FinanceRecorderCmnDef.enable_show_console(true);
-				index_offset = 1;
-			}
+//			else if (option.equals("--show_console"))
+//			{
+//				FinanceRecorderCmnDef.enable_show_console(true);
+//				index_offset = 1;
+//			}
 //			else if (option.equals("--run_daily"))
 //			{
 //				run_daily = true;
@@ -274,6 +272,47 @@ public class FinanceRecorder
 	private static short check_param()
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		if (database_operation_param != null)
+		{
+			if (database_operation_param.indexOf('W') != -1 || database_operation_param.indexOf('w') != -1)
+				database_operation |= DATABASE_OPERATION_WRITE_MASK;
+			if (database_operation_param.indexOf('B') != -1 || database_operation_param.indexOf('b') != -1)
+				database_operation |= DATABASE_OPERATION_BACKUP_MASK;
+			if (database_operation_param.indexOf('M') != -1 || database_operation_param.indexOf('m') != -1)
+				database_operation |= DATABASE_OPERATION_DELETE_MASK;
+			if (database_operation_param.indexOf('C') != -1 || database_operation_param.indexOf('c') != -1)
+				database_operation |= DATABASE_OPERATION_CLEANUP_MASK;
+			if (database_operation_param.indexOf('R') != -1 || database_operation_param.indexOf('r') != -1)
+				database_operation |= DATABASE_OPERATION_RESTORE_MASK;
+			if ((database_operation & DATABASE_OPERATION_WRITE_MASK) != 0 && (database_operation & DATABASE_OPERATION_RESTORE_MASK) != 0 )
+			{
+				FinanceRecorderCmnDef.warn("The 'write' and 'resotre' operation can NOT be enabled simultaneously, ignore the 'restore' operation");
+				database_operation &= ~DATABASE_OPERATION_RESTORE_MASK;
+			}
+			if ((database_operation & DATABASE_OPERATION_DELETE_MASK) != 0 && (database_operation & DATABASE_OPERATION_CLEANUP_MASK) != 0 )
+			{
+				FinanceRecorderCmnDef.warn("The 'delete' operation is ignored since 'cleanup' is set");
+				database_operation &= ~DATABASE_OPERATION_RESTORE_MASK;
+			}
+		}
+		if (is_delete_operation_enabled())
+		{
+			try
+			{
+				delete_sql_accurancy_type = FinanceRecorderCmnDef.DeleteSQLAccurancyType.valueOf(Integer.valueOf(delete_sql_accurancy_param));
+			}
+			catch (Exception e){}
+			if (delete_sql_accurancy_type == null)
+				throw new IllegalStateException(String.format("Unknown delete sql accurancy type: %s", delete_sql_accurancy_param));
+		}
+		else
+		{
+			if (delete_sql_accurancy_param != null)
+			{
+				delete_sql_accurancy_param = null;
+				FinanceRecorderCmnDef.warn("The 'delete_sql_accurancy' argument is ignored since delete action is NOT set");
+			}
+		}
 		if (source_from_file_param != null)
 		{
 			if (source_param != null)
@@ -316,47 +355,6 @@ public class FinanceRecorder
 				}
 			}
 		}
-		if (database_operation_param != null)
-		{
-			if (database_operation_param.indexOf('W') != -1 || database_operation_param.indexOf('w') != -1)
-				database_operation |= DATABASE_OPERATION_WRITE_MASK;
-			if (database_operation_param.indexOf('B') != -1 || database_operation_param.indexOf('b') != -1)
-				database_operation |= DATABASE_OPERATION_BACKUP_MASK;
-			if (database_operation_param.indexOf('M') != -1 || database_operation_param.indexOf('m') != -1)
-				database_operation |= DATABASE_OPERATION_DELETE_MASK;
-			if (database_operation_param.indexOf('C') != -1 || database_operation_param.indexOf('c') != -1)
-				database_operation |= DATABASE_OPERATION_CLEANUP_MASK;
-			if (database_operation_param.indexOf('R') != -1 || database_operation_param.indexOf('r') != -1)
-				database_operation |= DATABASE_OPERATION_RESTORE_MASK;
-			if ((database_operation & DATABASE_OPERATION_WRITE_MASK) != 0 && (database_operation & DATABASE_OPERATION_RESTORE_MASK) != 0 )
-			{
-				FinanceRecorderCmnDef.warn("The 'write' and 'resotre' operation can NOT be enabled simultaneously, ignore the 'restore' operation");
-				database_operation &= ~DATABASE_OPERATION_RESTORE_MASK;
-			}
-			if ((database_operation & DATABASE_OPERATION_DELETE_MASK) != 0 && (database_operation & DATABASE_OPERATION_CLEANUP_MASK) != 0 )
-			{
-				FinanceRecorderCmnDef.warn("The 'delete' operation is ignored since 'cleanup' is set");
-				database_operation &= ~DATABASE_OPERATION_RESTORE_MASK;
-			}
-		}
-		if (is_delete_operation_enabled())
-		{
-			try
-			{
-				delete_sql_accurancy_type = FinanceRecorderCmnDef.DeleteSQLAccurancyType.valueOf(Integer.valueOf(delete_sql_accurancy_param));
-			}
-			catch (Exception e){}
-			if (delete_sql_accurancy_type == null)
-				throw new IllegalStateException(String.format("Unknown delete sql accurancy type: %s", delete_sql_accurancy_param));
-		}
-		else
-		{
-			if (delete_sql_accurancy_param != null)
-			{
-				delete_sql_accurancy_param = null;
-				FinanceRecorderCmnDef.warn("The 'delete_sql_accurancy' argument is ignored since delete action is NOT set");
-			}
-		}
 
 		return ret;
 	}
@@ -371,6 +369,10 @@ public class FinanceRecorder
 // Setup the finance backup root folder path
 		if (finance_backup_folderpath_param != null)
 			finance_recorder_mgr.set_finance_backup_folderpath(finance_backup_folderpath_param);
+// Setup the finance restore root folder path
+		if (finance_restore_folderpath_param != null)
+			finance_recorder_mgr.set_finance_restore_folderpath(finance_restore_folderpath_param);
+// Set the delete SQL accurancy 
 		if (delete_sql_accurancy_param != null)
 			finance_recorder_mgr.set_delete_sql_accuracy(delete_sql_accurancy_type);
 // Set source type
@@ -570,10 +572,25 @@ public class FinanceRecorder
 			return;
 		}
 		System.out.println("====================== Usage ======================");
-		System.out.printf("--market_mode --stock_mode\nDescription: Switch the market/stock mode\nCaution: Read parameters from %s when NOT set", FinanceRecorderCmnDef.MARKET_STOCK_SWITCH_CONF_FILENAME);
+		System.out.printf("--market_mode --stock_mode\nDescription: Switch the market/stock mode\nCaution: Read parameters from %s when NOT set\n", FinanceRecorderCmnDef.MARKET_STOCK_SWITCH_CONF_FILENAME);
 		System.out.println("-h|--help\nDescription: The usage");
-		System.out.printf("--finance_folderpath\nThe finance folder path\nDefault: %s", FinanceRecorderCmnDef.CSV_ROOT_FOLDERPATH);
-		System.out.printf("--finance_backup_folderpath\nThe finance backup folder path\nDefault: %s", FinanceRecorderCmnDef.BACKUP_CSV_ROOT_FOLDERPATH);
+		System.out.println("--silent\nDescription: True for disabling STDOUR/STDERR");
+		System.out.printf("--finance_folderpath\nDescription: The finance folder path\nDefault: %s\n", FinanceRecorderCmnDef.CSV_ROOT_FOLDERPATH);
+		System.out.printf("--finance_backup_folderpath\nDescription: The finance backup folder path\nDefault: %s\n", FinanceRecorderCmnDef.CSV_BACKUP_ROOT_FOLDERPATH);
+		System.out.printf("--finance_restore_folderpath\nDescription: The finance restore folder path\nDefault: %s\n", FinanceRecorderCmnDef.CSV_RESTORE_ROOT_FOLDERPATH);
+		System.out.printf("--show_finance_backup_foldername\nDescription: Show backup subfolder name list in a specific folder\nDefault folder: %s\n", FinanceRecorderCmnDef.CSV_BACKUP_ROOT_FOLDERPATH);
+		System.out.printf("--show_finance_restore_foldername\nDescription: Show restore subfolder name list in a specific folder\nDefault folder: %s\n", FinanceRecorderCmnDef.CSV_RESTORE_ROOT_FOLDERPATH);
+		System.out.println("-o|--database_operation\nDescription: Operate the MySQL");
+		System.out.println("  Type: {W(w), B(b), D(d), C(c), R(r)");
+		System.out.println("  W(w): Write into SQL from CSV files");
+		System.out.println("  B(b): Backup SQL to CSV files");
+		System.out.println("  D(d): delete existing SQL");
+		System.out.println("  C(c): Clean-up all existing SQL");
+		System.out.println("  R(r): Restore SQL from CSV Tar file");
+		System.out.println("Caution:");
+		System.out.println("  The R(r) attribute is ignored if W(w) set");
+		System.out.println("  The D(d) attribute is ignored if C(c) set");
+		System.out.println("  The C(c) attribute is enabled if R(r) set");
 		if (FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
 		{
 			System.out.println("--delete_sql_accurancy\nDescription: The accurancy of delete SQL\nDefault: Source type only\nCaution: Only useful for Delete action");
@@ -581,10 +598,10 @@ public class FinanceRecorder
 			System.out.println("  Format 2 Company Only: 1");
 			System.out.println("  Format 3 Source Type and Company: 2");
 		}
-//		System.out.println("-r|--delete\nDescription: delete some MySQL database(s)\nCaution: Ignored if --backup set");
-//		System.out.println("  Format: 1,2,3 (Start from 0)");
-		System.out.printf(String.format("--source_from_all_default_file\nThe all finance data source in full time range from file: %s\nCaution: source is ignored when set", (FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE ? FinanceRecorderCmnDef.MARKET_ALL_CONFIG_FILENAME : FinanceRecorderCmnDef.STOCK_ALL_CONFIG_FILENAME)));
-		System.out.printf(String.format("--source_from_file\nThe finance data source from file\nCaution: source is ignored when set", (FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE ? FinanceRecorderCmnDef.MARKET_ALL_CONFIG_FILENAME : FinanceRecorderCmnDef.STOCK_ALL_CONFIG_FILENAME)));
+		System.out.println("--backup_list\nDescription: List database backup folder");
+		System.out.println("--restore_list\nDescription: List database restore folder");
+		System.out.printf(String.format("--source_from_all_default_file\nDescription: The all finance data source in full time range from file: %s\nCaution: source is ignored when set\n", (FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE ? FinanceRecorderCmnDef.MARKET_ALL_CONFIG_FILENAME : FinanceRecorderCmnDef.STOCK_ALL_CONFIG_FILENAME)));
+		System.out.printf(String.format("--source_from_file\nDescription: The finance data source from file\nCaution: source is ignored when set\n", (FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE ? FinanceRecorderCmnDef.MARKET_ALL_CONFIG_FILENAME : FinanceRecorderCmnDef.STOCK_ALL_CONFIG_FILENAME)));
 		System.out.println("-s|--source\nDescription: Type of CSV date file\nCaution: Ignored when --source_from_file/--source_from_all_default_file set");
 		System.out.println("  Format: 1,2,3 (Start from 0)");
 		System.out.println("  all: All types");
@@ -606,17 +623,8 @@ public class FinanceRecorder
 			System.out.println("  Format 3 Company group number: [Gg]12");
 			System.out.println("  Format 4 Company code number/number range/group hybrid: 2347,2100-2200,G12,2362,g2,1500-1510");
 		}
-		System.out.println("-o|--database_operation\nDescription: Operate the MySQL");
-		System.out.println("  Type: {W(w), B(b), M(m), C(c), R(r)");
-		System.out.println("  W(w): Write into SQL from CSV files");
-		System.out.println("  B(b): Backup SQL to CSV files");
-		System.out.println("  M(m): delete existing SQL");
-		System.out.println("  C(c): Clean-up all existing SQL");
-		System.out.println("  R(r): Restore SQL from CSV Tar file");
 //		System.out.println("--restore\nDescription: Restore the MySQL databases from certain a backup folder\nDefault: $CurrentWorkingFolder/.backup\nCaution: delete old MySQL before backup. The proccess stops after restore");
 //		System.out.println("  Format: 160313060053");
-//		System.out.println("--restore_path\nDescription: The path where the backup folder is located in\nCaution: Enabled if --restore set");
-//		System.out.println("  Format: /home/super/Projects/finance_recorder_java/.backup");
 //		System.out.println("--delete_old\nDescription: delete the old MySQL databases\nCaution: Ignored if --restore set");
 //		System.out.println("--backup\nDescription: Backup the current databases");
 //		System.out.println("--backup_list\nDescription: List database backup folder");
@@ -628,9 +636,6 @@ public class FinanceRecorder
 		System.out.println("===================================================");
 		System.exit(0);
 	}
-
-//	private static boolean need_read(ActionType type){return (type == ActionType.Action_Read || type == ActionType.Action_ReadWrite) ? true : false;}
-//	private static boolean need_write(ActionType type){return (type == ActionType.Action_Write || type == ActionType.Action_ReadWrite) ? true : false;}
 
 //	private static short init_workday_calendar_table()
 //	{
@@ -691,7 +696,78 @@ public class FinanceRecorder
 //
 //		return ret;
 //	}
-//
+	private static short show_backup_folername_list()
+	{
+		if(!FinanceRecorderCmnDef.is_show_console())
+		{
+			FinanceRecorderCmnDef.warn("The STDOUT/STDERR is Disabled");
+			show_error_and_exit(FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG);
+		}
+// Find the backup folder list
+		LinkedList<String> sorted_foldername_list = new LinkedList<String>();
+		short ret = finance_recorder_mgr.get_backup_foldername_list(sorted_foldername_list);
+		if (FinanceRecorderCmnDef.CheckSuccess(ret))
+		{
+// Print the result
+			if (sorted_foldername_list.isEmpty())
+				System.out.println("No backup folders Found");
+			else
+			{
+				System.out.println("The backup folder list:");
+				for (String foldername : sorted_foldername_list)
+					System.out.println(foldername);
+			}
+		}
+		else
+			FinanceRecorderCmnDef.warn(String.format("Fail to get finance backup foldername list, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		return ret;
+	}
+
+	private static short show_restore_folername_list()
+	{
+		if(!FinanceRecorderCmnDef.is_show_console())
+		{
+			FinanceRecorderCmnDef.warn("The STDOUT/STDERR is Disabled");
+			show_error_and_exit(FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG);
+		}
+// Find the backup folder list
+		LinkedList<String> sorted_foldername_list = new LinkedList<String>();
+		short ret = finance_recorder_mgr.get_restore_foldername_list(sorted_foldername_list);
+		if (FinanceRecorderCmnDef.CheckSuccess(ret))
+		{
+// Print the result
+			if (sorted_foldername_list.isEmpty())
+				System.out.println("No restore folders Found");
+			else
+			{
+				System.out.println("The restore folder list:");
+				for (String foldername : sorted_foldername_list)
+					System.out.println(foldername);
+			}
+		}
+		else
+			FinanceRecorderCmnDef.warn(String.format("Fail to get finance restore foldername list, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		return ret;
+	}
+	
+	private static void show_backup_and_restore_foldername_list_and_exit()
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		if (show_finance_backup_foldername_param)
+		{
+			ret = show_backup_folername_list();
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				show_error_and_exit(String.format("Fail to show bakcup foldername list, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		}
+		if (show_finance_restore_foldername_param)
+		{
+			show_restore_folername_list();
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				show_error_and_exit(String.format("Fail to show bakcup foldername list, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		}
+		System.exit(0);
+	}
+
 	private static void write_operation()
 	{
 		if(FinanceRecorderCmnDef.is_show_console())
@@ -760,31 +836,6 @@ public class FinanceRecorder
 //		return ret;
 //	}
 //
-//	private static short backup_sql_list()
-//	{
-//		if(!FinanceRecorderCmnDef.is_show_console())
-//		{
-//			FinanceRecorderCmnDef.warn("The STDOUT/STDERR is Disabled");
-//			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
-//		}
-//// Find the backup folder list
-//		List<String> sorted_backup_list = new LinkedList<String>();
-//		short ret = finance_recorder_mgr.get_sorted_backup_list(sorted_backup_list);
-//		if (FinanceRecorderCmnDef.CheckFailure(ret))
-//			return ret;
-//// Print the result
-//		if (sorted_backup_list.isEmpty())
-//		{
-//			System.out.println("No backup folders Found");
-//		}
-//		else
-//		{
-//			System.out.println("The backup folder list:");
-//			for (String backup_foldername : sorted_backup_list)
-//				System.out.println(backup_foldername);
-//		}
-//		return FinanceRecorderCmnDef.RET_SUCCESS;
-//	}
 //
 //	private static short backup_sql_cleanup()
 //	{
@@ -962,7 +1013,6 @@ public class FinanceRecorder
 //				System.out.printf("%s\n", data.get(FinanceRecorderCompanyProfileLookup.COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER));
 //			}
 //		}
-
 // Determine the finance mode
 		if (FinanceRecorderCmnDef.FINANCE_MODE == null)
 		{
@@ -998,14 +1048,17 @@ public class FinanceRecorder
 			show_error_and_exit("Fail to check the parameters ......");
 		if (FinanceRecorderCmnDef.CheckFailure(setup_param()))
 			show_error_and_exit("Fail to setup the parameters ......");
+//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Show finance backup/restore foldername
+		if (show_finance_backup_foldername_param || show_finance_restore_foldername_param)
+			show_backup_and_restore_foldername_list_and_exit();
 
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // cleanup/delete the old database
 		if (is_cleanup_operation_enabled())
 			cleanup_operation();
 		else if (is_delete_operation_enabled())
 			delete_operation();
-		
+
 // After Initialization is done, start to work.......
 		if (is_write_operation_enabled())
 			write_operation();

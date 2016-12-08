@@ -26,7 +26,7 @@ public class FinanceRecorderDatabaseTimeRange
 			short ret = instance.initialize();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 			{
-				String errmsg = String.format("Fail to initialize the FinanceRecorderDatabaseTimeRange object , due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret));
+				String errmsg = String.format("Fail to initialize the FinanceRecorderDatabaseTimeRange object, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret));
 				throw new RuntimeException(errmsg);
 			}
 		} 

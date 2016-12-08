@@ -1,11 +1,11 @@
 package com.price.finance_recorder_base;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 //import com.price.finance_recorder_market.FinanceRecorderDatabaseTimeRange;
@@ -15,6 +15,51 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 {
 	private static FinanceRecorderWorkdayCalendar workday_calendar = null;// FinanceRecorderWorkdayCalendar.get_instance();
 //	private static FinanceRecorderDatabaseTimeRange database_time_range = null; //FinanceRecorderDatabaseTimeRange.get_instance();
+	private static short get_sorted_sub_foldername_list(String root_folderpath, List<String> sorted_sub_foldername_list)
+	{
+		class FoldernameComparable implements Comparable
+		{
+			public String foldername;
+			public FoldernameComparable(String name)
+			{
+				foldername = name;
+			}
+			@Override
+			public int compareTo(Object other) 
+			{
+				Long value = Long.parseLong(foldername);
+				Long another_value = Long.parseLong(((FoldernameComparable)other).foldername);
+				if (value > another_value)
+					return 1;
+				else if (value < another_value)
+					return -1;
+				else 
+					return 0;
+			}
+			@Override
+			public String toString()
+			{
+				return foldername;
+			}
+		};
+
+//		String filepath = String.format("%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.BACKUP_FOLDERNAME);
+		ArrayList<String> sub_foldername_list = new ArrayList<String>();
+		short ret = FinanceRecorderCmnDef.get_subfolder_list(root_folderpath, sub_foldername_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+			FinanceRecorderCmnDef.format_error("Fail to get sub folder list from the folder: %s, due to: %s", root_folderpath, FinanceRecorderCmnDef.GetErrorDescription(ret));
+			return ret;
+		}
+		List<FoldernameComparable> sorted_subfolder_list = new LinkedList<FoldernameComparable>();
+		for (String sub_foldername : sub_foldername_list)
+			sorted_subfolder_list.add(new FoldernameComparable(sub_foldername));
+// Sort the data by number
+		Collections.sort(sorted_subfolder_list);
+		for (FoldernameComparable sorted_subfolder : sorted_subfolder_list)
+			sorted_sub_foldername_list.add(sorted_subfolder.toString());
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
 
 //	private HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg> finance_source_time_range_table = null;
 //	private HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg> finance_backup_source_time_range_table = null;
@@ -23,13 +68,25 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 	protected LinkedList<Integer> source_type_index_list = new LinkedList<Integer>();
 	protected boolean setup_param_done = false;
 	String finance_root_folerpath = FinanceRecorderCmnDef.CSV_ROOT_FOLDERPATH;
-	String finance_root_backup_folerpath = FinanceRecorderCmnDef.BACKUP_CSV_ROOT_FOLDERPATH ;
+	String finance_root_backup_folerpath = FinanceRecorderCmnDef.CSV_BACKUP_ROOT_FOLDERPATH ;
+	String finance_root_restore_folerpath = FinanceRecorderCmnDef.CSV_RESTORE_ROOT_FOLDERPATH ;
 	protected FinanceRecorderCmnDef.DeleteSQLAccurancyType delete_sql_accurancy_type = FinanceRecorderCmnDef.DeleteSQLAccurancyType.DeleteSQLAccurancyType_SOURCE_TYPE_ONLY;
 
 	protected abstract FinanceRecorderDataHandlerInf get_data_handler();
 
 	public void set_finance_folderpath(String finance_folderpath){finance_root_folerpath = finance_folderpath;}
 	public void set_finance_backup_folderpath(String finance_backup_folderpath){finance_root_backup_folerpath = finance_backup_folderpath;}
+	public void set_finance_restore_folderpath(String finance_restore_folderpath){finance_root_restore_folerpath = finance_restore_folderpath;}
+
+	public short get_backup_foldername_list(List<String> sorted_sub_foldername_list)
+	{
+		return get_sorted_sub_foldername_list(finance_root_backup_folerpath, sorted_sub_foldername_list);
+	}
+
+	public short get_restore_foldername_list(List<String> sorted_sub_foldername_list)
+	{
+		return get_sorted_sub_foldername_list(finance_root_restore_folerpath, sorted_sub_foldername_list);
+	}
 
 	public short set_source_type_from_file(String filename)
 	{
@@ -164,6 +221,7 @@ OUT:
 		short ret = finance_recorder_data_handler.cleanup_sql();
 		return ret;
 	}
+
 //	private short update_backup_by_config_file(String filename, HashMap<Integer,FinanceRecorderCmnClass.TimeRangeCfg> time_range_table, HashMap<Integer, LinkedList<Integer>> source_field_table)
 //	{
 //		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
@@ -1390,50 +1448,4 @@ OUT:
 //		return ret;
 //	}
 //
-//	public static short get_sorted_backup_list(List<String> sorted_backup_list)
-//	{
-//		class FoldernameCompare implements Comparable
-//		{
-//			public String foldername;
-//			public FoldernameCompare(String name)
-//			{
-//				foldername = name;
-//			}
-//			@Override
-//			public int compareTo(Object other) 
-//			{
-//				Long value = Long.parseLong(foldername);
-//				Long another_value = Long.parseLong(((FoldernameCompare)other).foldername);
-//				if (value > another_value)
-//					return 1;
-//				else if (value < another_value)
-//					return -1;
-//				else 
-//					return 0;
-//			}
-//			@Override
-//			public String toString()
-//			{
-//				return foldername;
-//			}
-//		};
-//
-//		String filepath = String.format("%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.BACKUP_FOLDERNAME);
-//		List<String> subfolder_list = new ArrayList<String>();
-//		short ret = FinanceRecorderCmnDef.get_subfolder_list(filepath, subfolder_list);
-//		if (FinanceRecorderCmnDef.CheckFailure(ret))
-//		{
-//			FinanceRecorderCmnDef.format_error("Fail to get backup folderlist of the MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret));
-//			return ret;
-//		}
-//		List<FoldernameCompare> sorted_subfolder_list = new LinkedList<FoldernameCompare>();
-//		for (String subfolder : subfolder_list)
-//			sorted_subfolder_list.add(new FoldernameCompare(subfolder));
-//// Sort the data by number
-//		Collections.sort(sorted_subfolder_list);
-//		for (FoldernameCompare sorted_subfolder : sorted_subfolder_list)
-//			sorted_backup_list.add(sorted_subfolder.toString());
-//		return FinanceRecorderCmnDef.RET_SUCCESS;
-//	}
-
 }

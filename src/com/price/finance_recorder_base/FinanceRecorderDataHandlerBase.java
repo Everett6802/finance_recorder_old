@@ -11,7 +11,7 @@ public abstract class FinanceRecorderDataHandlerBase extends FinanceRecorderClas
 {
 	protected LinkedList<Integer> source_type_index_list = null;
 	protected String finance_root_folerpath = FinanceRecorderCmnDef.CSV_ROOT_FOLDERPATH;
-	protected String finance_root_backup_folerpath = FinanceRecorderCmnDef.BACKUP_CSV_ROOT_FOLDERPATH;
+	protected String finance_root_backup_folerpath = FinanceRecorderCmnDef.CSV_BACKUP_ROOT_FOLDERPATH;
 
 	public void set_finance_root_folerpath(String foldername){finance_root_folerpath = foldername;}
 	public void set_finance_root_backup_folerpath(String backup_foldername){finance_root_backup_folerpath = backup_foldername;}

@@ -117,7 +117,8 @@ public class FinanceRecorderCmnDef
 	public static final String FINANCE_MARKET_MODE_DESCRIPTION = "market";
 	public static final String FINANCE_STOCK_MODE_DESCRIPTION = "stock";
 	public static final String CSV_ROOT_FOLDERPATH = "/var/tmp/finance";
-	public static final String BACKUP_CSV_ROOT_FOLDERPATH = "/var/www/finance";
+	public static final String CSV_BACKUP_ROOT_FOLDERPATH = "/var/www/finance_backup";
+	public static final String CSV_RESTORE_ROOT_FOLDERPATH = "/var/www/finance_restore";
 	public static final String CSV_MARKET_FOLDERNAME = "market";
 	public static final String CSV_STOCK_FOLDERNAME = "stock";
 	public static final String CSV_FOLDERPATH = String.format("%s/%s", CSV_ROOT_FOLDERPATH, (IS_FINANCE_MARKET_MODE ? CSV_MARKET_FOLDERNAME : CSV_STOCK_FOLDERNAME));
@@ -125,7 +126,7 @@ public class FinanceRecorderCmnDef
 	public static final String SQL_STOCK_DATABASE_NAME = "stock";
 	public static final String RESULT_FOLDERNAME = "result";
 	public static final String CONF_FOLDERNAME = "conf";
-	public static final String BACKUP_FOLDERNAME = ".backup";
+//	public static final String BACKUP_FOLDERNAME = ".backup";
 	public static final String MARKET_ALL_CONFIG_FILENAME = "market_all.conf";
 	public static final String STOCK_ALL_CONFIG_FILENAME = "stock_all.conf";
 	public static final String WORKDAY_CANLENDAR_CONF_FILENAME = ".workday_canlendar.conf";
