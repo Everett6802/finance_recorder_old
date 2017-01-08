@@ -7,11 +7,19 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 //import java.util.TreeMap;
 import java.util.regex.*;
+import java.util.zip.GZIPOutputStream;
 import java.text.*;
+
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.compress.utils.IOUtils;
 
 
 public class FinanceRecorderCmnDef 
@@ -117,11 +125,11 @@ public class FinanceRecorderCmnDef
 	public static final String FINANCE_MARKET_MODE_DESCRIPTION = "market";
 	public static final String FINANCE_STOCK_MODE_DESCRIPTION = "stock";
 	public static final String CSV_ROOT_FOLDERPATH = "/var/tmp/finance";
-	public static final String CSV_BACKUP_ROOT_FOLDERPATH = "/var/www/finance_backup";
-	public static final String CSV_RESTORE_ROOT_FOLDERPATH = "/var/www/finance_restore";
+	public static final String CSV_BACKUP_ROOT_FOLDERPATH = "/var/www/.finance_backup";
+	public static final String CSV_RESTORE_ROOT_FOLDERPATH = CSV_BACKUP_ROOT_FOLDERPATH;
 	public static final String CSV_MARKET_FOLDERNAME = "market";
 	public static final String CSV_STOCK_FOLDERNAME = "stock";
-	public static final String CSV_FOLDERPATH = String.format("%s/%s", CSV_ROOT_FOLDERPATH, (IS_FINANCE_MARKET_MODE ? CSV_MARKET_FOLDERNAME : CSV_STOCK_FOLDERNAME));
+//	public static final String CSV_FOLDERPATH = String.format("%s/%s", CSV_ROOT_FOLDERPATH, (IS_FINANCE_MARKET_MODE ? CSV_MARKET_FOLDERNAME : CSV_STOCK_FOLDERNAME));
 	public static final String SQL_MARKET_DATABASE_NAME = "market";
 	public static final String SQL_STOCK_DATABASE_NAME = "stock";
 	public static final String RESULT_FOLDERNAME = "result";
@@ -145,6 +153,8 @@ public class FinanceRecorderCmnDef
 	public static final String[] FINANCE_TIME_REGEX_STRING_FORMAT_ARRAY = new String[] {FINANCE_DATE_REGEX_STRING_FORMAT, FINANCE_MONTH_REGEX_STRING_FORMAT, FINANCE_QUARTER_REGEX_STRING_FORMAT };
 
 	public static final String CSV_FILE_ROOT_FOLDERPATH = "/var/tmp/finance";
+//	public static final String MARKET_CSV_FILE_ROOT_FOLDERPATH = String.format("%s/market", CSV_FILE_ROOT_FOLDERPATH);
+//	public static final String STOCK_CSV_FILE_ROOT_FOLDERPATH = String.format("%s/stock", CSV_FILE_ROOT_FOLDERPATH);
 	public static final String COMMA_DATA_SPLIT = ",";
 	public static final String SPACE_DATA_SPLIT = " ";
 	public static final String DAILY_FINANCE_FILENAME_FORMAT = "daily_finance%04d%02d%02d";
@@ -1571,6 +1581,103 @@ public class FinanceRecorderCmnDef
 		File dest = new File(dest_folderpath);
 		return copy_dir(src, dest);
 	}
+
+	/**
+	 * Compress (tar.gz) the input files to the output file
+	 * @param files The files to compress
+	 * @param output The resulting output file (should end in .tar.gz)
+	 * @throws IOException
+	 */
+	public static void compress_files(Collection<File> files, File output) throws IOException
+	{
+		debug("Compressing "+ files.size() + " to " + output.getAbsoluteFile());
+// Create the output stream for the output file
+		FileOutputStream fos = new FileOutputStream(output);
+// Wrap the output file stream in streams that will tar and gzip everything
+		TarArchiveOutputStream taos = new TarArchiveOutputStream(new GZIPOutputStream(new BufferedOutputStream(fos)));
+// TAR has an 8 gig file limit by default, this gets around that
+		taos.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_STAR); // to get past the 8 gig limit
+// TAR originally didn't support long file names, so enable the support for it
+		taos.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
+// Get to putting all the files in the compressed output file
+		for (File f : files) 
+			add_files_to_compression(taos, f, ".");
+// Close everything up
+		taos.close();
+		fos.close();
+	}
+
+	public static void compress_file(File file, File output) throws IOException
+	{
+		ArrayList<File> list = new ArrayList<File>(1);
+		list.add(file);
+		compress_files(list, output);
+	}
+
+	/**
+	 * Does the work of compression and going recursive for nested directories
+	 * Borrowed heavily from http://www.thoughtspark.org/node/53
+	 * @param taos The archive
+	 * @param file The file to add to the archive
+	 * @param dir The directory that should serve as the parent directory in the archive
+	 * @throws IOException
+	 */
+	private static void add_files_to_compression(TarArchiveOutputStream taos, File file, String dir) throws IOException
+	{
+// Create an entry for the file
+		taos.putArchiveEntry(new TarArchiveEntry(file, dir + file.separator + file.getName()));
+		if (file.isFile()) 
+		{
+// Add the file to the archive
+			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
+			IOUtils.copy(bis, taos);
+			taos.closeArchiveEntry();
+			bis.close();
+		}
+		else if (file.isDirectory()) 
+		{
+// close the archive entry
+			taos.closeArchiveEntry();
+// go through all the files in the directory and using recursion, add them to the archive
+			for (File childFile : file.listFiles()) 
+			{
+				add_files_to_compression(taos, childFile, file.getName());
+			}
+		}
+	}
+
+	public static void decompress_file(File tar_file, File output) throws IOException 
+	{
+		output.mkdir();
+		TarArchiveInputStream tain = new TarArchiveInputStream(new GzipCompressorInputStream(new BufferedInputStream(new FileInputStream(tar_file))));
+
+		TarArchiveEntry tarEntry = tain.getNextTarEntry();
+// create a file with the same name as the tarEntry
+		while (tarEntry != null) 
+		{
+			File output_path = new File(output, tarEntry.getName());
+//			System.out.println("working: " + output_path.getCanonicalPath());
+			if (tarEntry.isDirectory()) 
+				output_path.mkdirs();
+			else 
+			{
+				output_path.createNewFile();
+				//byte [] bto_read = new byte[(int)tarEntry.getSize()];
+				byte [] bto_read = new byte[1024];
+				//FileInputStream fin = new FileInputStream(output_path.getCanonicalPath());
+				BufferedOutputStream bout = new BufferedOutputStream(new FileOutputStream(output_path));
+				int len = 0;
+				while((len = tain.read(bto_read)) != -1)
+				{
+					bout.write(bto_read,0,len);
+				}
+				bout.close();
+				bto_read = null;
+			}
+			tarEntry = tain.getNextTarEntry();
+		}
+		tain.close();
+	} 
 
 	// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Interface

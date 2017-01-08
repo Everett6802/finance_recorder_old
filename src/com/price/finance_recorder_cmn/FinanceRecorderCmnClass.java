@@ -1623,7 +1623,7 @@ public class FinanceRecorderCmnClass
 				return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 			}
 
-			if(field_index < 0 && field_index >= FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index])
+			if(field_index < 0 || field_index >= FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index])
 			{
 // If field_index == -1, it means select all field in the table
 				if (field_index != -1)
@@ -1669,7 +1669,7 @@ public class FinanceRecorderCmnClass
 //			for (int i = 0 ; i < FinanceRecorderCmnDef.FINANCE_SOURCE_SIZE ; i++)
 			{
 				int source_type_index = entry.getKey();
-				if (FinanceRecorderCmnDef.check_source_type_index_in_range(source_type_index))
+				if (!FinanceRecorderCmnDef.check_source_type_index_in_range(source_type_index))
 					throw new IllegalStateException(String.format("Unsupported source type index: %d", source_type_index));
 				LinkedList<Integer> field_list = entry.getValue();
 				if (field_list.isEmpty())
@@ -1982,7 +1982,7 @@ public class FinanceRecorderCmnClass
 				FinanceRecorderCmnDef.error("source_type_index is out of range in ResultSet");
 				return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 			}
-			if(field_index < 0 && field_index >= FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index])
+			if(field_index < 0 || field_index >= FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index])
 			{
 // If field_index == -1, it means select all field in the table
 //				if (field_index != -1)

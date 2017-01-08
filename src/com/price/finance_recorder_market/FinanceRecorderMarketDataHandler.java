@@ -18,7 +18,7 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 	private static FinanceRecorderCmnClass.QuerySet whole_field_query_set = null;
 	private static String get_csv_filepath(String csv_folderpath, int source_type_index)
 	{
-		return String.format("%s/%s", csv_folderpath, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]);
+		return String.format("%s/%s/%s.csv", csv_folderpath, FinanceRecorderCmnDef.CSV_MARKET_FOLDERNAME, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]);
 	}
 
 //	private static String get_sql_database_name()
@@ -81,7 +81,7 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		for (Integer source_type_index : source_type_index_list)
 		{
-			FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderMarketDataHandler.get_csv_filepath(FinanceRecorderCmnDef.CSV_FOLDERPATH, source_type_index));
+			FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderMarketDataHandler.get_csv_filepath(finance_root_folerpath, source_type_index));
 			ret = csv_reader.read();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
@@ -151,7 +151,7 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		for (Integer source_type_index : source_type_index_list)
 		{
 // Read data from CSV
-			FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderMarketDataHandler.get_csv_filepath(FinanceRecorderCmnDef.CSV_FOLDERPATH, source_type_index));
+			FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderMarketDataHandler.get_csv_filepath(finance_root_folerpath, source_type_index));
 			ret = csv_reader.read();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
@@ -330,6 +330,11 @@ OUT:
 
 	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
 	{
+		if (!query_set.is_add_query_done())
+		{
+			FinanceRecorderCmnDef.error("The add-done flag in query_set is NOT true");
+			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
+		}
 // CAUTION: The data set in the reslt_set variable should be added before calling this function 
 // Set the mapping table of reading the specific CSV files and writing correct SQL database
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;

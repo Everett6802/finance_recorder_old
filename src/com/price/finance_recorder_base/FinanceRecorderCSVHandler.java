@@ -13,6 +13,7 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 	{
 		FinanceRecorderCSVHandler csv_reader = new FinanceRecorderCSVHandler();
 		csv_reader.handler_mode = HandlerMode.HandlerMode_Read;
+		FinanceRecorderCmnDef.debug(String.format("Ready to read CSV from: %s", csv_filepath));
 		csv_reader.csv_filepath = csv_filepath;
 		short ret = csv_reader.intialize_read_stream();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))

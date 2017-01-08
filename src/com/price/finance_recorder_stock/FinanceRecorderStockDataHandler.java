@@ -23,7 +23,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 	private static FinanceRecorderCompanyProfile company_profile = null;
 	private static String get_csv_filepath(String csv_folderpath, int source_type_index, int company_group_number, String company_code_number)
 	{
-		return String.format("%s%02d/%s%s", csv_folderpath, company_group_number, company_code_number, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]);
+		return String.format("%s/%s%02d/%s%s.csv", csv_folderpath, FinanceRecorderCmnDef.CSV_STOCK_FOLDERNAME, company_group_number, company_code_number, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]);
 	}
 
 //	private static String get_sql_database_name(int company_group_number)
@@ -102,7 +102,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 			{
 				for (Integer source_type_index : source_type_index_list)
 				{
-					FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderStockDataHandler.get_csv_filepath(FinanceRecorderCmnDef.CSV_FILE_ROOT_FOLDERPATH, source_type_index, company_group_number, company_code_number));
+					FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderStockDataHandler.get_csv_filepath(finance_root_folerpath, source_type_index, company_group_number, company_code_number));
 					ret = csv_reader.read();
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						return ret;
@@ -356,7 +356,7 @@ OUT:
 				int company_group_number = FinanceRecorderCmnDef.get_company_group_number(source_key);
 				result_set = entry.getValue();
 // Ignore the data which is NOT in the list
-				FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderStockDataHandler.get_csv_filepath(FinanceRecorderCmnDef.CSV_FILE_ROOT_FOLDERPATH, source_type_index, company_group_number, company_code_number));
+				FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderStockDataHandler.get_csv_filepath(finance_root_folerpath, source_type_index, company_group_number, company_code_number));
 // Assemble the data and write into CSV
 				ArrayList<String> csv_data_list = result_set.to_string_array(source_type_index);
 				csv_writer.set_write_data(csv_data_list);
@@ -377,6 +377,11 @@ OUT:
 
 	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
 	{
+		if (!query_set.is_add_query_done())
+		{
+			FinanceRecorderCmnDef.error("The add-done flag in query_set is NOT true");
+			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
+		}
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
 		FinanceRecorderCmnClass.ResultSet result_set = new FinanceRecorderCmnClass.ResultSet();

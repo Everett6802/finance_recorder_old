@@ -2,6 +2,8 @@ package com.price.finance_recorder;
 
 //import java.io.*;
 //import java.util.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 //import java.util.List;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
@@ -34,6 +36,7 @@ public class FinanceRecorder
 	private static String time_range_param = null;
 	private static String company_from_file_param = null;
 	private static String company_param = null;
+//	private static boolean compress_file_param = false;
 
 	private static FinanceRecorderMgrInf finance_recorder_mgr = null;
 	private static byte database_operation = 0x0;
@@ -183,6 +186,11 @@ public class FinanceRecorder
 					company_param = args[index + 1];
 				index_offset = 2;
 			}
+//			else if (option.equals("--compress_file"))
+//			{
+//				compress_file_param = true;
+//				index_offset = 1;
+//			}
 //			else if (option.equals("--restore"))
 //			{
 //				if (index + 1 >= args_len)
@@ -284,12 +292,17 @@ public class FinanceRecorder
 				database_operation |= DATABASE_OPERATION_CLEANUP_MASK;
 			if (database_operation_param.indexOf('R') != -1 || database_operation_param.indexOf('r') != -1)
 				database_operation |= DATABASE_OPERATION_RESTORE_MASK;
-			if ((database_operation & DATABASE_OPERATION_WRITE_MASK) != 0 && (database_operation & DATABASE_OPERATION_RESTORE_MASK) != 0 )
+			if ((database_operation & DATABASE_OPERATION_WRITE_MASK) != 0 && (database_operation & DATABASE_OPERATION_RESTORE_MASK) != 0)
 			{
 				FinanceRecorderCmnDef.warn("The 'write' and 'resotre' operation can NOT be enabled simultaneously, ignore the 'restore' operation");
 				database_operation &= ~DATABASE_OPERATION_RESTORE_MASK;
 			}
-			if ((database_operation & DATABASE_OPERATION_DELETE_MASK) != 0 && (database_operation & DATABASE_OPERATION_CLEANUP_MASK) != 0 )
+			if ((database_operation & DATABASE_OPERATION_RESTORE_MASK) != 0 && (database_operation & DATABASE_OPERATION_CLEANUP_MASK) == 0)
+			{
+				FinanceRecorderCmnDef.warn("The 'cleanup' operation should be enabled, when 'restore' is set");
+				database_operation &= ~DATABASE_OPERATION_RESTORE_MASK;
+			}
+			if ((database_operation & DATABASE_OPERATION_DELETE_MASK) != 0 && (database_operation & DATABASE_OPERATION_CLEANUP_MASK) != 0)
 			{
 				FinanceRecorderCmnDef.warn("The 'delete' operation is ignored since 'cleanup' is set");
 				database_operation &= ~DATABASE_OPERATION_RESTORE_MASK;
@@ -586,7 +599,7 @@ public class FinanceRecorder
 		System.out.println("  B(b): Backup SQL to CSV files");
 		System.out.println("  D(d): delete existing SQL");
 		System.out.println("  C(c): Clean-up all existing SQL");
-		System.out.println("  R(r): Restore SQL from CSV Tar file");
+		System.out.println("  R(r): Restore SQL from CSV file");
 		System.out.println("Caution:");
 		System.out.println("  The R(r) attribute is ignored if W(w) set");
 		System.out.println("  The D(d) attribute is ignored if C(c) set");
@@ -623,8 +636,10 @@ public class FinanceRecorder
 			System.out.println("  Format 3 Company group number: [Gg]12");
 			System.out.println("  Format 4 Company code number/number range/group hybrid: 2347,2100-2200,G12,2362,g2,1500-1510");
 		}
-//		System.out.println("--restore\nDescription: Restore the MySQL databases from certain a backup folder\nDefault: $CurrentWorkingFolder/.backup\nCaution: delete old MySQL before backup. The proccess stops after restore");
-//		System.out.println("  Format: 160313060053");
+		System.out.println("--operation_folder\nDescription: Select an operation folder from the specfic finance root folder\nCaution: Only take effect for Database Operation: W(write),B(backup),R(restore)");
+		System.out.println("  Format: 160313060053");
+		System.out.println("--operation_latest_folder\nDescription: Select the latest operation folder from the specfic finance root folder\nCaution: Only take effect for Database Operation: W(write),B(backup),R(restore)");
+//		System.out.println("--compress_file\nDescription: Access the compressed file for the backup/restore operation\nDefault: true\nCaution: Only take effect for Database Operation: B(backup) R(restore)");
 //		System.out.println("--delete_old\nDescription: delete the old MySQL databases\nCaution: Ignored if --restore set");
 //		System.out.println("--backup\nDescription: Backup the current databases");
 //		System.out.println("--backup_list\nDescription: List database backup folder");
@@ -749,7 +764,7 @@ public class FinanceRecorder
 			FinanceRecorderCmnDef.warn(String.format("Fail to get finance restore foldername list, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		return ret;
 	}
-	
+
 	private static void show_backup_and_restore_foldername_list_and_exit()
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
@@ -774,20 +789,38 @@ public class FinanceRecorder
 			System.out.println("Write CSV data into MySQL......");
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+
+		long time_start_millisecond = System.currentTimeMillis();
 		ret = finance_recorder_mgr.transfrom_csv_to_sql();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to write CSV data into MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		long time_end_millisecond = System.currentTimeMillis();
+
+		if(FinanceRecorderCmnDef.is_show_console())
+			System.out.println("Write CSV data into MySQL...... Done");
+
+		long time_lapse_millisecond = time_end_millisecond - time_start_millisecond;
+		String time_lapse_msg; 
+		if (time_lapse_millisecond >= 100 * 1000)
+			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+		else if (time_lapse_millisecond >= 10 * 1000)
+			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+		else
+			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+		FinanceRecorderCmnDef.info(time_lapse_msg);
+		if(FinanceRecorderCmnDef.is_show_console())
+			System.out.println(time_lapse_msg);
 	}
 
 	private static void backup_operation()
 	{
 		if(FinanceRecorderCmnDef.is_show_console())
-			System.out.println("Backup MySQL to CSV TAR......");
+			System.out.println("Backup MySQL to CSV......");
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		ret = finance_recorder_mgr.transfrom_sql_to_csv(finance_time_range);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			show_error_and_exit(String.format("Fail to backup MySQL to CSV TAR, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+			show_error_and_exit(String.format("Fail to backup MySQL to CSV, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 	}
 
 	private static void cleanup_operation()
@@ -815,12 +848,29 @@ public class FinanceRecorder
 	private static void restore_operation()
 	{
 		if(FinanceRecorderCmnDef.is_show_console())
-			System.out.println("Restore MySQL data from CSV Tar......");
+			System.out.println("Restore MySQL data from CSV......");
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		long time_start_millisecond = System.currentTimeMillis();
 		ret = finance_recorder_mgr.transfrom_csv_to_sql();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			show_error_and_exit(String.format("Fail to restore MySQL data from CSV Tar, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+			show_error_and_exit(String.format("Fail to restore MySQL data from CSV, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		long time_end_millisecond = System.currentTimeMillis();
+
+		if(FinanceRecorderCmnDef.is_show_console())
+			System.out.println("Restore MySQL data from CSV Tar...... Done");
+
+		long time_lapse_millisecond = time_end_millisecond - time_start_millisecond;
+		String time_lapse_msg; 
+		if (time_lapse_millisecond >= 100 * 1000)
+			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+		else if (time_lapse_millisecond >= 10 * 1000)
+			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+		else
+			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+		FinanceRecorderCmnDef.info(time_lapse_msg);
+		if(FinanceRecorderCmnDef.is_show_console())
+			System.out.println(time_lapse_msg);
 	}
 
 //	private static short backup_sql(boolean copy_backup_folder)
@@ -977,8 +1027,31 @@ public class FinanceRecorder
 //
 //		return ret;
 //	}
+
 	public static void main(String args[])
 	{
+//		File src_folder = new File("/home/super/Projects/finance_recorder_java/.backup/160604045541");
+//		LinkedList<File> src_folder_list = new LinkedList();
+//		src_folder_list.add(src_folder);
+//		File dst_folder = new File("/home/super/Projects/finance_recorder_java/.backup/160604045541.tar.gz");
+//		try
+//		{
+//			FinanceRecorderCmnDef.compress_files(src_folder_list, dst_folder);
+//		}
+//		catch (IOException ex)
+//		{
+//			System.err.printf("Error, due to: %s", ex.toString());
+//		}
+//		File dst_folder2 = new File("/home/super");
+//		try
+//		{
+//			FinanceRecorderCmnDef.decompress_file(dst_folder, dst_folder2);
+//		}
+//		catch (IOException ex)
+//		{
+//			System.err.printf("Error, due to: %s", ex.toString());
+//		}
+//		System.exit(0);
 //		FinanceRecorderCmnClassCompanyProfile lookup = FinanceRecorderCmnClassCompanyProfile.get_instance();
 //		for (ArrayList<String> data : lookup.entry())
 //		{
@@ -1052,18 +1125,18 @@ public class FinanceRecorder
 // Show finance backup/restore foldername
 		if (show_finance_backup_foldername_param || show_finance_restore_foldername_param)
 			show_backup_and_restore_foldername_list_and_exit();
+// After Initialization is done, start to work.......		
 
-// cleanup/delete the old database
 		if (is_cleanup_operation_enabled())
 			cleanup_operation();
 		else if (is_delete_operation_enabled())
 			delete_operation();
 
-// After Initialization is done, start to work.......
 		if (is_write_operation_enabled())
 			write_operation();
 		else if (is_restore_operation_enabled())
 			restore_operation();
+
 		if (is_backup_operation_enabled())
 			backup_operation();
 

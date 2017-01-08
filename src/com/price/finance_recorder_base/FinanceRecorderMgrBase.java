@@ -1,6 +1,7 @@
 package com.price.finance_recorder_base;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -60,6 +61,12 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 			sorted_sub_foldername_list.add(sorted_subfolder.toString());
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
+	private static String generate_foldername_from_time()
+	{
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(new java.util.Date());
+		return String.format("%02d%02d%02d%02d%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DATE), cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE));
+	}
 
 //	private HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg> finance_source_time_range_table = null;
 //	private HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg> finance_backup_source_time_range_table = null;
@@ -77,6 +84,9 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 	public void set_finance_folderpath(String finance_folderpath){finance_root_folerpath = finance_folderpath;}
 	public void set_finance_backup_folderpath(String finance_backup_folderpath){finance_root_backup_folerpath = finance_backup_folderpath;}
 	public void set_finance_restore_folderpath(String finance_restore_folderpath){finance_root_restore_folerpath = finance_restore_folderpath;}
+	public String get_finance_folderpath(){return finance_root_folerpath;}
+	public String set_finance_backup_folderpath(){return finance_root_backup_folerpath;}
+	public String set_finance_restore_folderpath(){return finance_root_restore_folerpath;}
 
 	public short get_backup_foldername_list(List<String> sorted_sub_foldername_list)
 	{
@@ -191,6 +201,12 @@ OUT:
 		FinanceRecorderCmnClass.QuerySet query_set = new FinanceRecorderCmnClass.QuerySet();
 		for (Integer source_type_index : source_type_index_list)
 			query_set.add_query(source_type_index);
+		short ret = query_set.add_query_done();
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+			FinanceRecorderCmnDef.error("Fail to set add-done flag in query_set to true");
+			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
+		}
 		return transfrom_sql_to_csv(query_set, finance_time_range);
 	}
 
