@@ -55,10 +55,10 @@ public class FinanceRecorderDatabaseTimeRange
 		database_time_range_list = new ArrayList<FinanceRecorderCmnClass.FinanceTimeRange>(market_source_type_amount);
 		Collections.fill(database_time_range_list, null);
 // Check if the config file exist
-		if (FinanceRecorderCmnDef.check_config_file_exist(FinanceRecorderCmnDef.MARKET_DATABASE_TIME_RANGE_CONF_FILENAME))
+		if (!FinanceRecorderCmnDef.check_config_file_exist(FinanceRecorderCmnDef.MARKET_DATABASE_TIME_RANGE_CONF_FILENAME))
 		{
 			FinanceRecorderCmnDef.format_warn("The database time range config file[%s] does NOT exist", FinanceRecorderCmnDef.MARKET_DATABASE_TIME_RANGE_CONF_FILENAME);
-			return FinanceRecorderCmnDef.RET_SUCCESS;
+			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
 		}
 // Start to parse the time range from the config files if the file exists
 		LinkedList<String> config_line_list = new LinkedList<String>();

@@ -47,7 +47,7 @@ public class FinanceRecorderDatabaseTimeRange
 		int stock_source_type_amount = FinanceRecorderCmnDef.FinanceSourceType.get_stock_source_type_amount();
 		database_time_range_map = new HashMap<String, ArrayList<FinanceRecorderCmnClass.FinanceTimeRange>>();
 // Check if the config folder exist
-		if (FinanceRecorderCmnDef.check_config_file_exist(FinanceRecorderCmnDef.STOCK_DATABASE_TIME_RANGE_CONF_FOLDERNAME))
+		if (!FinanceRecorderCmnDef.check_config_file_exist(FinanceRecorderCmnDef.STOCK_DATABASE_TIME_RANGE_CONF_FOLDERNAME))
 		{
 			FinanceRecorderCmnDef.format_warn("The database time range config folder[%s] does NOT exist", FinanceRecorderCmnDef.STOCK_DATABASE_TIME_RANGE_CONF_FOLDERNAME);
 			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
@@ -122,7 +122,7 @@ public class FinanceRecorderDatabaseTimeRange
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		// Read the data from the config file
 		ret = parse_database_time_range_config();
-		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		if (FinanceRecorderCmnDef.CheckFailure(ret) && !FinanceRecorderCmnDef.CheckFailureNotFound(ret))
 			return ret;
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}

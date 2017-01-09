@@ -237,7 +237,7 @@ public class FinanceRecorderCmnDef
 		// //////////////////////////////////////////////////////////////////////////////////////////////
 		// Stock data source
 		FinanceSource_StockStart(8), // Keep in mind to update the value at the right time
-		FinanceSource_StockEnd(8); // Keep in mind to update the value at the right time
+		FinanceSource_StockEnd(9); // Keep in mind to update the value at the right time
 
 		private int value = 0;
 
@@ -974,81 +974,6 @@ public class FinanceRecorderCmnDef
 		return 0;
 	}
 
-	public static short get_config_file_lines(String filename, String conf_folderpath, LinkedList<String> config_line_list) 
-	{
-		String current_path = get_current_path();
-		String conf_filepath = null;
-		if (conf_folderpath == null)
-			conf_filepath = String.format("%s/%s/%s", current_path, CONF_FOLDERNAME, filename);
-		else
-			conf_filepath = String.format("%s/%s", conf_folderpath, filename);
-		debug(String.format("Check the config file[%s] exist", conf_filepath));
-		File f = new File(conf_filepath);
-		if (!f.exists()) 
-		{
-			format_error("The configration file[%s] does NOT exist", conf_filepath);
-			return RET_FAILURE_NOT_FOUND;
-		}
-
-		// Open the config file for reading
-		BufferedReader br = null;
-		try 
-		{
-			FileInputStream fis = new FileInputStream(f);
-			InputStreamReader isr = new InputStreamReader(fis);
-			br = new BufferedReader(isr);
-		} 
-		catch (IOException e) 
-		{
-			format_error("Fails to open %s file, due to: %s", conf_filepath, e.toString());
-			return RET_FAILURE_IO_OPERATION;
-		}
-
-		short ret = RET_SUCCESS;
-		// Read the conf file
-		try 
-		{
-			String line = null;
-			while ((line = br.readLine()) != null) 
-			{
-				if (line.startsWith("#"))
-					continue;
-				String line_strip = line.replace("\n", "");
-				if (line_strip.isEmpty())
-					continue;
-				config_line_list.add(line_strip);
-			}
-		} 
-		catch (IOException e) 
-		{
-			format_error("IO Error occur while parsing the config file, due to: %s", e.toString());
-			ret = RET_FAILURE_IO_OPERATION;
-		} 
-		catch (Exception e) 
-		{
-			format_error("Error occur while parsing the config file, due to: %s", e.toString());
-			ret = RET_FAILURE_UNKNOWN;
-		} 
-		finally 
-		{
-			if (br != null) 
-			{
-				try 
-				{
-					br.close();
-				} 
-				catch (Exception e) {}
-				br = null;
-			}
-		}
-		return ret;
-	}
-
-	public static short get_config_file_lines(String filename, LinkedList<String> config_line_list) 
-	{
-		return get_config_file_lines(filename, null, config_line_list);
-	}
-
 	private static FinanceFieldType[] TransformFieldTypeString2Enum(String[] field_type_string_list) 
 	{
 		FinanceFieldType[] file_type_int_list = new FinanceFieldType[field_type_string_list.length];
@@ -1373,8 +1298,10 @@ public class FinanceRecorderCmnDef
 
 	public static boolean check_file_exist(final String filepath) 
 	{
-		File file = new File(filepath);
-		return file.exists();
+		format_debug("Check the file exist: %s", filepath);
+		File f = new File(filepath);
+		boolean exist = f.exists();
+		return exist;
 	}
 
 	public static boolean check_config_file_exist(final String config_filename, String conf_folderpath) 
@@ -1391,6 +1318,80 @@ public class FinanceRecorderCmnDef
 	{
 		String conf_filepath = String.format("%s/%s/%s", get_current_path(), CONF_FOLDERNAME, config_filename);
 		return check_file_exist(conf_filepath);
+	}
+
+	public static short get_config_file_lines(String filename, String conf_folderpath, LinkedList<String> config_line_list) 
+	{
+		String conf_filepath = null;
+		if (conf_folderpath == null)
+			conf_filepath = String.format("%s/%s/%s", get_current_path(), CONF_FOLDERNAME, filename);
+		else
+			conf_filepath = String.format("%s/%s", conf_folderpath, filename);
+//		debug(String.format("Check the config file[%s] exist", conf_filepath));
+		File f = new File(conf_filepath);
+		if (!f.exists()) 
+		{
+			format_error("The configration file[%s] does NOT exist", conf_filepath);
+			return RET_FAILURE_NOT_FOUND;
+		}
+
+		// Open the config file for reading
+		BufferedReader br = null;
+		try 
+		{
+			FileInputStream fis = new FileInputStream(f);
+			InputStreamReader isr = new InputStreamReader(fis);
+			br = new BufferedReader(isr);
+		} 
+		catch (IOException e) 
+		{
+			format_error("Fails to open %s file, due to: %s", conf_filepath, e.toString());
+			return RET_FAILURE_IO_OPERATION;
+		}
+
+		short ret = RET_SUCCESS;
+		// Read the conf file
+		try 
+		{
+			String line = null;
+			while ((line = br.readLine()) != null) 
+			{
+				if (line.startsWith("#"))
+					continue;
+				String line_strip = line.replace("\n", "");
+				if (line_strip.isEmpty())
+					continue;
+				config_line_list.add(line_strip);
+			}
+		} 
+		catch (IOException e) 
+		{
+			format_error("IO Error occur while parsing the config file, due to: %s", e.toString());
+			ret = RET_FAILURE_IO_OPERATION;
+		} 
+		catch (Exception e) 
+		{
+			format_error("Error occur while parsing the config file, due to: %s", e.toString());
+			ret = RET_FAILURE_UNKNOWN;
+		} 
+		finally 
+		{
+			if (br != null) 
+			{
+				try 
+				{
+					br.close();
+				} 
+				catch (Exception e) {}
+				br = null;
+			}
+		}
+		return ret;
+	}
+
+	public static short get_config_file_lines(String filename, LinkedList<String> config_line_list) 
+	{
+		return get_config_file_lines(filename, null, config_line_list);
 	}
 
 	public static short create_folder(final String path) 
