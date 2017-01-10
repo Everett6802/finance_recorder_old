@@ -88,8 +88,8 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 		if (whole_field_query_set == null)
 		{
 			whole_field_query_set = new FinanceRecorderCmnClass.QuerySet();
-			int source_type_start_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_StockStart.ordinal();
-			int source_type_end_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_StockEnd.ordinal();
+			int source_type_start_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_StockStart.value();
+			int source_type_end_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_StockEnd.value();
 			for (int source_type_index = source_type_start_index ; source_type_index < source_type_end_index ; source_type_index++)
 				whole_field_query_set.add_query(source_type_index);
 			whole_field_query_set.add_query_done();
