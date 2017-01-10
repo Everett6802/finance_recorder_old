@@ -7,13 +7,13 @@ import com.price.finance_recorder_base.FinanceRecorderCSVHandlerMap;
 import com.price.finance_recorder_base.FinanceRecorderDataHandlerBase;
 import com.price.finance_recorder_base.FinanceRecorderDataHandlerInf;
 //import com.price.finance_recorder_base.FinanceRecorderSQLClient;
-import com.price.finance_recorder_cmn.FinanceRecorderClassBase;
+//import com.price.finance_recorder_cmn.FinanceRecorderClassBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.ResultSetMap;
+//import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.ResultSetMap;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 //import com.price.finance_recorder_market.FinanceRecorderStockDataHandler;
 //import com.price.finance_recorder_market.FinanceRecorderStockSQLClient;
-import com.price.finance_recorder_market.FinanceRecorderMarketSQLClient;
+//import com.price.finance_recorder_market.FinanceRecorderMarketSQLClient;
 
 
 public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerBase
@@ -23,7 +23,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 	private static FinanceRecorderCompanyProfile company_profile = null;
 	private static String get_csv_filepath(String csv_folderpath, int source_type_index, int company_group_number, String company_code_number)
 	{
-		return String.format("%s/%s%02d/%s%s.csv", csv_folderpath, FinanceRecorderCmnDef.CSV_STOCK_FOLDERNAME, company_group_number, company_code_number, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]);
+		return String.format("%s/%s%02d/%s/%s.csv", csv_folderpath, FinanceRecorderCmnDef.CSV_STOCK_FOLDERNAME, company_group_number, company_code_number, FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]);
 	}
 
 //	private static String get_sql_database_name(int company_group_number)
@@ -50,7 +50,6 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 			String errmsg = "It's NOT Stock mode";
 			throw new IllegalStateException(errmsg);
 		}
-		FinanceRecorderStockDataHandler data_handler_obj = new FinanceRecorderStockDataHandler();
 		for (Integer source_type_index : source_type_index_list)
 		{
 			if (!FinanceRecorderCmnDef.FinanceSourceType.is_stock_source_type(source_type_index))
@@ -59,19 +58,24 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 				throw new IllegalArgumentException(errmsg);
 			}
 		}
+		FinanceRecorderStockDataHandler data_handler_obj = new FinanceRecorderStockDataHandler();
 		data_handler_obj.source_type_index_list = source_type_index_list;
+		if (data_handler_obj.source_type_index_list == null)
+		{
+			data_handler_obj.source_type_index_list = new LinkedList<Integer>();
+			int start_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_StockStart.value();
+			int end_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_StockEnd.value();
+			for (int source_type_index = start_index ; source_type_index < end_index ; source_type_index++)
+				source_type_index_list.add(source_type_index);
+		}
 		data_handler_obj.company_group_set = company_group_set;
+		if (data_handler_obj.company_group_set == null)
+			data_handler_obj.company_group_set = FinanceRecorderCompanyGroupSet.get_whole_company_group_set();
 		return data_handler_obj;
 	}
 	public static FinanceRecorderDataHandlerInf get_data_handler_whole()
 	{
-		LinkedList<Integer> source_type_index_list = new LinkedList<Integer>();
-		int start_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_StockStart.value();
-		int end_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_StockEnd.value();
-		for (int source_type_index = start_index ; source_type_index < end_index ; source_type_index++)
-			source_type_index_list.add(source_type_index);
-		FinanceRecorderCompanyGroupSet company_group_set = FinanceRecorderCompanyGroupSet.get_whole_company_group_set();
-		return get_data_handler(source_type_index_list, company_group_set);
+		return get_data_handler(null, null);
 	}
 
 	private FinanceRecorderCompanyGroupSet company_group_set = null;
@@ -216,7 +220,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 				for (Integer source_type_index : source_type_index_list)
 				{
 // Read data from CSV
-					FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderStockDataHandler.get_csv_filepath(finance_root_backup_folerpath, source_type_index, company_group_number, company_code_number));
+					FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderStockDataHandler.get_csv_filepath(finance_root_folerpath, source_type_index, company_group_number, company_code_number));
 					ret = csv_reader.read();
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						return ret;

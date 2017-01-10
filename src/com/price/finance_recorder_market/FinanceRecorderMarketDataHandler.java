@@ -6,10 +6,10 @@ import com.price.finance_recorder_base.FinanceRecorderCSVHandler;
 import com.price.finance_recorder_base.FinanceRecorderCSVHandlerMap;
 import com.price.finance_recorder_base.FinanceRecorderDataHandlerBase;
 import com.price.finance_recorder_base.FinanceRecorderDataHandlerInf;
-import com.price.finance_recorder_cmn.FinanceRecorderClassBase;
+//import com.price.finance_recorder_cmn.FinanceRecorderClassBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceTimeRange;
-import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.QuerySet;
+//import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceTimeRange;
+//import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.QuerySet;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 
@@ -38,7 +38,6 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 			String errmsg = "It's NOT Market mode";
 			throw new IllegalStateException(errmsg);
 		}
-		FinanceRecorderMarketDataHandler data_handler_obj = new FinanceRecorderMarketDataHandler();
 		for (Integer source_type_index : source_type_index_list)
 		{
 			if (!FinanceRecorderCmnDef.FinanceSourceType.is_market_source_type(source_type_index))
@@ -47,17 +46,21 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 				throw new IllegalArgumentException(errmsg);
 			}
 		}
+		FinanceRecorderMarketDataHandler data_handler_obj = new FinanceRecorderMarketDataHandler();
 		data_handler_obj.source_type_index_list = source_type_index_list;
+		if (data_handler_obj.source_type_index_list == null)
+		{
+			data_handler_obj.source_type_index_list = new LinkedList<Integer>();
+			int start_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_MarketStart.value();
+			int end_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_MarketEnd.value();
+			for (int source_type_index = start_index ; source_type_index < end_index ; source_type_index++)
+				source_type_index_list.add(source_type_index);
+		}
 		return data_handler_obj;
 	}
 	public static FinanceRecorderDataHandlerInf get_data_handler_whole()
 	{
-		LinkedList<Integer> source_type_index_list = new LinkedList<Integer>();
-		int start_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_MarketStart.value();
-		int end_index = FinanceRecorderCmnDef.FinanceSourceType.FinanceSource_MarketEnd.value();
-		for (int source_type_index = start_index ; source_type_index < end_index ; source_type_index++)
-			source_type_index_list.add(source_type_index);
-		return get_data_handler(source_type_index_list);
+		return get_data_handler(null);
 	}
 
 //	private LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange> source_type_time_range_list = null;

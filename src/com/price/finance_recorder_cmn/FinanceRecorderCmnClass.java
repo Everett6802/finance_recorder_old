@@ -1619,7 +1619,7 @@ public class FinanceRecorderCmnClass
 // Check if the index is out of range
 			if(!FinanceRecorderCmnDef.check_source_type_index_in_range(source_type_index))
 			{
-				FinanceRecorderCmnDef.error("source_type_index is out of range in QuerySet");
+				FinanceRecorderCmnDef.format_error("source_type_index[%d] is out of range in QuerySet", source_type_index);
 				return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 			}
 
