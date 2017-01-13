@@ -1,5 +1,6 @@
 package com.price.finance_recorder_market;
 
+import java.io.*;
 import java.util.*;
 
 import com.price.finance_recorder_base.FinanceRecorderCSVHandler;
@@ -79,12 +80,20 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		}
 	}
 
-	public short read_from_csv(FinanceRecorderCSVHandlerMap csv_data_map)
+	public short read_from_csv(FinanceRecorderCSVHandlerMap csv_data_map, boolean stop_when_csv_not_foud)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		for (Integer source_type_index : source_type_index_list)
 		{
 			FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderMarketDataHandler.get_csv_filepath(finance_root_folerpath, source_type_index));
+			if (csv_reader == null)
+			{
+				FinanceRecorderCmnDef.error(String.format("CSV NOT Found [%s:%d]", source_type_index));
+				if (stop_when_csv_not_foud)
+					return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+				else
+					continue;
+			}
 			ret = csv_reader.read();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
@@ -141,7 +150,7 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		return ret;
 	}
 
-	public short transfrom_csv_to_sql()
+	public short transfrom_csv_to_sql(boolean stop_when_csv_not_foud)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Establish the connection to the MySQL and create the database if not exist
@@ -155,6 +164,14 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		{
 // Read data from CSV
 			FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderMarketDataHandler.get_csv_filepath(finance_root_folerpath, source_type_index));
+			if (csv_reader == null)
+			{
+				FinanceRecorderCmnDef.error(String.format("CSV NOT Found [%s:%d]", source_type_index));
+				if (stop_when_csv_not_foud)
+					return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+				else
+					continue;
+			}
 			ret = csv_reader.read();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
@@ -423,9 +440,9 @@ OUT:
 		{
 			if (FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
 				return FinanceRecorderCmnDef.RET_SUCCESS;
+			else
+				return ret;
 		}
-		else
-			return ret;
 // Delete the database
 		ret = sql_client.delete_database();
 // Destroy the connection to the MySQL

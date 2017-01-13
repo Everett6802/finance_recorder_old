@@ -182,10 +182,10 @@ OUT:
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short transfrom_csv_to_sql()
+	public short transfrom_csv_to_sql(boolean stop_when_csv_not_foud)
 	{
 		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
-		short ret = finance_recorder_data_handler.transfrom_csv_to_sql();
+		short ret = finance_recorder_data_handler.transfrom_csv_to_sql(stop_when_csv_not_foud);
 		return ret;
 	}
 

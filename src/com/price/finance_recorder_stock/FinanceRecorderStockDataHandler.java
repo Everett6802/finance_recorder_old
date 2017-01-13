@@ -1,6 +1,7 @@
 package com.price.finance_recorder_stock;
 
 import java.util.*;
+import java.io.*;
 
 import com.price.finance_recorder_base.FinanceRecorderCSVHandler;
 import com.price.finance_recorder_base.FinanceRecorderCSVHandlerMap;
@@ -96,7 +97,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 		}
 	}
 
-	public short read_from_csv(FinanceRecorderCSVHandlerMap csv_data_map)
+	public short read_from_csv(FinanceRecorderCSVHandlerMap csv_data_map, boolean stop_when_csv_not_foud)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		for (Map.Entry<Integer, ArrayList<String>> company_code_entry : company_group_set)
@@ -107,6 +108,14 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 				for (Integer source_type_index : source_type_index_list)
 				{
 					FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderStockDataHandler.get_csv_filepath(finance_root_folerpath, source_type_index, company_group_number, company_code_number));
+					if (csv_reader == null)
+					{
+						FinanceRecorderCmnDef.error(String.format("CSV NOT Found [%s:%d]", company_code_number, source_type_index));
+						if (stop_when_csv_not_foud)
+							return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+						else
+							continue;
+					}
 					ret = csv_reader.read();
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						return ret;
@@ -114,7 +123,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 				}
 			}
 		}
-		return ret;
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	public short write_into_sql(final FinanceRecorderCSVHandlerMap csv_data_map)
@@ -200,7 +209,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 		return ret;
 	}
 
-	public short transfrom_csv_to_sql()
+	public short transfrom_csv_to_sql(boolean stop_when_csv_not_foud)
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		OUT:
@@ -221,6 +230,14 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 				{
 // Read data from CSV
 					FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderStockDataHandler.get_csv_filepath(finance_root_folerpath, source_type_index, company_group_number, company_code_number));
+					if (csv_reader == null)
+					{
+						FinanceRecorderCmnDef.error(String.format("CSV NOT Found [%s:%d]", company_code_number, source_type_index));
+						if (stop_when_csv_not_foud)
+							return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+						else
+							continue;
+					}
 					ret = csv_reader.read();
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 						return ret;
@@ -480,7 +497,6 @@ OUT:
 	{
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Establish the connection to the MySQL
-		
 		int company_group_size = get_company_profile().get_company_group_size();
 OUT:
 		for (int i = 0 ; i < company_group_size ; i++)
@@ -492,9 +508,10 @@ OUT:
 			{
 				if (FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
 					continue;
+				else
+					return ret;
 			}
-			else
-				return ret;
+
 // Delete the database
 			ret = sql_client.delete_database(i);
 // Destroy the connection to the MySQL

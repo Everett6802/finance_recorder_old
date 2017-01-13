@@ -9,28 +9,46 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 {
 	public enum HandlerMode{HandlerMode_Read, HandlerMode_Write};
 
-	public static FinanceRecorderCSVHandler get_csv_reader(String csv_filepath)
+	public static FinanceRecorderCSVHandler get_csv_reader(String csv_filepath, boolean no_not_foud_exception)
 	{
 		FinanceRecorderCSVHandler csv_reader = new FinanceRecorderCSVHandler();
 		csv_reader.handler_mode = HandlerMode.HandlerMode_Read;
 		FinanceRecorderCmnDef.debug(String.format("Ready to read CSV from: %s", csv_filepath));
 		csv_reader.csv_filepath = csv_filepath;
-		short ret = csv_reader.intialize_read_stream();
+		short ret = csv_reader.initialize_read_stream();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			throw new RuntimeException(String.format("Fail to initialize the CSV reader, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		{
+			if (no_not_foud_exception)
+			{
+				if (FinanceRecorderCmnDef.CheckFailureNotFound(ret))
+					return null;
+			}
+			else
+				throw new RuntimeException(String.format("Fail to initialize the CSV reader, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		}
 		return csv_reader;
 	}
+	public static FinanceRecorderCSVHandler get_csv_reader(String csv_filepath){return get_csv_reader(csv_filepath, true);}
 
-	public static FinanceRecorderCSVHandler get_csv_writer(String csv_filepath)
+	public static FinanceRecorderCSVHandler get_csv_writer(String csv_filepath, boolean no_not_foud_exception)
 	{
 		FinanceRecorderCSVHandler csv_writer = new FinanceRecorderCSVHandler();
 		csv_writer.handler_mode = HandlerMode.HandlerMode_Write;
 		csv_writer.csv_filepath = csv_filepath;
-		short ret = csv_writer.intialize_write_stream();
+		short ret = csv_writer.initialize_write_stream();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
-			throw new RuntimeException(String.format("Fail to initialize the CSV writer, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		{
+			if (no_not_foud_exception)
+			{
+				if (FinanceRecorderCmnDef.CheckFailureNotFound(ret))
+					return null;
+			}
+			else
+				throw new RuntimeException(String.format("Fail to initialize the CSV writer, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		}
 		return csv_writer;
 	}
+	public static FinanceRecorderCSVHandler get_csv_writer(String csv_filepath){return get_csv_writer(csv_filepath, false);}
 
 	private final String NEW_LINE = "\n";
 	private String csv_filepath;
@@ -47,7 +65,7 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 //		FinanceRecorderCmnDef.FinanceObserverInf parent_observer = observer;
 	}
 
-	private short intialize_read_stream()
+	private short initialize_read_stream() 
 	{
 		try
 		{
@@ -58,16 +76,16 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 			FinanceRecorderCmnDef.format_error("The data file[%s] is NOT found", csv_filepath);
 			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
 		}
-		catch (IOException e)
-		{
-			FinanceRecorderCmnDef.format_error("Error occur, due to: %s", e.toString());
-			return FinanceRecorderCmnDef.RET_FAILURE_IO_OPERATION;
-		} 
+//		catch (IOException e)
+//		{
+//			FinanceRecorderCmnDef.format_error("Error occur, due to: %s", e.toString());
+//			return FinanceRecorderCmnDef.RET_FAILURE_IO_OPERATION;
+//		} 
 
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	private short intialize_write_stream()
+	private short initialize_write_stream()
 	{
 		File file = new File(csv_filepath);
 		try
@@ -94,7 +112,7 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 //		csv_filepath = data_filepath;
 //		handler_mode = mode;
 ////		FinanceRecorderCmnDef.format_debug("Open the CSV file: %s", csv_filepath);
-//		return ((mode == HandlerMode.HandlerMode_Read) ? intialize_read_stream() : intialize_write_stream());
+//		return ((mode == HandlerMode.HandlerMode_Read) ? initialize_read_stream() : initialize_write_stream());
 //	}
 
 	public short deinitialize()

@@ -31,6 +31,7 @@ public class FinanceRecorder
 	private static boolean show_finance_restore_foldername_param = false;
 	private static String delete_sql_accurancy_param = null;
 	private static String database_operation_param = null;
+	private static boolean continue_when_csv_not_foud_param = false;
 	private static String source_from_file_param = null;
 	private static String source_param = null;
 	private static String time_range_param = null;
@@ -144,6 +145,11 @@ public class FinanceRecorder
 					show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
 				database_operation_param = args[index + 1];
 				index_offset = 2;
+			}
+			else if (option.equals("--continue_when_csv_not_foud"))
+			{
+				continue_when_csv_not_foud_param = true;
+				index_offset = 1;
 			}
 			else if (option.equals("--source_from_file"))
 			{
@@ -604,9 +610,10 @@ public class FinanceRecorder
 		System.out.println("  The R(r) attribute is ignored if W(w) set");
 		System.out.println("  The D(d) attribute is ignored if C(c) set");
 		System.out.println("  The C(c) attribute is enabled if R(r) set");
+		System.out.println("--continue_when_csv_not_foud\nDescription: Continue running when CSV file Not Found\nCaution: Only take effect for Write/Restore action");
 		if (FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
 		{
-			System.out.println("--delete_sql_accurancy\nDescription: The accurancy of delete SQL\nDefault: Source type only\nCaution: Only useful for Delete action");
+			System.out.println("--delete_sql_accurancy\nDescription: The accurancy of delete SQL\nDefault: Source type only\nCaution: Only take effect for Delete action");
 			System.out.println("  Format 1 Source Type Only: 0");
 			System.out.println("  Format 2 Company Only: 1");
 			System.out.println("  Format 3 Source Type and Company: 2");
@@ -791,7 +798,7 @@ public class FinanceRecorder
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 
 		long time_start_millisecond = System.currentTimeMillis();
-		ret = finance_recorder_mgr.transfrom_csv_to_sql();
+		ret = finance_recorder_mgr.transfrom_csv_to_sql(!continue_when_csv_not_foud_param);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to write CSV data into MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		long time_end_millisecond = System.currentTimeMillis();
@@ -852,7 +859,7 @@ public class FinanceRecorder
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		long time_start_millisecond = System.currentTimeMillis();
-		ret = finance_recorder_mgr.transfrom_csv_to_sql();
+		ret = finance_recorder_mgr.transfrom_csv_to_sql(!continue_when_csv_not_foud_param);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to restore MySQL data from CSV, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		long time_end_millisecond = System.currentTimeMillis();
