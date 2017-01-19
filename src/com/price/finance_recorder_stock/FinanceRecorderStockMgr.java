@@ -1,7 +1,12 @@
 package com.price.finance_recorder_stock;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import com.price.finance_recorder_base.*;
 //import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
@@ -106,9 +111,58 @@ public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 		ret = super.initialize();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
+		if (company_group_set == null)
+			company_group_set = FinanceRecorderCompanyGroupSet.get_whole_company_group_set();
 // Initialize the database time range
 		database_time_range = FinanceRecorderDatabaseTimeRange.get_instance();
 
 		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	public short transfrom_csv_to_sql_multithread(boolean stop_when_csv_not_foud, int sub_company_group_set_amount)
+	{
+		ArrayList<FinanceRecorderCompanyGroupSet> sub_company_group_set_list = company_group_set.get_sub_company_group_set_list(sub_company_group_set_amount);
+// Create thread pool 
+		ThreadPoolExecutor executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(FinanceRecorderCmnDef.MAX_CONCURRENT_THREAD);
+		LinkedList<Future<Integer>> res_list = new LinkedList<Future<Integer>>();
+		for (FinanceRecorderCompanyGroupSet sub_company_group_set : sub_company_group_set_list)
+		{
+// Activate the task of writing data into SQL
+			FinanceRecorderStockWriteSQLTask task = new FinanceRecorderStockWriteSQLTask(source_type_index_list, sub_company_group_set, finance_root_folderpath, stop_when_csv_not_foud);
+			Future<Integer> res = executor.submit(task);
+			res_list.add(res);
+		}
+// Check the result
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		int res_index = 0;
+		for (Future<Integer> res : res_list)
+		{
+			try
+			{
+				ret = res.get().shortValue();
+			}
+			catch (ExecutionException e)
+			{
+				FinanceRecorderCmnDef.format_error("Fail to get return value in thread[%d], due to: %s", res_index, e.toString());
+				ret = FinanceRecorderCmnDef.RET_FAILURE_UNKNOWN;
+			}
+			catch (InterruptedException e)
+			{
+				FinanceRecorderCmnDef.format_error("Fail to get return value in thread[%d], due to: %s", res_index, e.toString());
+				ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+			}
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+			{
+				FinanceRecorderCmnDef.format_error("Fail to get return value in thread[%d], due to: %s", res_index, FinanceRecorderCmnDef.GetErrorDescription(ret));
+				break;
+			}
+			res_index++;
+		}
+// Shut down the executor
+		if(FinanceRecorderCmnDef.CheckSuccess(ret))
+				executor.shutdown();
+			else
+				executor.shutdownNow();
+		return ret;
 	}
 }

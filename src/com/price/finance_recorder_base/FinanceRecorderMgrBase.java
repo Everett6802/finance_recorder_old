@@ -1,9 +1,9 @@
 package com.price.finance_recorder_base;
 
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.HashMap;
+//import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -74,28 +74,28 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 	private LinkedList<String> email_address_list = new LinkedList<String>();
 	protected LinkedList<Integer> source_type_index_list = new LinkedList<Integer>();
 	protected boolean setup_param_done = false;
-	String finance_root_folerpath = FinanceRecorderCmnDef.CSV_ROOT_FOLDERPATH;
-	String finance_root_backup_folerpath = FinanceRecorderCmnDef.CSV_BACKUP_ROOT_FOLDERPATH ;
-	String finance_root_restore_folerpath = FinanceRecorderCmnDef.CSV_RESTORE_ROOT_FOLDERPATH ;
+	protected String finance_root_folderpath = FinanceRecorderCmnDef.CSV_ROOT_FOLDERPATH;
+	protected String finance_root_backup_folderpath = FinanceRecorderCmnDef.CSV_BACKUP_ROOT_FOLDERPATH ;
+	protected String finance_root_restore_folderpath = FinanceRecorderCmnDef.CSV_RESTORE_ROOT_FOLDERPATH ;
 	protected FinanceRecorderCmnDef.DeleteSQLAccurancyType delete_sql_accurancy_type = FinanceRecorderCmnDef.DeleteSQLAccurancyType.DeleteSQLAccurancyType_SOURCE_TYPE_ONLY;
 
 	protected abstract FinanceRecorderDataHandlerInf get_data_handler();
 
-	public void set_finance_folderpath(String finance_folderpath){finance_root_folerpath = finance_folderpath;}
-	public void set_finance_backup_folderpath(String finance_backup_folderpath){finance_root_backup_folerpath = finance_backup_folderpath;}
-	public void set_finance_restore_folderpath(String finance_restore_folderpath){finance_root_restore_folerpath = finance_restore_folderpath;}
-	public String get_finance_folderpath(){return finance_root_folerpath;}
-	public String set_finance_backup_folderpath(){return finance_root_backup_folerpath;}
-	public String set_finance_restore_folderpath(){return finance_root_restore_folerpath;}
+	public void set_finance_folderpath(String finance_folderpath){finance_root_folderpath = finance_folderpath;}
+	public void set_finance_backup_folderpath(String finance_backup_folderpath){finance_root_backup_folderpath = finance_backup_folderpath;}
+	public void set_finance_restore_folderpath(String finance_restore_folderpath){finance_root_restore_folderpath = finance_restore_folderpath;}
+	public String get_finance_folderpath(){return finance_root_folderpath;}
+	public String set_finance_backup_folderpath(){return finance_root_backup_folderpath;}
+	public String set_finance_restore_folderpath(){return finance_root_restore_folderpath;}
 
 	public short get_backup_foldername_list(List<String> sorted_sub_foldername_list)
 	{
-		return get_sorted_sub_foldername_list(finance_root_backup_folerpath, sorted_sub_foldername_list);
+		return get_sorted_sub_foldername_list(finance_root_backup_folderpath, sorted_sub_foldername_list);
 	}
 
 	public short get_restore_foldername_list(List<String> sorted_sub_foldername_list)
 	{
-		return get_sorted_sub_foldername_list(finance_root_restore_folerpath, sorted_sub_foldername_list);
+		return get_sorted_sub_foldername_list(finance_root_restore_folderpath, sorted_sub_foldername_list);
 	}
 
 	public short set_source_type_from_file(String filename)
@@ -187,6 +187,11 @@ OUT:
 		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
 		short ret = finance_recorder_data_handler.transfrom_csv_to_sql(stop_when_csv_not_foud);
 		return ret;
+	}
+
+	public short transfrom_csv_to_sql_multithread(boolean stop_when_csv_not_foud, int sub_company_group_set_amount)
+	{
+		throw new RuntimeException("Not support multh-thread !!!");
 	}
 
 	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)

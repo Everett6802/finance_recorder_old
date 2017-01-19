@@ -16,6 +16,7 @@ public class FinanceRecorderCompanyGroupSet implements Iterable<Map.Entry<Intege
 	private HashMap<Integer, ArrayList<String>> company_number_in_group_map = null;
 	private HashMap<Integer, ArrayList<String>> altered_company_number_in_group_map = null;
 	private boolean is_add_done = false;
+	private int company_amount = -1;
 
 	private static FinanceRecorderCompanyProfile get_company_profile()
 	{
@@ -218,13 +219,13 @@ public class FinanceRecorderCompanyGroupSet implements Iterable<Map.Entry<Intege
 		if (!is_add_done)
 		{
 			String errmsg = "The add_done flag is NOT set to True";
-			FinanceRecorderCmnDef.format_error(errmsg);
+			FinanceRecorderCmnDef.error(errmsg);
 			throw new IllegalStateException(errmsg);
 		}
 		if (!altered_company_number_in_group_map.containsKey(company_group_index))
 		{
 			String errmsg = String.format("The company group index[%d] is NOT found in data structure", company_group_index);
-			FinanceRecorderCmnDef.format_error(errmsg);
+			FinanceRecorderCmnDef.error(errmsg);
 			throw new IllegalArgumentException(errmsg);
 		}
 		return altered_company_number_in_group_map.get(company_group_index);
@@ -242,5 +243,103 @@ public class FinanceRecorderCompanyGroupSet implements Iterable<Map.Entry<Intege
 			for (Map.Entry<Integer, ArrayList<String>> entry : company_number_in_group_map.entrySet())
 				altered_company_number_in_group_map.put(entry.getKey(), (entry.getValue() != null) ? entry.getValue() : whole_company_number_in_group_map.get(entry.getKey()));
 		}
+	}
+
+	public int get_company_amount()
+	{
+		if (!is_add_done)
+		{
+			String errmsg = "The add_done flag is NOT set to True";
+			FinanceRecorderCmnDef.format_error(errmsg);
+			throw new IllegalStateException(errmsg);
+		}
+		if (company_amount == -1)
+		{
+			company_amount = 0;
+			for (Map.Entry<Integer, ArrayList<String>> entry : altered_company_number_in_group_map.entrySet())
+			{
+				ArrayList<String> company_number_list = entry.getValue();
+				for (String company_number : company_number_list)
+					company_amount += 1;
+			}
+		}
+		return company_amount;
+	}
+
+	public int get_cur_company_amount()
+	{
+		int cur_company_amount = 0;
+		if (altered_company_number_in_group_map != null)
+		{
+			for (Map.Entry<Integer, ArrayList<String>> entry : altered_company_number_in_group_map.entrySet())
+			{
+				ArrayList<String> company_number_list = entry.getValue();
+				for (String company_number : company_number_list)
+					cur_company_amount += 1;
+			}
+		}
+		return cur_company_amount;
+	}
+
+	public ArrayList<FinanceRecorderCompanyGroupSet> get_sub_company_group_set_list(int sub_company_group_set_amount)
+	{
+		if (!is_add_done)
+		{
+			String errmsg = "The add_done flag is NOT set to True";
+			FinanceRecorderCmnDef.error(errmsg);
+			throw new IllegalStateException(errmsg);
+		}
+		if (sub_company_group_set_amount <= 0)
+			throw new IllegalArgumentException("sub_company_group_set_amount should be larger than 0");
+		ArrayList<FinanceRecorderCompanyGroupSet> sub_company_group_set_list = new ArrayList<FinanceRecorderCompanyGroupSet>();
+		ArrayList<Integer> sub_company_group_set_amount_list = new ArrayList<Integer>();
+		int sub_company_amount = 0;
+		int rest_company_amount = 0;
+		if (get_company_amount() <= sub_company_group_set_amount)
+		{
+			sub_company_amount = 1;
+			rest_company_amount = 0;
+			sub_company_group_set_amount = get_company_amount();
+			FinanceRecorderCmnDef.format_debug("The company amount is less than sub company group set amount. Set the sub company group set amount to %d", get_company_amount());
+		}
+		else
+		{
+			sub_company_amount = get_company_amount() / sub_company_group_set_amount;
+			rest_company_amount = get_company_amount() % sub_company_group_set_amount;
+		}
+		FinanceRecorderCompanyGroupSet sub_company_group_set = null;
+		int sub_company_group_cnt = 0;
+		int sub_company_amount_in_group_threshold = 0;
+		int sub_company_cnt = 0;
+		for (Map.Entry<Integer, ArrayList<String>> entry : altered_company_number_in_group_map.entrySet())
+		{
+			Integer company_group_number = entry.getKey();
+			ArrayList<String> company_code_number_list = entry.getValue();
+			for (String company_code_number : company_code_number_list)
+			{
+				if (sub_company_cnt == 0)
+				{
+					sub_company_group_set = new FinanceRecorderCompanyGroupSet();
+					sub_company_group_set_list.add(sub_company_group_set);
+					sub_company_amount_in_group_threshold = (sub_company_group_cnt < rest_company_amount ? (sub_company_amount + 1) : sub_company_amount);
+					sub_company_group_cnt += 1;
+				}
+				sub_company_group_set.add_company(company_group_number, company_code_number);
+				sub_company_cnt += 1;
+// Add to another group
+				if (sub_company_cnt == sub_company_amount_in_group_threshold)
+					sub_company_cnt = 0;
+			}
+		}
+		String company_amount_list_str = "Company Amount list for each sub group: ";
+		for (int group_index = 0 ; group_index < sub_company_group_set_amount ; group_index++)
+		{
+			sub_company_group_set = sub_company_group_set_list.get(group_index);
+			sub_company_group_set.add_done();
+			sub_company_group_set_amount_list.add(sub_company_group_set.get_company_amount());
+			company_amount_list_str += String.format("%d ", sub_company_group_set.get_company_amount());
+		}
+		FinanceRecorderCmnDef.debug(company_amount_list_str);
+		return sub_company_group_set_list;
 	}
 }

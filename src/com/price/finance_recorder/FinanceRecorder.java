@@ -30,6 +30,7 @@ public class FinanceRecorder
 	private static boolean show_finance_backup_foldername_param = false;
 	private static boolean show_finance_restore_foldername_param = false;
 	private static String delete_sql_accurancy_param = null;
+	private static String multi_thread_param = null;
 	private static String database_operation_param = null;
 	private static boolean continue_when_csv_not_foud_param = false;
 	private static String source_from_file_param = null;
@@ -127,6 +128,13 @@ public class FinanceRecorder
 					FinanceRecorderCmnDef.warn("The delete_sql_accurancy arguemnt is ignored in the Market mode");
 				else
 					delete_sql_accurancy_param = args[index + 1];
+				index_offset = 2;
+			}
+			else if (option.equals("--multi_thread"))
+			{
+				if (index + 1 >= args_len)
+					show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
+				multi_thread_param = args[index + 1];
 				index_offset = 2;
 			}
 			else if (option.equals("--show_finance_backup_foldername"))
@@ -314,22 +322,31 @@ public class FinanceRecorder
 				database_operation &= ~DATABASE_OPERATION_RESTORE_MASK;
 			}
 		}
-		if (is_delete_operation_enabled())
+		if (delete_sql_accurancy_param != null)
 		{
-			try
+			if (is_delete_operation_enabled())
 			{
-				delete_sql_accurancy_type = FinanceRecorderCmnDef.DeleteSQLAccurancyType.valueOf(Integer.valueOf(delete_sql_accurancy_param));
+				try
+				{
+					delete_sql_accurancy_type = FinanceRecorderCmnDef.DeleteSQLAccurancyType.valueOf(Integer.valueOf(delete_sql_accurancy_param));
+				}
+				catch (Exception e){}
+				if (delete_sql_accurancy_type == null)
+					throw new IllegalStateException(String.format("Unknown delete sql accurancy type: %s", delete_sql_accurancy_param));
 			}
-			catch (Exception e){}
-			if (delete_sql_accurancy_type == null)
-				throw new IllegalStateException(String.format("Unknown delete sql accurancy type: %s", delete_sql_accurancy_param));
-		}
-		else
-		{
-			if (delete_sql_accurancy_param != null)
+			else
 			{
 				delete_sql_accurancy_param = null;
-				FinanceRecorderCmnDef.warn("The 'delete_sql_accurancy' argument is ignored since delete action is NOT set");
+				FinanceRecorderCmnDef.warn("The 'delete_sql_accurancy' argument is ignored since Delete action is NOT set");
+			}
+		}
+
+		if (multi_thread_param != null)
+		{
+			if (!is_write_operation_enabled())
+			{
+				multi_thread_param = null;
+				FinanceRecorderCmnDef.warn("The 'multi_thread_param' argument is ignored since Write action is NOT set");
 			}
 		}
 		if (source_from_file_param != null)
@@ -617,6 +634,7 @@ public class FinanceRecorder
 			System.out.println("  Format 1 Source Type Only: 0");
 			System.out.println("  Format 2 Company Only: 1");
 			System.out.println("  Format 3 Source Type and Company: 2");
+			System.out.println("--multi_thread\nDescription: Execute actions by using multiple threads\nCaution: Only take effect for Write action");
 		}
 		System.out.println("--backup_list\nDescription: List database backup folder");
 		System.out.println("--restore_list\nDescription: List database restore folder");
@@ -652,7 +670,6 @@ public class FinanceRecorder
 //		System.out.println("--backup_list\nDescription: List database backup folder");
 //		System.out.println("--backup_cleanup\nDescription: CleanUp all database backup sub-folders");
 //		System.out.println("--copy_backup\nDescription: Copy the backup folder to the designated path\nCaution: Enabled if --backup set");
-//		System.out.println("--multi_thread\nDescription: Write into MySQL database by using multiple threads");
 //		System.out.println("--check_error\nDescription: Check if the data in the MySQL database is correct");
 //		System.out.println("--run_daily\nDescription: Run daily data\nCaution: Executed after writing MySQL data if set");
 		System.out.println("===================================================");
@@ -796,9 +813,11 @@ public class FinanceRecorder
 			System.out.println("Write CSV data into MySQL......");
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-
 		long time_start_millisecond = System.currentTimeMillis();
-		ret = finance_recorder_mgr.transfrom_csv_to_sql(!continue_when_csv_not_foud_param);
+		if (multi_thread_param != null)
+			ret = finance_recorder_mgr.transfrom_csv_to_sql_multithread(!continue_when_csv_not_foud_param, Integer.valueOf(multi_thread_param));
+		else
+			ret = finance_recorder_mgr.transfrom_csv_to_sql(!continue_when_csv_not_foud_param);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to write CSV data into MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		long time_end_millisecond = System.currentTimeMillis();

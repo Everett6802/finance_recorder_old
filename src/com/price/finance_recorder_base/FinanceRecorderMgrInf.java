@@ -23,6 +23,7 @@ public interface FinanceRecorderMgrInf
 	short set_company(List<String> company_word_list);
 	short initialize();
 	short transfrom_csv_to_sql(boolean stop_when_csv_not_foud);
+	short transfrom_csv_to_sql_multithread(boolean stop_when_csv_not_foud, int sub_company_group_set_amount);
 	short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range);
 	short transfrom_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range);
 	short delete_sql();
