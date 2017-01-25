@@ -15,6 +15,7 @@ import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 //import com.price.finance_recorder_market.FinanceRecorderStockDataHandler;
 //import com.price.finance_recorder_market.FinanceRecorderStockSQLClient;
 //import com.price.finance_recorder_market.FinanceRecorderMarketSQLClient;
+import com.price.finance_recorder_market.FinanceRecorderMarketSQLClient;
 
 
 public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerBase
@@ -99,6 +100,9 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 
 	public short read_from_csv(FinanceRecorderCSVHandlerMap csv_data_map, boolean stop_when_csv_not_foud)
 	{
+		assert source_type_index_list != null : "source_type_index_list == NULL";
+		assert company_group_set != null : "company_group_set == NULL";
+
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		for (Map.Entry<Integer, ArrayList<String>> company_code_entry : company_group_set)
 		{
@@ -128,6 +132,9 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 
 	public short write_into_sql(final FinanceRecorderCSVHandlerMap csv_data_map)
 	{
+		assert source_type_index_list != null : "source_type_index_list == NULL";
+		assert company_group_set != null : "company_group_set == NULL";
+
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		OUT:
 		for (Map.Entry<Integer, ArrayList<String>> company_code_entry : company_group_set)
@@ -211,6 +218,9 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 
 	public short transfrom_csv_to_sql(boolean stop_when_csv_not_foud)
 	{
+		assert source_type_index_list != null : "source_type_index_list == NULL";
+		assert company_group_set != null : "company_group_set == NULL";
+
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		OUT:
 		for (Map.Entry<Integer, ArrayList<String>> company_code_entry : company_group_set)
@@ -259,6 +269,9 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 
 	public short read_from_sql(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map)
 	{
+		assert source_type_index_list != null : "source_type_index_list == NULL";
+		assert company_group_set != null : "company_group_set == NULL";
+
 // CAUTION: The data set in the reslt_set variable should be added before calling this function 
 // Set the mapping table of reading the specific CSV files and writing correct SQL database
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
@@ -340,6 +353,9 @@ OUT:
 
 	public short write_into_csv(FinanceRecorderCmnClass.ResultSetMap result_set_map)
 	{
+		assert source_type_index_list != null : "source_type_index_list == NULL";
+		assert company_group_set != null : "company_group_set == NULL";
+
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		FinanceRecorderCmnDef.ResultSetDataUnit data_unit = result_set_map.get_data_unit();
 		FinanceRecorderCmnClass.ResultSet result_set = null;
@@ -398,6 +414,9 @@ OUT:
 
 	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
 	{
+		assert source_type_index_list != null : "source_type_index_list == NULL";
+		assert company_group_set != null : "company_group_set == NULL";
+
 		if (!query_set.is_add_query_done())
 		{
 			FinanceRecorderCmnDef.error("The add-done flag in query_set is NOT true");
@@ -480,16 +499,23 @@ OUT:
 
 	public short delete_sql_by_source_type()
 	{
+		assert source_type_index_list != null : "source_type_index_list == NULL";
+
 		return delete_sql_table_by_source_type_and_company(source_type_index_list, FinanceRecorderCompanyGroupSet.get_whole_company_group_set());
 	}
 
 	public short delete_sql_by_company() // Only useful in stock mode
 	{
+		assert company_group_set != null : "company_group_set == NULL";
+
 		return delete_sql_table_by_source_type_and_company(FinanceRecorderCmnDef.get_all_source_type_index_list(), company_group_set);
 	} 
 
 	public short delete_sql_by_source_type_and_company() // Only useful in stock mode
 	{
+		assert source_type_index_list != null : "source_type_index_list == NULL";
+		assert company_group_set != null : "company_group_set == NULL";
+
 		return delete_sql_table_by_source_type_and_company(source_type_index_list, company_group_set);
 	} 
 
@@ -511,7 +537,6 @@ OUT:
 				else
 					return ret;
 			}
-
 // Delete the database
 			ret = sql_client.delete_database(i);
 // Destroy the connection to the MySQL
@@ -519,6 +544,59 @@ OUT:
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				break OUT;
 		}
+		return ret;
+	}
+
+	public short check_sql_exist(ArrayList<String> not_exist_list)
+	{
+		assert source_type_index_list != null : "source_type_index_list == NULL";
+		assert company_group_set != null : "company_group_set == NULL";
+
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Establish the connection to the MySQL
+OUT:
+		for (Map.Entry<Integer, ArrayList<String>> company_code_entry : company_group_set)
+		{
+			FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
+			int company_group_number = company_code_entry.getKey();
+// Establish the connection to the MySQL
+			ret = sql_client.try_connect_mysql(company_group_number, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+			{
+				if (FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
+				{
+					String database_name = String.format("%s%02d", FinanceRecorderCmnDef.SQL_STOCK_DATABASE_NAME, company_group_number);
+					FinanceRecorderCmnDef.format_warn("The database[%s] does NOT exist, add all tables in the Not-Found List......", database_name);
+					LinkedList<Integer> all_source_type_index_list = FinanceRecorderCmnDef.get_all_source_type_index_list();
+					for(String company_code_number : company_code_entry.getValue())
+					{
+						for (Integer source_type_index : all_source_type_index_list)
+							not_exist_list.add(String.format("%s:%d", company_code_number, source_type_index));
+					}
+					return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+				}
+				else
+					return ret;
+			}
+// Check MySQL table exist
+			for(String company_code_number : company_code_entry.getValue())
+			{
+				for (Integer source_type_index : source_type_index_list)
+				{
+					ret = sql_client.check_table_exist(source_type_index, company_code_number);
+					if (FinanceRecorderCmnDef.CheckFailure(ret))
+					{
+						if (FinanceRecorderCmnDef.CheckFailureNotFound(ret))
+							not_exist_list.add(String.format("%s:%d", company_code_number, source_type_index));
+						else
+							break OUT;
+					}
+				}
+			}
+// Destroy the connection to the MySQL
+			sql_client.disconnect_mysql();
+		}
+
 		return ret;
 	}
 

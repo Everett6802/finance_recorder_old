@@ -27,6 +27,10 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 // Create Table command format
 	private static final String FORMAT_CMD_DELETE_TABLE_FORMAT = "DROP TABLE IF EXISTS %s";
 //	private static final String format_cmd_insert_into_table = "INSERT INTO sql%s VALUES(\"%s\", \"%s\", %d, \"%s\")";
+//// Check Database Exist command format
+//	private static final String FORMAT_CMD_CHECK_DATABASE_EXIST_FORMAT = "SHOW DATABASES LIKE \'%s\'";
+//// Check Table Exist command format
+//	private static final String FORMAT_CMD_CHECK_TABLE_EXIST_FORMAT = "SHOW TABLES LIKE \'%s\'";
 // Insert Data command format
 	private static final String FORMAT_CMD_INSERT_TABLE_HEAD_FORMAT = "INSERT INTO %s VALUES(";
 	private static final String FORMAT_CMD_INSERT_TABLE_TAIL = ")";
@@ -92,29 +96,36 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 //		return new java.sql.Date(dateStr.getTime());
 //	}
 
+	private static String get_sql_field_name(int field_index)
+	{
+		return (field_index != 0 ? String.format("%s%d", FinanceRecorderCmnDef.MYSQL_FILED_NAME_BASE, field_index) : FinanceRecorderCmnDef.MYSQL_DATE_FILED_NAME); 
+	}
+
 	public static short get_sql_field_command(int source_type_index, LinkedList<Integer> field_index_list, StringBuilder field_cmd_builder)
 	{
 		if (field_index_list.isEmpty())
-			throw new IllegalArgumentException("The query should NOT be empty");
-//		string field_cmd;
+			throw new IllegalArgumentException("The field_index_list should NOT be empty");
 // Select all the fields in the table
-		if ((int)field_index_list.size() == FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index] - 1) // Caution: Don't include the "date" field
+		if ((int)field_index_list.size() == FinanceRecorderCmnDef.FINANCE_DATABASE_FIELD_AMOUNT_LIST[source_type_index])
 			field_cmd_builder.append("*");
 		else
 		{
 // Assemble the MySQL command of the designated field
-// The "date" field is a must
-			String field_cmd = String.format("%s", FinanceRecorderCmnDef.MYSQL_DATE_FILED_NAME);
-//			int field_index_list_size = field_index_list.size();
-//			for(int field_index = 0 ; field_index < field_index_list_size ; field_index++)
 			ListIterator<Integer> iter = field_index_list.listIterator();
+			String field_cmd = get_sql_field_name(iter.next());
 			while(iter.hasNext())
 			{
-//				snprintf(field_buf, 16, ",%s%d", MYSQL_FILED_NAME_BASE, field_index_list[field_index]);
-//				field_cmd += string(field_buf);
-				Integer index = iter.next();
-				field_cmd += String.format(",%s%d", FinanceRecorderCmnDef.MYSQL_FILED_NAME_BASE, index);
+				Integer field_index = iter.next();
+				field_cmd += get_sql_field_name(field_index);
 			}
+//// The "date" field is a must no matter it exists in field_index_list
+//			String field_cmd = String.format("%s", FinanceRecorderCmnDef.MYSQL_DATE_FILED_NAME);
+//			ListIterator<Integer> iter = field_index_list.listIterator();
+//			while(iter.hasNext())
+//			{
+//				Integer index = iter.next();
+//				field_cmd += String.format(",%s%d", FinanceRecorderCmnDef.MYSQL_FILED_NAME_BASE, index);
+//			}
 			field_cmd_builder.append(field_cmd);
 		}
 		return FinanceRecorderCmnDef.RET_SUCCESS;
@@ -434,7 +445,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 
 	public short disconnect_mysql()
 	{
-		FinanceRecorderCmnDef.format_debug("Disconnect from the MySQL database server...");
+		FinanceRecorderCmnDef.debug("Disconnect from the MySQL database server...");
 		if (connection != null)
 		{
 			try 
@@ -449,7 +460,6 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 			connection = null;
 		}
 //		database_name = null;
-
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
@@ -554,6 +564,63 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 
 		FinanceRecorderCmnDef.format_debug("Try to open the MySQL table[%s]...... Successfully", table_name);
 		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	public short get_table_list(ArrayList<String> table_name_list)
+	{
+		FinanceRecorderCmnDef.format_debug("Get table list from the MySQL...");
+// Check if the connection is established
+		if (connection == null)
+		{
+			FinanceRecorderCmnDef.error("The connection is NOT established");
+			return  FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
+// Get table list
+		try 
+		{
+			DatabaseMetaData md = connection.getMetaData();
+			ResultSet rs = md.getTables(null, null, "%", null);
+			while (rs.next())
+			{
+//				System.out.printf("%s\n", rs.getString(3));
+				table_name_list.add(rs.getString(3));
+			}
+		} 
+		catch (SQLException e) 
+		{
+			FinanceRecorderCmnDef.format_error("Fail to get table list from the MySQL, due to %s", e.toString());
+			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL; 
+		}
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
+	protected short check_table_exist(String table_name)
+	{
+		FinanceRecorderCmnDef.format_debug("Check table exist from the MySQL...");
+// Check if the connection is established
+		if (connection == null)
+		{
+			FinanceRecorderCmnDef.error("The connection is NOT established");
+			return  FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
+// Check table exist
+		boolean table_found = false;
+		try 
+		{
+			DatabaseMetaData md = connection.getMetaData();
+			ResultSet rs = md.getTables(null, null, table_name, null);
+			if (rs.next())
+			{
+//				System.out.printf("%s\n", rs.getString(3));
+				table_found = true;
+			}
+		} 
+		catch (SQLException e) 
+		{
+			FinanceRecorderCmnDef.format_error("Fail to check table exist from the MySQL, due to %s", e.toString());
+			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL; 
+		}
+		return table_found ? FinanceRecorderCmnDef.RET_SUCCESS : FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
 	}
 
 //	short get_table_name_list(List<String> table_name_list)
@@ -764,7 +831,6 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 		}
 		int field_index_list_len = field_index_list.size();
-
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Generate the SQL command for querying
 		StringBuilder field_cmd_builder = new StringBuilder();
@@ -824,27 +890,6 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 						break OUT;
 					}
 				}
-
-//				String result_str = "";
-//				for(int i = 0 ; i < field_index_list_len ; i++)
-//				{
-//					String field_type = finance_data_sql_field_type_definition[field_index_list.get(i)];
-//					if (field_type.equals("INT"))
-//						result_str += String.format("%d,", rs.getInt(finance_data_sql_field_definition[field_index_list.get(i)]));
-//					else if (field_type.equals("BIGINT"))
-//						result_str += String.format("%d,", rs.getLong(finance_data_sql_field_definition[field_index_list.get(i)]));
-//					else if (field_type.equals("FLOAT"))
-//						result_str += String.format("%f,", rs.getFloat(finance_data_sql_field_definition[field_index_list.get(i)]));
-//					else if (field_type.contains("DATE"))
-//						result_str += String.format("%s,", rs.getString(finance_data_sql_field_definition[field_index_list.get(i)]));
-//					else
-//					{
-//						FinanceRecorderCmnDef.format_debug("Unknown SQL field type: %s", field_type);
-//						return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
-//					}
-//				}
-////				FinanceRecorderCmnDef.format_debug("Query Data: %s", result_str);
-//				data_list.add(result_str.substring(0, result_str.length() - 1));
 			}
 		}
 		catch(SQLException ex) //有可能會產生sql exception

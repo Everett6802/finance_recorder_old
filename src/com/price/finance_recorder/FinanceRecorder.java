@@ -4,6 +4,7 @@ package com.price.finance_recorder;
 //import java.util.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 //import java.util.List;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
@@ -22,6 +23,7 @@ public class FinanceRecorder
 	private static final byte DATABASE_OPERATION_DELETE_MASK = 0x1 << 2;
 	private static final byte DATABASE_OPERATION_CLEANUP_MASK = 0x1 << 3;
 	private static final byte DATABASE_OPERATION_RESTORE_MASK = 0x1 << 4;
+	private static final byte DATABASE_OPERATION_CHECK_EXIST_MASK = 0x1 << 5;
 
 	private static boolean help_param = false;
 	private static String finance_folderpath_param = null;
@@ -50,6 +52,7 @@ public class FinanceRecorder
 	private static boolean is_delete_operation_enabled(){return (database_operation & DATABASE_OPERATION_DELETE_MASK) != 0;}
 	private static boolean is_cleanup_operation_enabled(){return (database_operation & DATABASE_OPERATION_CLEANUP_MASK) != 0;}
 	private static boolean is_restore_operation_enabled(){return (database_operation & DATABASE_OPERATION_RESTORE_MASK) != 0;}
+	private static boolean is_check_exist_operation_enabled(){return (database_operation & DATABASE_OPERATION_CHECK_EXIST_MASK) != 0;}
 //	private static ActionType action_type = ActionType.Action_None;
 //	static boolean use_multithread = false;
 //	static boolean check_error = false;
@@ -306,6 +309,8 @@ public class FinanceRecorder
 				database_operation |= DATABASE_OPERATION_CLEANUP_MASK;
 			if (database_operation_param.indexOf('R') != -1 || database_operation_param.indexOf('r') != -1)
 				database_operation |= DATABASE_OPERATION_RESTORE_MASK;
+			if (database_operation_param.indexOf('E') != -1 || database_operation_param.indexOf('e') != -1)
+				database_operation |= DATABASE_OPERATION_CHECK_EXIST_MASK;
 			if ((database_operation & DATABASE_OPERATION_WRITE_MASK) != 0 && (database_operation & DATABASE_OPERATION_RESTORE_MASK) != 0)
 			{
 				FinanceRecorderCmnDef.warn("The 'write' and 'resotre' operation can NOT be enabled simultaneously, ignore the 'restore' operation");
@@ -481,12 +486,10 @@ public class FinanceRecorder
 					show_error_and_exit(String.format("Fail to set company, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 			}
 		}
-
 // Initialize the manager class
 		ret = finance_recorder_mgr.initialize();
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to initialize the Manager class, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-//
 ///////////////////////////////////////////////////////////////////
 //// CAUTION: The process stops after restore !!!
 ///////////////////////////////////////////////////////////////////
@@ -611,18 +614,19 @@ public class FinanceRecorder
 		System.out.printf("--market_mode --stock_mode\nDescription: Switch the market/stock mode\nCaution: Read parameters from %s when NOT set\n", FinanceRecorderCmnDef.MARKET_STOCK_SWITCH_CONF_FILENAME);
 		System.out.println("-h|--help\nDescription: The usage");
 		System.out.println("--silent\nDescription: True for disabling STDOUR/STDERR");
-		System.out.printf("--finance_folderpath\nDescription: The finance folder path\nDefault: %s\n", FinanceRecorderCmnDef.CSV_ROOT_FOLDERPATH);
+		System.out.printf("check_sql_exist--finance_folderpath\nDescription: The finance folder path\nDefault: %s\n", FinanceRecorderCmnDef.CSV_ROOT_FOLDERPATH);
 		System.out.printf("--finance_backup_folderpath\nDescription: The finance backup folder path\nDefault: %s\n", FinanceRecorderCmnDef.CSV_BACKUP_ROOT_FOLDERPATH);
 		System.out.printf("--finance_restore_folderpath\nDescription: The finance restore folder path\nDefault: %s\n", FinanceRecorderCmnDef.CSV_RESTORE_ROOT_FOLDERPATH);
 		System.out.printf("--show_finance_backup_foldername\nDescription: Show backup subfolder name list in a specific folder\nDefault folder: %s\n", FinanceRecorderCmnDef.CSV_BACKUP_ROOT_FOLDERPATH);
 		System.out.printf("--show_finance_restore_foldername\nDescription: Show restore subfolder name list in a specific folder\nDefault folder: %s\n", FinanceRecorderCmnDef.CSV_RESTORE_ROOT_FOLDERPATH);
 		System.out.println("-o|--database_operation\nDescription: Operate the MySQL");
-		System.out.println("  Type: {W(w), B(b), D(d), C(c), R(r)");
+		System.out.println("  Type: {W(w), B(b), D(d), C(c), R(r), E(e)");
 		System.out.println("  W(w): Write into SQL from CSV files");
 		System.out.println("  B(b): Backup SQL to CSV files");
 		System.out.println("  D(d): delete existing SQL");
 		System.out.println("  C(c): Clean-up all existing SQL");
 		System.out.println("  R(r): Restore SQL from CSV file");
+		System.out.println("  E(e): check SQL Exist");
 		System.out.println("Caution:");
 		System.out.println("  The R(r) attribute is ignored if W(w) set");
 		System.out.println("  The D(d) attribute is ignored if C(c) set");
@@ -899,6 +903,41 @@ public class FinanceRecorder
 			System.out.println(time_lapse_msg);
 	}
 
+	private static void check_exist_operation()
+	{
+		if(FinanceRecorderCmnDef.is_show_console())
+			System.out.println("Check MySQL exist......");
+
+		ArrayList<String> not_exist_list = new ArrayList<String>();
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		ret = finance_recorder_mgr.check_sql_exist(not_exist_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+			if (FinanceRecorderCmnDef.CheckFailureNotFound(ret))
+			{
+				String not_found_size_string = String.format("There are totally %d tables missing", not_exist_list.size());
+				FinanceRecorderCmnDef.warn(not_found_size_string);
+				if(FinanceRecorderCmnDef.is_show_console())
+					System.out.println(not_found_size_string);
+				for (String not_found : not_exist_list)
+				{
+					FinanceRecorderCmnDef.warn(not_found);
+					if(FinanceRecorderCmnDef.is_show_console())
+						System.out.println(not_found);
+				}
+			}
+			else
+				show_error_and_exit(String.format("Fail to check the MySQL exist, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		}
+		else
+		{
+			String no_not_found_string = "There are NO tables missing";
+			FinanceRecorderCmnDef.info(no_not_found_string);
+			if(FinanceRecorderCmnDef.is_show_console())
+				System.out.println(no_not_found_string);
+		}
+	}
+
 //	private static short backup_sql(boolean copy_backup_folder)
 //	{
 //		if(FinanceRecorderCmnDef.is_show_console())
@@ -1152,6 +1191,8 @@ public class FinanceRecorder
 		if (show_finance_backup_foldername_param || show_finance_restore_foldername_param)
 			show_backup_and_restore_foldername_list_and_exit();
 // After Initialization is done, start to work.......		
+		if (is_check_exist_operation_enabled())
+			check_exist_operation();
 
 		if (is_cleanup_operation_enabled())
 			cleanup_operation();

@@ -1,6 +1,7 @@
 package com.price.finance_recorder_base;
 
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
@@ -28,4 +29,6 @@ public interface FinanceRecorderDataHandlerInf
 	short delete_sql_by_source_type_and_company(); // Only useful in stock mode
 // Cleanup SQL
 	short cleanup_sql();
+// Cleanup SQL
+	short check_sql_exist(ArrayList<String> not_exist_list);
 }

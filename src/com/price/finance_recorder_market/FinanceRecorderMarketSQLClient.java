@@ -41,6 +41,11 @@ public class FinanceRecorderMarketSQLClient extends FinanceRecorderSQLClient
 		return delete_table(FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]);
 	}
 
+	short check_table_exist(int source_type_index)
+	{
+		return check_table_exist(FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index]);
+	}
+
 	short insert_data(int source_type_index, final FinanceRecorderCSVHandler csv_reader)
 	{
 		return insert_data(FinanceRecorderCmnDef.FINANCE_DATA_NAME_LIST[source_type_index], csv_reader);

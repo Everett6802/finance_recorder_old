@@ -243,6 +243,13 @@ OUT:
 		return ret;
 	}
 
+	public short check_sql_exist(ArrayList<String> not_exist_list)
+	{
+		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
+		short ret = finance_recorder_data_handler.check_sql_exist(not_exist_list);
+		return ret;
+	}
+
 //	private short update_backup_by_config_file(String filename, HashMap<Integer,FinanceRecorderCmnClass.TimeRangeCfg> time_range_table, HashMap<Integer, LinkedList<Integer>> source_field_table)
 //	{
 //		short ret = FinanceRecorderCmnDef.RET_SUCCESS;

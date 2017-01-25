@@ -1,5 +1,6 @@
 package com.price.finance_recorder_base;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
@@ -28,4 +29,5 @@ public interface FinanceRecorderMgrInf
 	short transfrom_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range);
 	short delete_sql();
 	short cleanup_sql();
+	short check_sql_exist(ArrayList<String> not_exist_list);
 }
