@@ -563,9 +563,9 @@ OUT:
 			ret = sql_client.try_connect_mysql(company_group_number, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 			{
+				String database_name = String.format("%s%02d", FinanceRecorderCmnDef.SQL_STOCK_DATABASE_NAME, company_group_number);
 				if (FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
 				{
-					String database_name = String.format("%s%02d", FinanceRecorderCmnDef.SQL_STOCK_DATABASE_NAME, company_group_number);
 					FinanceRecorderCmnDef.format_warn("The database[%s] does NOT exist, add all tables in the Not-Found List......", database_name);
 					LinkedList<Integer> all_source_type_index_list = FinanceRecorderCmnDef.get_all_source_type_index_list();
 					for(String company_code_number : company_code_entry.getValue())
@@ -573,12 +573,17 @@ OUT:
 						for (Integer source_type_index : all_source_type_index_list)
 							not_exist_list.add(String.format("%s:%d", company_code_number, source_type_index));
 					}
-					return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+					continue OUT;
 				}
 				else
+				{
+					FinanceRecorderCmnDef.format_error("Error occurs while checking database[%s] exist, due to: %s", database_name, FinanceRecorderCmnDef.GetErrorDescription(ret));
 					return ret;
+				}
 			}
 // Check MySQL table exist
+			boolean fail_and_exit = false;
+OUT1:
 			for(String company_code_number : company_code_entry.getValue())
 			{
 				for (Integer source_type_index : source_type_index_list)
@@ -586,18 +591,24 @@ OUT:
 					ret = sql_client.check_table_exist(source_type_index, company_code_number);
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
 					{
+						String table_name = String.format("%s:%d", company_code_number, source_type_index);
 						if (FinanceRecorderCmnDef.CheckFailureNotFound(ret))
-							not_exist_list.add(String.format("%s:%d", company_code_number, source_type_index));
+							not_exist_list.add(table_name);
 						else
-							break OUT;
+						{
+							FinanceRecorderCmnDef.format_error("Error occurs while checking table[%s] exist, due to: %s", table_name, FinanceRecorderCmnDef.GetErrorDescription(ret));
+							fail_and_exit = true;
+							break OUT1;
+						}
 					}
 				}
 			}
 // Destroy the connection to the MySQL
 			sql_client.disconnect_mysql();
+			if (fail_and_exit)
+				return ret;
 		}
-
-		return ret;
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	public void enable_multi_thread_type(boolean enable)

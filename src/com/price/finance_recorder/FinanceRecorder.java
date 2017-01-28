@@ -913,7 +913,11 @@ public class FinanceRecorder
 		ret = finance_recorder_mgr.check_sql_exist(not_exist_list);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
-			if (FinanceRecorderCmnDef.CheckFailureNotFound(ret))
+			show_error_and_exit(String.format("Fail to check the MySQL exist, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		}
+		else
+		{
+			if (!not_exist_list.isEmpty())
 			{
 				String not_found_size_string = String.format("There are totally %d tables missing", not_exist_list.size());
 				FinanceRecorderCmnDef.warn(not_found_size_string);
@@ -927,14 +931,12 @@ public class FinanceRecorder
 				}
 			}
 			else
-				show_error_and_exit(String.format("Fail to check the MySQL exist, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-		}
-		else
-		{
-			String no_not_found_string = "There are NO tables missing";
-			FinanceRecorderCmnDef.info(no_not_found_string);
-			if(FinanceRecorderCmnDef.is_show_console())
-				System.out.println(no_not_found_string);
+			{
+				String no_not_found_string = "There are NO tables missing";
+				FinanceRecorderCmnDef.info(no_not_found_string);
+				if(FinanceRecorderCmnDef.is_show_console())
+					System.out.println(no_not_found_string);
+			}
 		}
 	}
 
