@@ -1,21 +1,12 @@
 package com.price.finance_recorder_stock;
 
 import java.util.*;
-import java.io.*;
-
 import com.price.finance_recorder_base.FinanceRecorderCSVHandler;
 import com.price.finance_recorder_base.FinanceRecorderCSVHandlerMap;
 import com.price.finance_recorder_base.FinanceRecorderDataHandlerBase;
 import com.price.finance_recorder_base.FinanceRecorderDataHandlerInf;
-//import com.price.finance_recorder_base.FinanceRecorderSQLClient;
-//import com.price.finance_recorder_cmn.FinanceRecorderClassBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
-//import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.ResultSetMap;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
-//import com.price.finance_recorder_market.FinanceRecorderStockDataHandler;
-//import com.price.finance_recorder_market.FinanceRecorderStockSQLClient;
-//import com.price.finance_recorder_market.FinanceRecorderMarketSQLClient;
-import com.price.finance_recorder_market.FinanceRecorderMarketSQLClient;
 
 
 public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerBase
@@ -81,7 +72,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 	}
 
 	private FinanceRecorderCompanyGroupSet company_group_set = null;
-	private FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type = FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single;
+	private FinanceRecorderCmnDef.CreateThreadType database_create_thread_type = FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single;
 //	private LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange> source_type_time_range_list = null;
 //	private String csv_backup_foldername = FinanceRecorderCmnDef.COPY_BACKUP_FOLDERPATH;
 
@@ -96,6 +87,31 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 				whole_field_query_set.add_query(source_type_index);
 			whole_field_query_set.add_query_done();
 		}
+	}
+
+	protected short create_finance_folder_hierarchy(String root_folderpath)
+	{
+		short ret = FinanceRecorderCmnDef.create_folder_if_not_exist(root_folderpath);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			FinanceRecorderCmnDef.format_error("Fail to create the root folder[%s], due to: %s", root_folderpath, FinanceRecorderCmnDef.GetErrorDescription(ret));
+		for (Map.Entry<Integer, ArrayList<String>> entry : FinanceRecorderCompanyGroupSet.get_whole_company_number_in_group_map().entrySet())
+		{
+// Create the company group sub-folder
+			String company_group_folderpath = String.format("%s/stock%02d", root_folderpath, entry.getKey());
+			ret = FinanceRecorderCmnDef.create_folder_if_not_exist(company_group_folderpath);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				FinanceRecorderCmnDef.format_error("Fail to create the company group sub folder[%s], due to: %s", company_group_folderpath, FinanceRecorderCmnDef.GetErrorDescription(ret));
+// Create the company number sub-folder
+			ArrayList<String> company_number_list = entry.getValue();
+			for (String company_number : company_number_list)
+			{
+				String company_number_folderpath = String.format("%s/%s", company_group_folderpath, company_number);
+				ret = FinanceRecorderCmnDef.create_folder_if_not_exist(company_number_folderpath);
+				if (FinanceRecorderCmnDef.CheckFailure(ret))
+					FinanceRecorderCmnDef.format_error("Fail to create the company number sub folder[%s], due to: %s", company_number_folderpath, FinanceRecorderCmnDef.GetErrorDescription(ret));
+			}
+		}
+		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
 	public short read_from_csv(FinanceRecorderCSVHandlerMap csv_data_map, boolean stop_when_csv_not_foud)
@@ -143,7 +159,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 // Establish the connection to the MySQL and create the database if not exist
 			FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
 			String database_name = String.format("%s%02d", FinanceRecorderCmnDef.SQL_STOCK_DATABASE_NAME, company_group_number);
-			ret = sql_client.try_connect_mysql(database_name, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, database_create_thread_type);
+			ret = sql_client.try_connect_mysql(database_name, FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes, database_create_thread_type);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				break OUT;
 			for(String company_code_number : company_code_entry.getValue())
@@ -191,7 +207,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 //// Establish the connection to the MySQL and create the database if not exist
 //			FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
 //			String database_name = String.format("%s%02d", FinanceRecorderCmnDef.SQL_STOCK_DATABASE_NAME, company_group_number);
-//			ret = sql_client.try_connect_mysql(database_name, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, database_create_thread_type);
+//			ret = sql_client.try_connect_mysql(database_name, FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes, database_create_thread_type);
 //			if (FinanceRecorderCmnDef.CheckFailure(ret))
 //				break OUT;
 //// Traverse each company
@@ -229,7 +245,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 // Establish the connection to the MySQL and create the database if not exist
 			FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
 			String database_name = String.format("%s%02d", FinanceRecorderCmnDef.SQL_STOCK_DATABASE_NAME, company_group_number);
-			ret = sql_client.try_connect_mysql(database_name, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, database_create_thread_type);
+			ret = sql_client.try_connect_mysql(database_name, FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes, database_create_thread_type);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				break OUT;
 // For each company
@@ -267,7 +283,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 		return ret;
 	}
 
-	public short read_from_sql(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map)
+	public short read_from_sql(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map, boolean stop_when_sql_not_foud)
 	{
 		assert source_type_index_list != null : "source_type_index_list == NULL";
 		assert company_group_set != null : "company_group_set == NULL";
@@ -277,11 +293,12 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		FinanceRecorderCmnDef.ResultSetDataUnit data_unit = result_set_map.get_data_unit();
 		FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
+		sql_client.enable_ignore_select_not_exist(!stop_when_sql_not_foud);
 		for (Map.Entry<Integer, ArrayList<String>> company_code_entry : company_group_set)
 		{
 			int company_group_number = company_code_entry.getKey();
 // Establish the connection to the MySQL
-			ret = sql_client.try_connect_mysql(company_group_number, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+			ret = sql_client.try_connect_mysql(company_group_number, FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_No, FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 			FinanceRecorderCmnClass.ResultSet result_set = null;
@@ -346,9 +363,9 @@ OUT:
 
 		return ret;
 	}
-	public short read_from_sql(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map)
+	public short read_from_sql(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map, boolean stop_when_sql_not_foud)
 	{
-		return read_from_sql(whole_field_query_set, finance_time_range, result_set_map);
+		return read_from_sql(whole_field_query_set, finance_time_range, result_set_map, stop_when_sql_not_foud);
 	}
 
 	public short write_into_csv(FinanceRecorderCmnClass.ResultSetMap result_set_map)
@@ -357,6 +374,11 @@ OUT:
 		assert company_group_set != null : "company_group_set == NULL";
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Create the finance folder hierarchy for writing CSV
+		ret = create_finance_folder_hierarchy(finance_root_backup_folerpath);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+
 		FinanceRecorderCmnDef.ResultSetDataUnit data_unit = result_set_map.get_data_unit();
 		FinanceRecorderCmnClass.ResultSet result_set = null;
 OUT:
@@ -393,7 +415,7 @@ OUT:
 				int company_group_number = FinanceRecorderCmnDef.get_company_group_number(source_key);
 				result_set = entry.getValue();
 // Ignore the data which is NOT in the list
-				FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderStockDataHandler.get_csv_filepath(finance_root_folerpath, source_type_index, company_group_number, company_code_number));
+				FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderStockDataHandler.get_csv_filepath(finance_root_backup_folerpath, source_type_index, company_group_number, company_code_number));
 // Assemble the data and write into CSV
 				ArrayList<String> csv_data_list = result_set.to_string_array(source_type_index);
 				csv_writer.set_write_data(csv_data_list);
@@ -412,7 +434,7 @@ OUT:
 		return ret;
 	}
 
-	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
+	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, boolean stop_when_sql_not_foud)
 	{
 		assert source_type_index_list != null : "source_type_index_list == NULL";
 		assert company_group_set != null : "company_group_set == NULL";
@@ -423,7 +445,13 @@ OUT:
 			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 		}
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Create the finance folder hierarchy for writing CSV
+		ret = create_finance_folder_hierarchy(finance_root_backup_folerpath);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+
 		FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
+		sql_client.enable_ignore_select_not_exist(!stop_when_sql_not_foud);
 		FinanceRecorderCmnClass.ResultSet result_set = new FinanceRecorderCmnClass.ResultSet();
 // Add query set
 		for (Integer source_type_index : source_type_index_list)
@@ -436,7 +464,7 @@ OUT:
 		{
 			int company_group_number = company_code_entry.getKey();
 // Establish the connection to the MySQL
-			ret = sql_client.try_connect_mysql(company_group_number, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+			ret = sql_client.try_connect_mysql(company_group_number, FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_No, FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
 OUT:
@@ -447,7 +475,12 @@ OUT:
 				{
 					ret = sql_client.select_data(source_type_index, company_code_number, finance_time_range, result_set);
 					if (FinanceRecorderCmnDef.CheckFailure(ret))
-						break OUT;
+					{
+						if (FinanceRecorderCmnDef.CheckFailureNotFound(ret))
+							continue OUT;
+						else
+							break OUT;
+					}
 					FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderStockDataHandler.get_csv_filepath(finance_root_backup_folerpath, source_type_index, company_group_number, company_code_number));
 //Assemble the data and write into CSV
 					ArrayList<String> csv_data_list = result_set.to_string_array(source_type_index);
@@ -464,9 +497,9 @@ OUT:
 		}
 		return ret;
 	}
-	public short transfrom_whole_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
+	public short transfrom_whole_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, boolean stop_when_sql_not_foud)
 	{
-		return transfrom_sql_to_csv(whole_field_query_set, finance_time_range);
+		return transfrom_sql_to_csv(whole_field_query_set, finance_time_range, stop_when_sql_not_foud);
 	}
 
 	private short delete_sql_table_by_source_type_and_company(List<Integer> in_source_type_index_list, FinanceRecorderCompanyGroupSet in_company_group_set)
@@ -477,10 +510,10 @@ OUT:
 			FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
 			int company_group_number = company_code_entry.getKey();
 // Establish the connection to the MySQL
-			ret = sql_client.try_connect_mysql(company_group_number, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+			ret = sql_client.try_connect_mysql(company_group_number, FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_No, FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				return ret;
-OUT:
+//OUT:
 			for(String company_code_number : company_code_entry.getValue())
 			{
 // Delete each table
@@ -529,7 +562,7 @@ OUT:
 		{
 			String database_name = FinanceRecorderStockSQLClient.get_database_name(i);
 			FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
-			ret = sql_client.try_connect_mysql(database_name, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+			ret = sql_client.try_connect_mysql(database_name, FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes, FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 			{
 				if (FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
@@ -560,7 +593,7 @@ OUT:
 			FinanceRecorderStockSQLClient sql_client = new FinanceRecorderStockSQLClient();
 			int company_group_number = company_code_entry.getKey();
 // Establish the connection to the MySQL
-			ret = sql_client.try_connect_mysql(company_group_number, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+			ret = sql_client.try_connect_mysql(company_group_number, FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_No, FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 			{
 				String database_name = String.format("%s%02d", FinanceRecorderCmnDef.SQL_STOCK_DATABASE_NAME, company_group_number);
@@ -613,7 +646,7 @@ OUT1:
 
 	public void enable_multi_thread_type(boolean enable)
 	{
-		database_create_thread_type = enable ? FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Multiple : FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single;
+		database_create_thread_type = enable ? FinanceRecorderCmnDef.CreateThreadType.CreateThread_Multiple : FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single;
 	}
-	public boolean is_multi_thread_type(){return database_create_thread_type == FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Multiple;}
+	public boolean is_multi_thread_type(){return database_create_thread_type == FinanceRecorderCmnDef.CreateThreadType.CreateThread_Multiple;}
 }

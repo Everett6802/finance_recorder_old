@@ -477,12 +477,9 @@ public class FinanceRecorderCmnDef
 		}
 	};
 
-	public static enum DatabaseNotExistIngoreType {DatabaseNotExistIngore_Yes, DatabaseNotExistIngore_No,};
-
-	public static enum DatabaseCreateThreadType {DatabaseCreateThread_Single, DatabaseCreateThread_Multiple,};
-
 	public static enum DatabaseEnableBatchType {DatabaseEnableBatch_Yes, DatabaseEnableBatch_No,};
-
+	public static enum CreateThreadType {CreateThread_Single, CreateThread_Multiple,};
+	public static enum NotExistIngoreType {NotExistIngore_Yes, NotExistIngore_No,};
 	public static enum ResultSetDataUnit {ResultSetDataUnit_NoSourceType, ResultSetDataUnit_SourceType};
 
 	public static final String[] FINANCE_DATA_NAME_LIST = new String[] 
@@ -1159,6 +1156,13 @@ public class FinanceRecorderCmnDef
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM"); // your template here
 		java.util.Date date = formatter.parse(date_str);
 		return date;
+	}
+
+	public static final String get_time_folder_name()
+	{
+		Calendar cal = Calendar.getInstance();
+		String time_string = String.format("%04d%02d%02d%02d%02d%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DATE), cal.get(Calendar.HOUR), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND));
+		return time_string;
 	}
 
 //	public static final String get_month_str(java.util.Date date) 

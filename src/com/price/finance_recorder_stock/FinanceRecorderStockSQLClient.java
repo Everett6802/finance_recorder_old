@@ -41,8 +41,8 @@ public class FinanceRecorderStockSQLClient extends FinanceRecorderSQLClient
 
 	short try_connect_mysql(
 			int company_group_number,
-			FinanceRecorderCmnDef.DatabaseNotExistIngoreType database_not_exist_ignore_type,
-			FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type
+			FinanceRecorderCmnDef.NotExistIngoreType database_not_exist_ignore_type,
+			FinanceRecorderCmnDef.CreateThreadType database_create_thread_type
 		)
 	{
 		String database_name = get_database_name(company_group_number);

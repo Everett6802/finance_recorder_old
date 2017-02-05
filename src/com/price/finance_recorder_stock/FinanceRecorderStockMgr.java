@@ -119,7 +119,7 @@ public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short transfrom_csv_to_sql_multithread(boolean stop_when_csv_not_foud, int sub_company_group_set_amount)
+	public short transfrom_csv_to_sql_multithread(int sub_company_group_set_amount, boolean stop_when_csv_not_foud)
 	{
 		ArrayList<FinanceRecorderCompanyGroupSet> sub_company_group_set_list = company_group_set.get_sub_company_group_set_list(sub_company_group_set_amount);
 // Create thread pool 

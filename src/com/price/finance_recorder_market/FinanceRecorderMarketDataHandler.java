@@ -1,8 +1,7 @@
 package com.price.finance_recorder_market;
 
-import java.io.*;
+//import java.io.*;
 import java.util.*;
-
 import com.price.finance_recorder_base.FinanceRecorderCSVHandler;
 import com.price.finance_recorder_base.FinanceRecorderCSVHandlerMap;
 import com.price.finance_recorder_base.FinanceRecorderDataHandlerBase;
@@ -80,6 +79,14 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		}
 	}
 
+	protected short create_finance_folder_hierarchy(String root_folderpath)
+	{
+		short ret = FinanceRecorderCmnDef.create_folder_if_not_exist(root_folderpath);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			FinanceRecorderCmnDef.format_error("Fail to create the root folder[%s], due to: %s", root_folderpath, FinanceRecorderCmnDef.GetErrorDescription(ret));
+		return ret;
+	}
+
 	public short read_from_csv(FinanceRecorderCSVHandlerMap csv_data_map, boolean stop_when_csv_not_foud)
 	{
 		assert source_type_index_list != null : "source_type_index_list == NULL";
@@ -111,7 +118,7 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Establish the connection to the MySQL and create the database if not exist
 		FinanceRecorderMarketSQLClient sql_client = new FinanceRecorderMarketSQLClient();
-		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes, FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 		OUT:
@@ -161,7 +168,7 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Establish the connection to the MySQL and create the database if not exist
 		FinanceRecorderMarketSQLClient sql_client = new FinanceRecorderMarketSQLClient();
-		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes, FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 		OUT:
@@ -195,7 +202,7 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		return ret;
 	}
 
-	public short read_from_sql(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map)
+	public short read_from_sql(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map, boolean stop_when_sql_not_foud)
 	{
 		assert source_type_index_list != null : "source_type_index_list == NULL";
 
@@ -205,7 +212,8 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		FinanceRecorderCmnDef.ResultSetDataUnit data_unit = result_set_map.get_data_unit();
 // Establish the connection to the MySQL
 		FinanceRecorderMarketSQLClient sql_client = new FinanceRecorderMarketSQLClient();
-		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+		sql_client.enable_ignore_select_not_exist(!stop_when_sql_not_foud);
+		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_No, FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 		FinanceRecorderCmnClass.ResultSet result_set = null;
@@ -267,9 +275,9 @@ OUT:
 		sql_client.disconnect_mysql();
 		return ret;
 	}
-	public short read_from_sql(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map)
+	public short read_from_sql(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, FinanceRecorderCmnClass.ResultSetMap result_set_map, boolean stop_when_sql_not_foud)
 	{
-		return read_from_sql(whole_field_query_set, finance_time_range, result_set_map);
+		return read_from_sql(whole_field_query_set, finance_time_range, result_set_map, stop_when_sql_not_foud);
 	}
 
 	public short write_into_csv(FinanceRecorderCmnClass.ResultSetMap result_set_map)
@@ -277,6 +285,11 @@ OUT:
 		assert source_type_index_list != null : "source_type_index_list == NULL";
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Create the finance folder hierarchy for writing CSV
+		ret = create_finance_folder_hierarchy(finance_root_backup_folerpath);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+
 		FinanceRecorderCmnDef.ResultSetDataUnit data_unit = result_set_map.get_data_unit();
 OUT:
 		switch (data_unit)
@@ -358,7 +371,7 @@ OUT:
 		return ret;
 	}
 
-	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
+	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, boolean stop_when_sql_not_foud)
 	{
 		assert source_type_index_list != null : "source_type_index_list == NULL";
 
@@ -367,9 +380,14 @@ OUT:
 			FinanceRecorderCmnDef.error("The add-done flag in query_set is NOT true");
 			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 		}
+
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+// Create the finance folder hierarchy for writing CSV
+		ret = create_finance_folder_hierarchy(finance_root_backup_folerpath);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
 // CAUTION: The data set in the reslt_set variable should be added before calling this function 
 // Set the mapping table of reading the specific CSV files and writing correct SQL database
-		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		FinanceRecorderCmnClass.ResultSet result_set = new FinanceRecorderCmnClass.ResultSet();
 // Add query set
 		for (Integer source_type_index : source_type_index_list)
@@ -380,33 +398,37 @@ OUT:
 		}
 // Establish the connection to the MySQL
 		FinanceRecorderMarketSQLClient sql_client = new FinanceRecorderMarketSQLClient();
-		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_No, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+		sql_client.enable_ignore_select_not_exist(!stop_when_sql_not_foud);
+		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_No, FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 OUT:
+		for (Integer source_type_index : source_type_index_list)
 		{
-			for (Integer source_type_index : source_type_index_list)
-			{
 // Query data from each source type
-				ret = sql_client.select_data(source_type_index, finance_time_range, result_set);
-				if (FinanceRecorderCmnDef.CheckFailure(ret))
-					break OUT;
-				FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderMarketDataHandler.get_csv_filepath(finance_root_backup_folerpath, source_type_index));
-//Assemble the data and write into CSV
-				ArrayList<String> csv_data_list = result_set.to_string_array(source_type_index);
-				csv_writer.set_write_data(csv_data_list);
-				ret = csv_writer.write();
-				if (FinanceRecorderCmnDef.CheckFailure(ret))
+			ret = sql_client.select_data(source_type_index, finance_time_range, result_set);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+			{
+				if (FinanceRecorderCmnDef.CheckFailureNotFound(ret))
+					continue OUT;
+				else
 					break OUT;
 			}
+			FinanceRecorderCSVHandler csv_writer = FinanceRecorderCSVHandler.get_csv_writer(FinanceRecorderMarketDataHandler.get_csv_filepath(finance_root_backup_folerpath, source_type_index));
+//Assemble the data and write into CSV
+			ArrayList<String> csv_data_list = result_set.to_string_array(source_type_index);
+			csv_writer.set_write_data(csv_data_list);
+			ret = csv_writer.write();
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				break OUT;
 		}
 // Destroy the connection to the MySQL
 		sql_client.disconnect_mysql();
 		return ret;
 	}
-	public short transfrom_whole_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
+	public short transfrom_whole_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, boolean stop_when_sql_not_foud)
 	{
-		return transfrom_sql_to_csv(whole_field_query_set, finance_time_range);
+		return transfrom_sql_to_csv(whole_field_query_set, finance_time_range, stop_when_sql_not_foud);
 	}
 
 	public short delete_sql_by_source_type()
@@ -416,7 +438,7 @@ OUT:
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Establish the connection to the MySQL
 		FinanceRecorderMarketSQLClient sql_client = new FinanceRecorderMarketSQLClient();
-		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes, FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
 			if (FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
@@ -449,7 +471,7 @@ OUT:
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Establish the connection to the MySQL
 		FinanceRecorderMarketSQLClient sql_client = new FinanceRecorderMarketSQLClient();
-		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes, FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
 			if (FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))
@@ -469,7 +491,7 @@ OUT:
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Establish the connection to the MySQL
 		FinanceRecorderMarketSQLClient sql_client = new FinanceRecorderMarketSQLClient();
-		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes, FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Single);
+		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes, FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
 			if (FinanceRecorderCmnDef.CheckMySQLFailureUnknownDatabase(ret))

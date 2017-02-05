@@ -85,8 +85,8 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 	public void set_finance_backup_folderpath(String finance_backup_folderpath){finance_root_backup_folderpath = finance_backup_folderpath;}
 	public void set_finance_restore_folderpath(String finance_restore_folderpath){finance_root_restore_folderpath = finance_restore_folderpath;}
 	public String get_finance_folderpath(){return finance_root_folderpath;}
-	public String set_finance_backup_folderpath(){return finance_root_backup_folderpath;}
-	public String set_finance_restore_folderpath(){return finance_root_restore_folderpath;}
+	public String get_finance_backup_folderpath(){return finance_root_backup_folderpath;}
+	public String get_finance_restore_folderpath(){return finance_root_restore_folderpath;}
 
 	public short get_backup_foldername_list(List<String> sorted_sub_foldername_list)
 	{
@@ -189,19 +189,19 @@ OUT:
 		return ret;
 	}
 
-	public short transfrom_csv_to_sql_multithread(boolean stop_when_csv_not_foud, int sub_company_group_set_amount)
+	public short transfrom_csv_to_sql_multithread(int sub_company_group_set_amount, boolean stop_when_csv_not_foud)
 	{
 		throw new RuntimeException("Not support multh-thread !!!");
 	}
 
-	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
+	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, boolean stop_when_sql_not_foud)
 	{
 		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
-		short ret = finance_recorder_data_handler.transfrom_sql_to_csv(query_set, finance_time_range);
+		short ret = finance_recorder_data_handler.transfrom_sql_to_csv(query_set, finance_time_range, stop_when_sql_not_foud);
 		return ret;
 	}
 
-	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
+	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, boolean stop_when_sql_not_foud)
 	{
 		FinanceRecorderCmnClass.QuerySet query_set = new FinanceRecorderCmnClass.QuerySet();
 		for (Integer source_type_index : source_type_index_list)
@@ -212,7 +212,7 @@ OUT:
 			FinanceRecorderCmnDef.error("Fail to set add-done flag in query_set to true");
 			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 		}
-		return transfrom_sql_to_csv(query_set, finance_time_range);
+		return transfrom_sql_to_csv(query_set, finance_time_range, stop_when_sql_not_foud);
 	}
 
 	public short delete_sql()

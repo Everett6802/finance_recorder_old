@@ -3,13 +3,9 @@ package com.price.finance_recorder_base;
 import java.sql.*;
 import java.text.*;
 import java.util.*;
-
 import com.price.finance_recorder_cmn.FinanceRecorderClassBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
-//import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceDateRange;
-//import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceMonthRange;
-//import com.price.finance_recorder_cmn.FinanceRecorderCmnClass.FinanceQuarterRange;
 
 
 public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
@@ -343,9 +339,10 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 //	private String table_name = null;
 //	private FinanceRecorderCmnDef.FinanceObserverInf finance_observer = null;
 //	private int source_type_index;
-//	private FinanceRecorderCmnDef.DatabaseNotExistIngoreType database_not_exist_ignore_type = null; 
-//	private FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type = null;
+//	private FinanceRecorderCmnDef.NotExistIngoreType database_not_exist_ignore_type = null; 
+//	private FinanceRecorderCmnDef.CreateThreadType database_create_thread_type = null;
 	private FinanceRecorderCmnDef.DatabaseEnableBatchType batch_operation = FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_No;
+	private FinanceRecorderCmnDef.NotExistIngoreType select_table_not_exist_type = FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes;
 
 	protected FinanceRecorderSQLClient()
 	{
@@ -358,8 +355,8 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 
 	public short try_connect_mysql(
 			String database_name, 
-			FinanceRecorderCmnDef.DatabaseNotExistIngoreType database_not_exist_ignore_type, 
-			FinanceRecorderCmnDef.DatabaseCreateThreadType database_create_thread_type
+			FinanceRecorderCmnDef.NotExistIngoreType database_not_exist_ignore_type, 
+			FinanceRecorderCmnDef.CreateThreadType database_create_thread_type
 		)
 	{
 //		database_name = database;
@@ -392,7 +389,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{
-			if (database_not_exist_ignore_type == FinanceRecorderCmnDef.DatabaseNotExistIngoreType.DatabaseNotExistIngore_Yes)
+			if (database_not_exist_ignore_type == FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes)
 			{
 				FinanceRecorderCmnDef.format_debug("The %s database does NOT exist, create a NEW one", database_name);
 				try
@@ -406,7 +403,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 					}
 					catch(SQLException ex1) //有可能會產生sql exception
 					{
-						if (database_create_thread_type == FinanceRecorderCmnDef.DatabaseCreateThreadType.DatabaseCreateThread_Multiple && ex.getErrorCode() == 1049)
+						if (database_create_thread_type == FinanceRecorderCmnDef.CreateThreadType.CreateThread_Multiple && ex.getErrorCode() == 1049)
 							FinanceRecorderCmnDef.format_warn("The database[%s] has already existed", database_name);
 						else
 							throw ex1;
@@ -514,11 +511,12 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 			Statement s = connection.createStatement();
 			FinanceRecorderCmnDef.format_debug("Try to create table[%s] by command: %s", table_name, cmd_create_table);
 			s.executeUpdate(cmd_create_table);
+//			FinanceRecorderCmnDef.format_debug("Try to open the MySQL table[%s]...... Successfully", table_name);
 		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{
 			if (ex.getErrorCode() == 1050)
-				FinanceRecorderCmnDef.format_info("The table[%s] has already existed", table_name);
+				FinanceRecorderCmnDef.format_debug("The table[%s] has already existed", table_name);
 			else
 			{
 				FinanceRecorderCmnDef.format_error("Fails to create table[%s], due to: %s", table_name, ex.getMessage());
@@ -526,7 +524,6 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 			}
 		}
 
-		FinanceRecorderCmnDef.format_debug("Try to open the MySQL table[%s]...... Successfully", table_name);
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
@@ -857,6 +854,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 		}
 
+		String[] finance_data_sql_field_type_definition = FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_TYPE_DEFINITION_LIST[source_type_index];
 		String[] finance_data_sql_field_definition = FinanceRecorderCmnDef.FINANCE_DATA_SQL_FIELD_DEFINITION_LIST[source_type_index];
 		ResultSet rs = null;
 		try
@@ -870,7 +868,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 				for(int i = 0 ; i < field_index_list_len ; i++)
 				{
 					Integer field_index = field_index_list.get(i);
-					String field_type = finance_data_sql_field_definition[field_index];
+					String field_type = finance_data_sql_field_type_definition[field_index];
 					if (field_type.equals("INT"))
 						result_set.set_data(source_type_index, field_index, rs.getInt(finance_data_sql_field_definition[field_index]));
 					else if (field_type.equals("BIGINT"))
@@ -879,8 +877,8 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 						result_set.set_data(source_type_index, field_index, rs.getFloat(finance_data_sql_field_definition[field_index]));
 					else if (field_type.contains("DATE"))
 					{
-						String field_date_type = "DATE"; //finance_data_sql_field_definition[field_index_list.get(i)];
-						String date_field_data = rs.getString(field_date_type);
+//						String field_date_type = "DATE"; //finance_data_sql_field_definition[field_index_list.get(i)];
+						String date_field_data = rs.getString("DATE");
 						result_set.set_date(date_field_data);
 					}
 					else
@@ -894,8 +892,16 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{
-			FinanceRecorderCmnDef.format_error("Fail to select from data by command[%s], due to: %s", pstmt, ex.getMessage());
-			ret = FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+			if (select_table_not_exist_type == FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes && ex.getErrorCode() == 1146)
+			{
+				FinanceRecorderCmnDef.format_warn("The table[%s] does NOT exist", table_name);
+				ret = FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+			}
+			else
+			{
+				FinanceRecorderCmnDef.format_error("Fail to select from data by command[%s], due to: %s", pstmt, ex.getMessage());
+				ret = FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+			}
 		}
 		catch(Exception ex)
 		{
@@ -927,12 +933,21 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 	protected short select_data(String table_name, int source_type_index, String cmd_table_field, FinanceRecorderCmnClass.ResultSet result_set){return select_data(table_name, source_type_index, cmd_table_field, null, result_set);}
 	protected short select_data(String table_name, int source_type_index, FinanceRecorderCmnClass.ResultSet result_set){return select_data(table_name, source_type_index, "*", null, result_set);}
 
-	void enable_batch_operation(boolean enable)
+	public void enable_batch_operation(boolean enable)
 	{
 		if (enable)
 			batch_operation = FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_Yes;
 		else
 			batch_operation = FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_No;
 	}
-	boolean is_batch_operation(){return (batch_operation == FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_Yes ? true : false);}
+	public boolean is_batch_operation(){return (batch_operation == FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_Yes ? true : false);}
+
+	public void enable_ignore_select_not_exist(boolean enable)
+	{
+		if (enable)
+			select_table_not_exist_type = FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes;
+		else
+			select_table_not_exist_type = FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_No;
+	}
+	public boolean is_ignore_select_not_exist(){return (select_table_not_exist_type == FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes ? true : false);}
 }
