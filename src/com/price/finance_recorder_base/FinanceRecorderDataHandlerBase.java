@@ -16,4 +16,5 @@ public abstract class FinanceRecorderDataHandlerBase extends FinanceRecorderClas
 	public void set_finance_root_folerpath(String folderpath){finance_root_folerpath = folderpath;}
 	public void set_finance_root_backup_folerpath(String backup_folderpath){finance_root_backup_folerpath = backup_folderpath;}
 	protected abstract short create_finance_folder_hierarchy(String root_folderpath);
+	protected abstract short parse_missing_csv();
 }

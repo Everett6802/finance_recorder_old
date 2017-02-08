@@ -861,7 +861,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 		{
 			FinanceRecorderCmnDef.format_debug("Select from data by command: %s", pstmt);
 			rs = pstmt.executeQuery();
-			OUT:
+OUT:
 			while(rs.next())
 			{
 // Read the result from MySQL

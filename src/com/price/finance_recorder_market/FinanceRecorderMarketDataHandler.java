@@ -2,6 +2,7 @@ package com.price.finance_recorder_market;
 
 //import java.io.*;
 import java.util.*;
+
 import com.price.finance_recorder_base.FinanceRecorderCSVHandler;
 import com.price.finance_recorder_base.FinanceRecorderCSVHandlerMap;
 import com.price.finance_recorder_base.FinanceRecorderDataHandlerBase;
@@ -63,6 +64,7 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		return get_data_handler(null);
 	}
 
+	private ArrayList<Integer> missing_csv_list = null;
 //	private LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange> source_type_time_range_list = null;
 //	private String finance_root_backup_folerpath = FinanceRecorderCmnDef.BACKUP_CSV_ROOT_FOLDERPATH;
 
@@ -87,11 +89,58 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		return ret;
 	}
 
+	protected short parse_missing_csv()
+	{
+		LinkedList<String> config_line_list = new LinkedList<String>();
+		short ret = FinanceRecorderCmnDef.get_config_file_lines(FinanceRecorderCmnDef.MISSING_CSV_MARKET_FILENAME, finance_root_folerpath, config_line_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+			if (!FinanceRecorderCmnDef.CheckFailureNotFound(ret))
+				return ret;
+			else
+				FinanceRecorderCmnDef.format_debug("The missing CSV file[%s] does NOT exist", FinanceRecorderCmnDef.MISSING_CSV_MARKET_FILENAME);
+		}
+		else
+		{
+// Parse the config
+//			missing_csv_list = new ArrayList<Integer>();
+			String missing_csv_title = config_line_list.pop();
+			if (missing_csv_title.indexOf("[FileNotFound]") != -1)
+				missing_csv_list = new ArrayList<Integer>();
+			else
+			{
+				config_line_list.pop();
+				missing_csv_title = config_line_list.pop();
+				if (missing_csv_title.indexOf("[FileNotFound]") != -1)
+					missing_csv_list = new ArrayList<Integer>();
+			}
+			if (missing_csv_list != null)
+			{
+				String missing_csv_string = config_line_list.pop();
+				String[] missing_csv_array = missing_csv_string.split(";");
+				for (String missing_csv : missing_csv_array)
+				{
+					Integer source_type_index = Integer.valueOf(missing_csv);
+					missing_csv_list.add(source_type_index);
+				}
+			}
+		}
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
 	public short read_from_csv(FinanceRecorderCSVHandlerMap csv_data_map, boolean stop_when_csv_not_foud)
 	{
 		assert source_type_index_list != null : "source_type_index_list == NULL";
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		if (stop_when_csv_not_foud)
+		{
+// Ignore the CSV file which is already in the Not Found list
+			ret = parse_missing_csv();
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				return ret;
+		}
+
 		for (Integer source_type_index : source_type_index_list)
 		{
 			FinanceRecorderCSVHandler csv_reader = FinanceRecorderCSVHandler.get_csv_reader(FinanceRecorderMarketDataHandler.get_csv_filepath(finance_root_folerpath, source_type_index));
@@ -99,7 +148,18 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 			{
 				FinanceRecorderCmnDef.error(String.format("CSV NOT Found [%s:%d]", source_type_index));
 				if (stop_when_csv_not_foud)
+				{
+//Check this missing CSV exist in the Not Found list
+					if (missing_csv_list != null)
+					{
+						if (missing_csv_list.indexOf(source_type_index) != -1)
+						{
+							FinanceRecorderCmnDef.format_debug("CSV[%d] already in the Not-Found list", source_type_index);
+							continue;
+						}
+					}
 					return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+				}
 				else
 					continue;
 			}
@@ -166,12 +226,19 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 		assert source_type_index_list != null : "source_type_index_list == NULL";
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		if (stop_when_csv_not_foud)
+		{
+// Ignore the CSV file which is already in the Not Found list
+			ret = parse_missing_csv();
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				return ret;
+		}
 // Establish the connection to the MySQL and create the database if not exist
 		FinanceRecorderMarketSQLClient sql_client = new FinanceRecorderMarketSQLClient();
 		ret = sql_client.try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes, FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
-		OUT:
+OUT:
 // For each source type
 		for (Integer source_type_index : source_type_index_list)
 		{
@@ -181,7 +248,18 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 			{
 				FinanceRecorderCmnDef.error(String.format("CSV NOT Found [%s:%d]", source_type_index));
 				if (stop_when_csv_not_foud)
+				{
+//Check this missing CSV exist in the Not Found list
+					if (missing_csv_list != null)
+					{
+						if (missing_csv_list.indexOf(source_type_index) != -1)
+						{
+							FinanceRecorderCmnDef.format_debug("CSV[%d] already in the Not-Found list", source_type_index);
+							continue;
+						}
+					}
 					return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+				}
 				else
 					continue;
 			}

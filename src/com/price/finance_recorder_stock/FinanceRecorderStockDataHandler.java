@@ -1,6 +1,8 @@
 package com.price.finance_recorder_stock;
 
+import java.io.File;
 import java.util.*;
+
 import com.price.finance_recorder_base.FinanceRecorderCSVHandler;
 import com.price.finance_recorder_base.FinanceRecorderCSVHandlerMap;
 import com.price.finance_recorder_base.FinanceRecorderDataHandlerBase;
@@ -73,6 +75,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 
 	private FinanceRecorderCompanyGroupSet company_group_set = null;
 	private FinanceRecorderCmnDef.CreateThreadType database_create_thread_type = FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single;
+	private HashMap<String, ArrayList<Integer>> missing_csv_map = null;
 //	private LinkedList<FinanceRecorderCmnClass.SourceTypeTimeRange> source_type_time_range_list = null;
 //	private String csv_backup_foldername = FinanceRecorderCmnDef.COPY_BACKUP_FOLDERPATH;
 
@@ -114,12 +117,64 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
+	protected short parse_missing_csv()
+	{
+//		String missing_csv_filepath = String.format("%s/%s", finance_root_folerpath, FinanceRecorderCmnDef.MISSING_CSV_STOCK_FILENAME);
+		LinkedList<String> config_line_list = new LinkedList<String>();
+		short ret = FinanceRecorderCmnDef.get_config_file_lines(FinanceRecorderCmnDef.MISSING_CSV_STOCK_FILENAME, finance_root_folerpath, config_line_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+			if (!FinanceRecorderCmnDef.CheckFailureNotFound(ret))
+				return ret;
+			else
+				FinanceRecorderCmnDef.format_debug("The missing CSV file[%s] does NOT exist", FinanceRecorderCmnDef.MISSING_CSV_STOCK_FILENAME);
+		}
+		else
+		{
+// Parse the config
+//			missing_csv_map = new HashMap<String, ArrayList<Integer>>();
+			String missing_csv_title = config_line_list.pop();
+			if (missing_csv_title.indexOf("[FileNotFound]") != -1)
+				missing_csv_map = new HashMap<String, ArrayList<Integer>>();
+			else
+			{
+				config_line_list.pop();
+				missing_csv_title = config_line_list.pop();
+				if (missing_csv_title.indexOf("[FileNotFound]") != -1)
+					missing_csv_map = new HashMap<String, ArrayList<Integer>>();
+			}
+			if (missing_csv_map != null)
+			{
+				String missing_csv_string = config_line_list.pop();
+				String[] missing_csv_array = missing_csv_string.split(";");
+				for (String missing_csv : missing_csv_array)
+				{
+					String[] missing_csv_element_array = missing_csv.split(":");
+					String company_number = missing_csv_element_array[0];
+					Integer source_type_index = Integer.valueOf(missing_csv_element_array[1]);
+					if (!missing_csv_map.containsKey(company_number))
+						missing_csv_map.put(company_number, new ArrayList<Integer>());
+					missing_csv_map.get(company_number).add(source_type_index);
+				}
+			}
+		}
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
 	public short read_from_csv(FinanceRecorderCSVHandlerMap csv_data_map, boolean stop_when_csv_not_foud)
 	{
 		assert source_type_index_list != null : "source_type_index_list == NULL";
 		assert company_group_set != null : "company_group_set == NULL";
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		if (stop_when_csv_not_foud)
+		{
+// Ignore the CSV file which is already in the Not Found list
+			ret = parse_missing_csv();
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				return ret;
+		}
+
 		for (Map.Entry<Integer, ArrayList<String>> company_code_entry : company_group_set)
 		{
 			int company_group_number = company_code_entry.getKey();
@@ -132,7 +187,22 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 					{
 						FinanceRecorderCmnDef.error(String.format("CSV NOT Found [%s:%d]", company_code_number, source_type_index));
 						if (stop_when_csv_not_foud)
+						{
+// Check this missing CSV exist in the Not Found list
+							if (missing_csv_map != null)
+							{
+								if (missing_csv_map.containsKey(company_code_number))
+								{
+									ArrayList<Integer> source_type_index_list = missing_csv_map.get(company_code_number);
+									if (source_type_index_list.indexOf(source_type_index) != -1)
+									{
+										FinanceRecorderCmnDef.format_debug("CSV[%s:%d] already in the Not-Found list", company_code_number, source_type_index);
+										continue;
+									}
+								}
+							}
 							return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+						}
 						else
 							continue;
 					}
@@ -238,7 +308,14 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 		assert company_group_set != null : "company_group_set == NULL";
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		OUT:
+		if (stop_when_csv_not_foud)
+		{
+// Ignore the CSV file which is already in the Not Found list
+			ret = parse_missing_csv();
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+				return ret;
+		}
+OUT:
 		for (Map.Entry<Integer, ArrayList<String>> company_code_entry : company_group_set)
 		{
 			int company_group_number = company_code_entry.getKey();
@@ -260,7 +337,22 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 					{
 						FinanceRecorderCmnDef.error(String.format("CSV NOT Found [%s:%d]", company_code_number, source_type_index));
 						if (stop_when_csv_not_foud)
+						{
+// Check this missing CSV exist in the Not Found list
+							if (missing_csv_map != null)
+							{
+								if (missing_csv_map.containsKey(company_code_number))
+								{
+									ArrayList<Integer> source_type_index_list = missing_csv_map.get(company_code_number);
+									if (source_type_index_list.indexOf(source_type_index) != -1)
+									{
+										FinanceRecorderCmnDef.format_debug("CSV[%s:%d] already in the Not-Found list", company_code_number, source_type_index);
+										continue;
+									}
+								}
+							}
 							return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+						}
 						else
 							continue;
 					}

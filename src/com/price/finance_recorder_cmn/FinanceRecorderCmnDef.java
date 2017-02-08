@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 //import java.util.TreeMap;
@@ -146,7 +147,9 @@ public class FinanceRecorderCmnDef
 	public static final String MARKET_STOCK_SWITCH_CONF_FILENAME = "market_stock_switch.conf";
 	public static final String FINANCE_RECORDER_CONF_FILENAME = "finance_recorder.conf";
 	public static final String BACKUP_CONF_FILENAME = "backup.conf";
-
+	public static final String MISSING_CSV_MARKET_FILENAME = ".missing_csv_market";
+	public static final String MISSING_CSV_STOCK_FILENAME = ".missing_csv_stock";
+	
 	public static final String FINANCE_DATE_REGEX_STRING_FORMAT = "([\\d]{4})-([\\d]{1,2})-([\\d]{1,2})";
 	public static final String FINANCE_MONTH_REGEX_STRING_FORMAT = "([\\d]{4})-([\\d]{1,2})";
 	public static final String FINANCE_QUARTER_REGEX_STRING_FORMAT = "([\\d]{4})[Qq]([\\d]{1})";
