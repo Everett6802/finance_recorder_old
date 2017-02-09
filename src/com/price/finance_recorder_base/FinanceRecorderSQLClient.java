@@ -870,11 +870,20 @@ OUT:
 					Integer field_index = field_index_list.get(i);
 					String field_type = finance_data_sql_field_type_definition[field_index];
 					if (field_type.equals("INT"))
-						result_set.set_data(source_type_index, field_index, rs.getInt(finance_data_sql_field_definition[field_index]));
+					{
+						Integer int_value = rs.getInt(finance_data_sql_field_definition[field_index]);
+						result_set.set_data(source_type_index, field_index, int_value);
+					}
 					else if (field_type.equals("BIGINT"))
-						result_set.set_data(source_type_index, field_index, rs.getLong(finance_data_sql_field_definition[field_index]));
+					{
+						Long long_value = rs.getLong(finance_data_sql_field_definition[field_index]);
+						result_set.set_data(source_type_index, field_index, long_value);
+					}
 					else if (field_type.equals("FLOAT"))
-						result_set.set_data(source_type_index, field_index, rs.getFloat(finance_data_sql_field_definition[field_index]));
+					{
+						Float float_value = rs.getFloat(finance_data_sql_field_definition[field_index]);
+						result_set.set_data(source_type_index, field_index, float_value);
+					}
 					else if (field_type.contains("DATE"))
 					{
 //						String field_date_type = "DATE"; //finance_data_sql_field_definition[field_index_list.get(i)];
@@ -906,6 +915,7 @@ OUT:
 		catch(Exception ex)
 		{
 			FinanceRecorderCmnDef.format_error("Error occur due to SQL command[%s], due to: %s", pstmt, ex.getMessage());
+			ex.printStackTrace();
 			ret = FinanceRecorderCmnDef.RET_FAILURE_UNKNOWN;
 		}
 		finally

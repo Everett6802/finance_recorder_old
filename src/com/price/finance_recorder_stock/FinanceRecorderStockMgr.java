@@ -73,6 +73,7 @@ public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 					return ret;
 			}
 		}
+		ret = company_group_set.add_done();
 		return ret;
 	}
 

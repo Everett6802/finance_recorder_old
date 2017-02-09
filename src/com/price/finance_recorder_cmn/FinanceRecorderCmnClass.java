@@ -1588,6 +1588,12 @@ public class FinanceRecorderCmnClass
 			}
 			return array_data.get(index);
 		}
+	
+		public void clear_array_data()
+		{
+			array_data.clear();
+			array_size = 0;
+		}
 	};
 
 	public static class FinanceIntDataArray extends FinanceDataArrayBase<Integer>{};
@@ -1948,21 +1954,6 @@ public class FinanceRecorderCmnClass
 		{
 			data_set_mapping = new HashMap<Integer, Integer>();
 			source_type_index_list = new LinkedList<Integer>();
-//			date_data = new FinanceStringDataArray();
-//			int_data_set = new ArrayList<FinanceIntDataArray>();
-//			long_data_set = new ArrayList<FinanceLongDataArray>();
-//			float_data_set = new ArrayList<FinanceFloatDataArray>();
-//			check_date_data_mode = false;
-//			date_data_size = 0;
-//			date_data_cur_pos = 0;
-//			int_data_set_size = 0;
-//			long_data_set_size = 0;
-//			float_data_set_size = 0;
-			reset_result();
-		}
-
-		public void reset_result()
-		{
 			date_data = new FinanceStringDataArray();
 			int_data_set = new ArrayList<FinanceIntDataArray>();
 			long_data_set = new ArrayList<FinanceLongDataArray>();
@@ -1974,6 +1965,34 @@ public class FinanceRecorderCmnClass
 			long_data_set_size = 0;
 			float_data_set_size = 0;
 		}
+
+		public void clear_array_data()
+		{
+			date_data.clear_array_data();
+			for(FinanceIntDataArray int_data : int_data_set)
+				int_data.clear_array_data();
+			for(FinanceLongDataArray long_data : long_data_set)
+				long_data.clear_array_data();
+			for(FinanceFloatDataArray float_data : float_data_set)
+				float_data.clear_array_data();
+			check_date_data_mode = false;
+			date_data_size = 0;
+			date_data_cur_pos = 0;
+		}
+
+//		public void reset_result()
+//		{
+//			date_data = new FinanceStringDataArray();
+//			int_data_set = new ArrayList<FinanceIntDataArray>();
+//			long_data_set = new ArrayList<FinanceLongDataArray>();
+//			float_data_set = new ArrayList<FinanceFloatDataArray>();
+//			check_date_data_mode = false;
+//			date_data_size = 0;
+//			date_data_cur_pos = 0;
+//			int_data_set_size = 0;
+//			long_data_set_size = 0;
+//			float_data_set_size = 0;
+//		}
 
 		public short add_set(int source_type_index, int field_index)
 		{

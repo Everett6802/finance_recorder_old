@@ -562,6 +562,7 @@ OUT:
 OUT:
 			for(String company_code_number : company_code_entry.getValue())
 			{
+//				System.out.printf("company_code_number: %s\n", company_code_number);
 // Query data from each source type
 				for (Integer source_type_index : source_type_index_list)
 				{
@@ -582,7 +583,7 @@ OUT:
 						break OUT;
 				}
 // Cleanup the result data
-				result_set.reset_result();
+				result_set.clear_array_data();
 			}
 // Destroy the connection to the MySQL
 			sql_client.disconnect_mysql();
