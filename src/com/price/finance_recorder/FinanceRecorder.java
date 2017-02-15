@@ -897,7 +897,7 @@ public class FinanceRecorder
 	private static void write_operation()
 	{
 		if(FinanceRecorderCmnDef.is_show_console())
-			System.out.printf("Write CSV[%s] data into MySQL......\n", finance_recorder_mgr.get_finance_folderpath());
+			System.out.printf("Write CSV[%s] data into SQL......\n", finance_recorder_mgr.get_finance_folderpath());
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		long time_start_millisecond = System.currentTimeMillis();
@@ -910,7 +910,7 @@ public class FinanceRecorder
 		long time_end_millisecond = System.currentTimeMillis();
 
 		if(FinanceRecorderCmnDef.is_show_console())
-			System.out.println("Write CSV data into MySQL...... Done");
+			System.out.println("Write CSV data to SQL...... Done");
 
 		long time_lapse_millisecond = time_end_millisecond - time_start_millisecond;
 		String time_lapse_msg; 
@@ -928,8 +928,9 @@ public class FinanceRecorder
 	private static void backup_operation()
 	{
 		if(FinanceRecorderCmnDef.is_show_console())
-			System.out.printf("Backup MySQL to CSV[%s]......\n", finance_recorder_mgr.get_finance_backup_folderpath());
+			System.out.printf("Backup SQL to CSV[%s]......\n", finance_recorder_mgr.get_finance_backup_folderpath());
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		long time_start_millisecond = System.currentTimeMillis();
 // Create the finance backup folder
 		ret = FinanceRecorderCmnDef.create_folder_if_not_exist(finance_backup_folderpath_param);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -937,6 +938,22 @@ public class FinanceRecorder
 		ret = finance_recorder_mgr.transfrom_sql_to_csv(finance_time_range, !continue_when_sql_not_foud_param);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to backup MySQL to CSV, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		long time_end_millisecond = System.currentTimeMillis();
+
+		if(FinanceRecorderCmnDef.is_show_console())
+			System.out.println("Backup SQL to CSV...... Done");
+
+		long time_lapse_millisecond = time_end_millisecond - time_start_millisecond;
+		String time_lapse_msg; 
+		if (time_lapse_millisecond >= 100 * 1000)
+			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+		else if (time_lapse_millisecond >= 10 * 1000)
+			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+		else
+			time_lapse_msg = String.format("######### Time Lapse: %d second(s) #########", (int)((time_end_millisecond - time_start_millisecond) / 1000));
+		FinanceRecorderCmnDef.info(time_lapse_msg);
+		if(FinanceRecorderCmnDef.is_show_console())
+			System.out.println(time_lapse_msg);
 	}
 
 	private static void cleanup_operation()
@@ -964,7 +981,7 @@ public class FinanceRecorder
 	private static void restore_operation()
 	{
 		if(FinanceRecorderCmnDef.is_show_console())
-			System.out.printf("Restore MySQL data from CSV[%s]......\n", finance_recorder_mgr.get_finance_restore_folderpath());
+			System.out.printf("Restore SQL data from CSV[%s]......\n", finance_recorder_mgr.get_finance_restore_folderpath());
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 // Check the finance restore folder exist
 		if (!FinanceRecorderCmnDef.check_file_exist(finance_restore_folderpath_param))
@@ -975,7 +992,7 @@ public class FinanceRecorder
 			show_error_and_exit(String.format("Fail to restore MySQL data from CSV, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		long time_end_millisecond = System.currentTimeMillis();
 		if(FinanceRecorderCmnDef.is_show_console())
-			System.out.println("Restore MySQL data from CSV Tar...... Done");
+			System.out.println("Restore SQL data from CSV...... Done");
 		long time_lapse_millisecond = time_end_millisecond - time_start_millisecond;
 		String time_lapse_msg; 
 		if (time_lapse_millisecond >= 100 * 1000)

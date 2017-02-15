@@ -20,7 +20,13 @@ public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 	private FinanceRecorderCompanyGroupSet company_group_set = null;
 	private FinanceRecorderDatabaseTimeRange database_time_range = null;
 
-	protected FinanceRecorderDataHandlerInf get_data_handler(){return FinanceRecorderStockDataHandler.get_data_handler(source_type_index_list, company_group_set);}
+	protected FinanceRecorderDataHandlerInf get_data_handler()
+	{
+		FinanceRecorderDataHandlerInf data_handler = FinanceRecorderStockDataHandler.get_data_handler(source_type_index_list, company_group_set);
+		data_handler.set_finance_root_folerpath(finance_root_folderpath);
+		data_handler.set_finance_root_backup_folerpath(finance_root_backup_folderpath);
+		return data_handler;
+	}
 
 	public void set_delete_sql_accuracy(FinanceRecorderCmnDef.DeleteSQLAccurancyType accurancy_type){delete_sql_accurancy_type = accurancy_type;}
 

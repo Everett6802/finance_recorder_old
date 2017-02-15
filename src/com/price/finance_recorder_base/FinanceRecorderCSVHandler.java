@@ -212,6 +212,7 @@ public class FinanceRecorderCSVHandler implements Iterable<String>
 				bw.write(data);
 				bw.write(NEW_LINE);
 			}
+			bw.flush();
 		}
 		catch (IOException e) 
 		{
