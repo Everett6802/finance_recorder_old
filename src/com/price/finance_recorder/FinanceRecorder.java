@@ -329,12 +329,12 @@ public class FinanceRecorder
 			if ((database_operation & DATABASE_OPERATION_RESTORE_MASK) != 0 && (database_operation & DATABASE_OPERATION_CLEANUP_MASK) == 0)
 			{
 				FinanceRecorderCmnDef.warn("The 'cleanup' operation should be enabled, when 'restore' is set");
-				database_operation &= ~DATABASE_OPERATION_RESTORE_MASK;
+				database_operation |= DATABASE_OPERATION_CLEANUP_MASK;
 			}
 			if ((database_operation & DATABASE_OPERATION_DELETE_MASK) != 0 && (database_operation & DATABASE_OPERATION_CLEANUP_MASK) != 0)
 			{
 				FinanceRecorderCmnDef.warn("The 'delete' operation is ignored since 'cleanup' is set");
-				database_operation &= ~DATABASE_OPERATION_RESTORE_MASK;
+				database_operation &= ~DATABASE_OPERATION_DELETE_MASK;
 			}
 		}
 
@@ -763,65 +763,6 @@ public class FinanceRecorder
 		System.exit(0);
 	}
 
-//	private static short init_workday_calendar_table()
-//	{
-//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-//		ret = finance_recorder_mgr.init_workday_calendar_table();
-//		if (FinanceRecorderCmnDef.CheckFailure(ret))
-//			show_error_and_exit(String.format("Fail to initialize the workday calendar table, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-//
-//		return ret;
-//	}
-//
-//	private static short init_database_time_range_table()
-//	{
-//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-//		ret = finance_recorder_mgr.init_database_time_range_table();
-//		if (FinanceRecorderCmnDef.CheckFailure(ret))
-//			show_error_and_exit(String.format("Fail to initialize the database time range table, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-//
-//		return ret;
-//	}
-//
-//	private static short setup_time_range_table(String filename)
-//	{clear_multi
-//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-//		ret = finance_recorder_mgr.setup_time_range_table_by_config_file(filename);
-//		if (FinanceRecorderCmnDef.CheckFailure(ret))
-//			show_error_and_exit(String.format("Fail to setup the parameters, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-//
-//		return ret;
-//	}
-//
-//	private static short setup_time_range_table(LinkedList<Integer> source_type_index_list, String time_month_begin, String time_month_end)
-//	{
-//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-//		ret = finance_recorder_mgr.setup_time_range_table_by_parameter(source_type_index_list, time_month_begin, time_month_end);
-//		if (FinanceRecorderCmnDef.CheckFailure(ret))
-//			show_error_and_exit(String.format("Fail to setup the parameters, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-//
-//		return ret;
-//	}
-//
-//	private static short setup_backup_time_range_table(String filename)
-//	{
-//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-//		ret = finance_recorder_mgr.setup_backup_time_range_table_by_config_file(filename);
-//		if (FinanceRecorderCmnDef.CheckFailure(ret))
-//			show_error_and_exit(String.format("Fail to setup the parameters, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-//
-//		return ret;
-//	}
-//
-//	private static short setup_backup_time_range_table(LinkedList<Integer> source_type_index_list, String time_month_begin, String time_month_end)
-//	{
-//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-//		ret = finance_recorder_mgr.setup_backup_time_range_table_by_parameter(source_type_index_list, time_month_begin, time_month_end);
-//		if (FinanceRecorderCmnDef.CheckFailure(ret))
-//			show_error_and_exit(String.format("Fail to setup the parameters, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-//
-//		return ret;
-//	}
 	private static short show_backup_folername_list()
 	{
 		if(!FinanceRecorderCmnDef.is_show_console())
@@ -883,13 +824,13 @@ public class FinanceRecorder
 		{
 			ret = show_backup_folername_list();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				show_error_and_exit(String.format("Fail to show bakcup foldername list, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+				show_error_and_exit(String.format("Fail to show backup foldername list, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		}
 		if (show_finance_restore_foldername_param)
 		{
 			show_restore_folername_list();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
-				show_error_and_exit(String.format("Fail to show bakcup foldername list, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+				show_error_and_exit(String.format("Fail to show restore foldername list, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		}
 		System.exit(0);
 	}
@@ -987,7 +928,10 @@ public class FinanceRecorder
 		if (!FinanceRecorderCmnDef.check_file_exist(finance_restore_folderpath_param))
 			show_error_and_exit(String.format("The finance restore root folder[%s] does NOT exist", finance_restore_folderpath_param));
 		long time_start_millisecond = System.currentTimeMillis();
-		ret = finance_recorder_mgr.transfrom_csv_to_sql(!continue_when_csv_not_foud_param);
+		if (multi_thread_param != null)
+			ret = finance_recorder_mgr.transfrom_csv_to_sql_multithread(Integer.valueOf(multi_thread_param), !continue_when_csv_not_foud_param);
+		else
+			ret = finance_recorder_mgr.transfrom_csv_to_sql(!continue_when_csv_not_foud_param);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to restore MySQL data from CSV, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		long time_end_millisecond = System.currentTimeMillis();
@@ -1149,51 +1093,6 @@ public class FinanceRecorder
 //		ret = finance_recorder_mgr.run_daily();
 //		if (FinanceRecorderCmnDef.CheckFailure(ret))
 //			show_error_and_exit(String.format("Fail to run daily data, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
-//
-//		return ret;
-//	}
-//
-////	private static short read_sql()
-////	{
-////		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-////		FinanceRecorderCmnClass.ResultSet result_set = new FinanceRecorderCmnClass.ResultSet();
-////		ret = finance_recorder_mgr.read(result_set);
-////// Show the result statistics
-////		int index = 0;
-////		String msg;
-////		for (List<String> data_list : total_data_list)
-////		{
-////			msg = String.format("%d: %d", index, data_list.size());
-////			FinanceRecorderCmnDef.info(msg);
-////			if (FinanceRecorderCmnDef.is_show_console())
-////				System.out.println(msg);
-////			index++;
-////		}
-//////		List<List<String>> total_data_list = new ArrayList<List<String>>();
-//////		ret = finance_recorder_mgr.read(total_data_list);
-//////// Show the result statistics
-//////		int index = 0;
-//////		String msg;
-//////		for (List<String> data_list : total_data_list)
-//////		{
-//////			msg = String.format("%d: %d", index, data_list.size());
-//////			FinanceRecorderCmnDef.info(msg);
-//////			if (FinanceRecorderCmnDef.is_show_console())
-//////				System.out.println(msg);
-//////			index++;
-//////		}
-////
-////		return ret;
-////	}
-//
-//	private static short check_sql(boolean check_error)
-//	{
-//		if (FinanceRecorderCmnDef.is_show_console() && check_error)
-//			System.out.println("Let's check error......");
-//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-//		ret = finance_recorder_mgr.check(check_error);
-//		if (FinanceRecorderCmnDef.CheckFailure(ret))
-//			show_error_and_exit(String.format("Fail to check data in MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 //
 //		return ret;
 //	}

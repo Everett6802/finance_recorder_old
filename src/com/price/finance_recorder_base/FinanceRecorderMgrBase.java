@@ -90,12 +90,38 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 
 	public short get_backup_foldername_list(List<String> sorted_sub_foldername_list)
 	{
-		return get_sorted_sub_foldername_list(finance_root_backup_folderpath, sorted_sub_foldername_list);
+		int pos = finance_root_backup_folderpath.lastIndexOf("/");
+		if (pos == -1)
+		{
+			FinanceRecorderCmnDef.format_error("Incorrect finance root backup folder path: %s", finance_root_backup_folderpath);
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_PATH;
+		}
+		String backup_foldername = finance_root_backup_folderpath.substring(pos + 1);
+		if (FinanceRecorderCmnDef.get_regex_matcher("[\\d]{14}", backup_foldername) == null)
+		{
+			FinanceRecorderCmnDef.format_error("Incorrect finance root backup folder name: %s", backup_foldername);
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_PATH;
+		}
+		String finance_parent_backup_folderpath = finance_root_backup_folderpath.substring(0, pos);
+		return get_sorted_sub_foldername_list(finance_parent_backup_folderpath, sorted_sub_foldername_list);
 	}
 
 	public short get_restore_foldername_list(List<String> sorted_sub_foldername_list)
 	{
-		return get_sorted_sub_foldername_list(finance_root_restore_folderpath, sorted_sub_foldername_list);
+		int pos = finance_root_restore_folderpath.lastIndexOf("/");
+		if (pos == -1)
+		{
+			FinanceRecorderCmnDef.format_error("Incorrect finance root restore folder path: %s", finance_root_restore_folderpath);
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_PATH;
+		}
+		String restore_foldername = finance_root_restore_folderpath.substring(pos + 1);
+		if (FinanceRecorderCmnDef.get_regex_matcher("[\\d]{14}", restore_foldername) == null)
+		{
+			FinanceRecorderCmnDef.format_error("Incorrect finance root restore folder name: %s", restore_foldername);
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_PATH;
+		}
+		String finance_parent_restore_folderpath = finance_root_restore_folderpath.substring(0, pos);
+		return get_sorted_sub_foldername_list(finance_parent_restore_folderpath, sorted_sub_foldername_list);
 	}
 
 	public short set_source_type_from_file(String filename)

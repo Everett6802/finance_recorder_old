@@ -167,9 +167,9 @@ public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 		}
 // Shut down the executor
 		if(FinanceRecorderCmnDef.CheckSuccess(ret))
-				executor.shutdown();
-			else
-				executor.shutdownNow();
+			executor.shutdown();
+		else
+			executor.shutdownNow();
 		return ret;
 	}
 }
