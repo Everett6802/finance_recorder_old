@@ -5,6 +5,7 @@ import java.util.Calendar;
 import java.util.Collections;
 //import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
@@ -16,7 +17,7 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 {
 	private static FinanceRecorderWorkdayCalendar workday_calendar = null;// FinanceRecorderWorkdayCalendar.get_instance();
 //	private static FinanceRecorderDatabaseTimeRange database_time_range = null; //FinanceRecorderDatabaseTimeRange.get_instance();
-	private static short get_sorted_sub_foldername_list(String root_folderpath, List<String> sorted_sub_foldername_list)
+	public static short get_sorted_sub_foldername_list(String root_folderpath, List<String> sorted_sub_foldername_list)
 	{
 		class FoldernameComparable implements Comparable
 		{
@@ -77,16 +78,33 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 	protected String finance_root_folderpath = FinanceRecorderCmnDef.CSV_ROOT_FOLDERPATH;
 	protected String finance_root_backup_folderpath = FinanceRecorderCmnDef.CSV_BACKUP_ROOT_FOLDERPATH ;
 	protected String finance_root_restore_folderpath = FinanceRecorderCmnDef.CSV_RESTORE_ROOT_FOLDERPATH ;
+	protected String[] finance_root_folderpath_array = new String[]{finance_root_folderpath, finance_root_backup_folderpath, finance_root_restore_folderpath};
+	protected FinanceRecorderCmnDef.CSVWorkingFolderType csv_working_folder_type = FinanceRecorderCmnDef.CSVWorkingFolderType.CSVWorkingFolder_Unknown;
+	protected String current_csv_working_folerpath = null;
 	protected FinanceRecorderCmnDef.DeleteSQLAccurancyType delete_sql_accurancy_type = FinanceRecorderCmnDef.DeleteSQLAccurancyType.DeleteSQLAccurancyType_SOURCE_TYPE_ONLY;
 
 	protected abstract FinanceRecorderDataHandlerInf get_data_handler();
 
-	public void set_finance_folderpath(String finance_folderpath){finance_root_folderpath = finance_folderpath;}
-	public void set_finance_backup_folderpath(String finance_backup_folderpath){finance_root_backup_folderpath = finance_backup_folderpath;}
-	public void set_finance_restore_folderpath(String finance_restore_folderpath){finance_root_restore_folderpath = finance_restore_folderpath;}
+	public void set_finance_folderpath(String finance_folderpath)
+	{
+		finance_root_folderpath_array[FinanceRecorderCmnDef.CSVWorkingFolderType.CSVWorkingFolder_Write.value()] = finance_root_folderpath = finance_folderpath;
+	}
+	public void set_finance_backup_folderpath(String finance_backup_folderpath)
+	{
+		finance_root_folderpath_array[FinanceRecorderCmnDef.CSVWorkingFolderType.CSVWorkingFolder_Backup.value()] = finance_root_backup_folderpath = finance_backup_folderpath;
+	}
+	public void set_finance_restore_folderpath(String finance_restore_folderpath)
+	{
+		finance_root_folderpath_array[FinanceRecorderCmnDef.CSVWorkingFolderType.CSVWorkingFolder_Restore.value()] = finance_root_restore_folderpath = finance_restore_folderpath;
+	}
 	public String get_finance_folderpath(){return finance_root_folderpath;}
 	public String get_finance_backup_folderpath(){return finance_root_backup_folderpath;}
 	public String get_finance_restore_folderpath(){return finance_root_restore_folderpath;}
+	public void switch_current_csv_working_folerpath(FinanceRecorderCmnDef.CSVWorkingFolderType working_folder_type)
+	{
+		csv_working_folder_type = working_folder_type;
+		current_csv_working_folerpath = finance_root_folderpath_array[csv_working_folder_type.value()];
+	}
 
 	public short get_backup_foldername_list(List<String> sorted_sub_foldername_list)
 	{
@@ -210,7 +228,13 @@ OUT:
 
 	public short transfrom_csv_to_sql(boolean stop_when_csv_not_foud)
 	{
+		if (current_csv_working_folerpath == null)
+		{
+			FinanceRecorderCmnDef.debug("current_csv_working_folerpath should NOT be NULL");
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
 		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
+		finance_recorder_data_handler.set_current_csv_working_folerpath(current_csv_working_folerpath);
 		short ret = finance_recorder_data_handler.transfrom_csv_to_sql(stop_when_csv_not_foud);
 		return ret;
 	}
@@ -222,7 +246,13 @@ OUT:
 
 	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, boolean stop_when_sql_not_foud)
 	{
+		if (current_csv_working_folerpath == null)
+		{
+			FinanceRecorderCmnDef.debug("current_csv_working_folerpath should NOT be NULL");
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
 		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
+		finance_recorder_data_handler.set_current_csv_working_folerpath(current_csv_working_folerpath);
 		short ret = finance_recorder_data_handler.transfrom_sql_to_csv(query_set, finance_time_range, stop_when_sql_not_foud);
 		return ret;
 	}

@@ -11,8 +11,6 @@ public class FinanceRecorderMarketMgr extends FinanceRecorderMgrBase
 	protected FinanceRecorderDataHandlerInf get_data_handler()
 	{
 		FinanceRecorderDataHandlerInf data_handler = FinanceRecorderMarketDataHandler.get_data_handler(source_type_index_list);
-		data_handler.set_finance_root_folerpath(finance_root_folderpath);
-		data_handler.set_finance_root_backup_folerpath(finance_root_backup_folderpath);
 		return data_handler;
 	}
 

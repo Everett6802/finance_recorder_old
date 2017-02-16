@@ -22,7 +22,7 @@ public class FinanceRecorderStockWriteSQLTask implements Callable<Integer>
 	public FinanceRecorderStockWriteSQLTask(final LinkedList<Integer> source_type_index_list, final FinanceRecorderCompanyGroupSet company_group_set, String finance_root_folderpath, boolean stop_when_csv_not_foud, String description)
 	{
 		data_handler = FinanceRecorderStockDataHandler.get_data_handler(source_type_index_list, company_group_set);
-		data_handler.set_finance_root_backup_folerpath(finance_root_folderpath);
+		data_handler.set_current_csv_working_folerpath(finance_root_folderpath);
 		thread_description = description;
 		thread_stop_when_csv_not_foud = stop_when_csv_not_foud;
 	}

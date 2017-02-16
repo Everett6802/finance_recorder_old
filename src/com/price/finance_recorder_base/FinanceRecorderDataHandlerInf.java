@@ -8,8 +8,9 @@ import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 
 public interface FinanceRecorderDataHandlerInf 
 {
-	void set_finance_root_folerpath(String foldername);
-	void set_finance_root_backup_folerpath(String backup_foldername);
+	void set_current_csv_working_folerpath(String csv_working_folerpath);
+//	void set_finance_root_folerpath(String foldername);
+//	void set_finance_root_backup_folerpath(String backup_foldername);
 // CSV -> SQL related function
 // For transforming data from CSV into SQL, I assumed the time range of each CSV data source can be different
 	short read_from_csv(FinanceRecorderCSVHandlerMap csv_data_map, boolean stop_when_csv_not_foud);

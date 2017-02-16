@@ -23,8 +23,8 @@ public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 	protected FinanceRecorderDataHandlerInf get_data_handler()
 	{
 		FinanceRecorderDataHandlerInf data_handler = FinanceRecorderStockDataHandler.get_data_handler(source_type_index_list, company_group_set);
-		data_handler.set_finance_root_folerpath(finance_root_folderpath);
-		data_handler.set_finance_root_backup_folerpath(finance_root_backup_folderpath);
+//		data_handler.set_finance_root_folerpath(finance_root_folderpath);
+//		data_handler.set_finance_root_backup_folerpath(finance_root_backup_folderpath);
 		return data_handler;
 	}
 
@@ -128,6 +128,11 @@ public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 
 	public short transfrom_csv_to_sql_multithread(int sub_company_group_set_amount, boolean stop_when_csv_not_foud)
 	{
+		if (current_csv_working_folerpath == null)
+		{
+			FinanceRecorderCmnDef.debug("current_csv_working_folerpath should NOT be NULL");
+			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
 		ArrayList<FinanceRecorderCompanyGroupSet> sub_company_group_set_list = company_group_set.get_sub_company_group_set_list(sub_company_group_set_amount);
 // Create thread pool 
 		ThreadPoolExecutor executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(FinanceRecorderCmnDef.MAX_CONCURRENT_THREAD);
@@ -135,7 +140,7 @@ public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 		for (FinanceRecorderCompanyGroupSet sub_company_group_set : sub_company_group_set_list)
 		{
 // Activate the task of writing data into SQL
-			FinanceRecorderStockWriteSQLTask task = new FinanceRecorderStockWriteSQLTask(source_type_index_list, sub_company_group_set, finance_root_folderpath, stop_when_csv_not_foud);
+			FinanceRecorderStockWriteSQLTask task = new FinanceRecorderStockWriteSQLTask(source_type_index_list, sub_company_group_set, current_csv_working_folerpath, stop_when_csv_not_foud);
 			Future<Integer> res = executor.submit(task);
 			res_list.add(res);
 		}

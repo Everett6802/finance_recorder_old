@@ -24,7 +24,7 @@ public class FinanceRecorderStockBackupSQLTask implements Callable<Integer>
 	public FinanceRecorderStockBackupSQLTask(final LinkedList<Integer> source_type_index_list, final FinanceRecorderCompanyGroupSet company_group_set, FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, String finance_backup_root_folderpath, String description, boolean stop_when_sql_not_foud)
 	{
 		data_handler = FinanceRecorderStockDataHandler.get_data_handler(source_type_index_list, company_group_set);
-		data_handler.set_finance_root_backup_folerpath(finance_backup_root_folderpath);
+		data_handler.set_current_csv_working_folerpath(finance_backup_root_folderpath);
 		thread_description = description;
 		csv_finance_time_range = finance_time_range;
 		csv_query_set = query_set;

@@ -484,6 +484,42 @@ public class FinanceRecorderCmnDef
 	public static enum CreateThreadType {CreateThread_Single, CreateThread_Multiple,};
 	public static enum NotExistIngoreType {NotExistIngore_Yes, NotExistIngore_No,};
 	public static enum ResultSetDataUnit {ResultSetDataUnit_NoSourceType, ResultSetDataUnit_SourceType};
+	public static enum CSVWorkingFolderType 
+	{
+		CSVWorkingFolder_Write(0),
+		CSVWorkingFolder_Backup(1),
+		CSVWorkingFolder_Restore(2),
+		CSVWorkingFolder_Unknown(3);
+
+		private int value = 0;
+
+		private CSVWorkingFolderType(int value) 
+		{
+			this.value = value;
+		}
+
+		public static CSVWorkingFolderType valueOf(int value) 
+		{
+			switch (value) 
+			{
+			case 0:
+				return CSVWorkingFolder_Write;
+			case 1:
+				return CSVWorkingFolder_Backup;
+			case 2:
+				return CSVWorkingFolder_Restore;
+			case 3:
+				return CSVWorkingFolder_Unknown;
+			default:
+				return null;
+			}
+		}
+
+		public int value() 
+		{
+			return this.value;
+		}
+	};
 
 	public static final String[] FINANCE_DATA_NAME_LIST = new String[] 
 	{

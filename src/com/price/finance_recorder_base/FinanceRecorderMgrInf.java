@@ -14,6 +14,7 @@ public interface FinanceRecorderMgrInf
 	String get_finance_folderpath();
 	String get_finance_backup_folderpath();
 	String get_finance_restore_folderpath();
+	void switch_current_csv_working_folerpath(FinanceRecorderCmnDef.CSVWorkingFolderType working_folder_type);
 
 	void set_delete_sql_accuracy(FinanceRecorderCmnDef.DeleteSQLAccurancyType accurancy_type); // Only work in stock mode
 	short get_backup_foldername_list(List<String> sorted_sub_foldername_list);
