@@ -236,11 +236,16 @@ public class FinanceRecorderCmnDef
 		FinanceSource_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest(5), 
 		FinanceSource_OptionPutCallRatio(6), 
 		FinanceSource_FutureTop10DealersAndLegalPersons(7), 
-		FinanceSource_MarketEnd(8), // Keep in mind to update the value at the right time
+		FinanceSource_MarketEnd(8), // Keep in mind to update the value at the right time, semi-open interval
 		// //////////////////////////////////////////////////////////////////////////////////////////////
 		// Stock data source
 		FinanceSource_StockStart(8), // Keep in mind to update the value at the right time
-		FinanceSource_StockEnd(9); // Keep in mind to update the value at the right time
+		FinanceSource_DepositoryShareholderDistributionTable(8),
+		FinanceSource_BalanceSheet(9),
+		FinanceSource_IncomeStatement(10),
+		FinanceSource_CashFlowStatement(11),
+		FinanceSource_StatementOfChangesInEquity(12),
+		FinanceSource_StockEnd(13); // Keep in mind to update the value at the right time, semi-open interval
 
 		private int value = 0;
 
@@ -269,11 +274,20 @@ public class FinanceRecorderCmnDef
 				return FinanceSource_OptionPutCallRatio;
 			case 7:
 				return FinanceSource_FutureTop10DealersAndLegalPersons;
+			case 8:
+				return FinanceSource_DepositoryShareholderDistributionTable;
+			case 9:
+				return FinanceSource_BalanceSheet;
+			case 10:
+				return FinanceSource_IncomeStatement;
+			case 11:
+				return FinanceSource_CashFlowStatement;
+			case 12:
+				return FinanceSource_StatementOfChangesInEquity;
 			default:
 				return null;
 			}
 		}
-
 		public int value() 
 		{
 			return this.value;
@@ -553,6 +567,10 @@ public class FinanceRecorderCmnDef
 		///////////////////////////////////////////////////////////
 // Stock Start
 		"個股集保戶股權分散表",
+		"資產負債表",
+		"損益表",
+		"現金流量表",
+		"股東權益變動表",
 // Stock End
 	};
 	public static final String[] FINANCE_DATA_FOLDER_MAPPING = new String[] 
@@ -565,6 +583,10 @@ public class FinanceRecorderCmnDef
 		"market",
 		"market",
 		"market",
+		"stock",
+		"stock",
+		"stock",
+		"stock",
 		"stock",
 	};
 	public static final String[] FINANCE_DATA_SQL_FIELD_LIST = new String[] 
