@@ -160,7 +160,7 @@ public class FinanceRecorderWorkdayCalendar
 	private short parse_config()
 	{
 		LinkedList<String> config_line_list = new LinkedList<String>();
-		short ret = FinanceRecorderCmnDef.get_config_file_lines(FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, config_line_list);
+		short ret = FinanceRecorderCmnDef.read_config_file_lines(FinanceRecorderCmnDef.WORKDAY_CANLENDAR_CONF_FILENAME, config_line_list);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;// Open the file
 

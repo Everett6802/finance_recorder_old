@@ -3,9 +3,10 @@ package com.price.finance_recorder;
 //import java.io.*;
 //import java.util.*;
 //import java.io.File;
-import java.io.IOException;
+//import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.regex.Matcher;
 //import java.util.List;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
@@ -520,17 +521,36 @@ public class FinanceRecorder
 				source_type_index_list = new LinkedList<Integer>();
 				for (String source_type_index_str : source_type_index_str_array)
 				{
-					int source_type_index = Integer.valueOf(source_type_index_str);
-					if (!FinanceRecorderCmnDef.check_source_type_index_in_range(source_type_index))
+					Matcher matcher = FinanceRecorderCmnDef.get_regex_matcher("([\\d]+)-([\\d]+)", source_type_index_str);
+					if (matcher != null)
 					{
-						errmsg = String.format("Unsupported source type index: %d", source_type_index);
-						show_error_and_exit(errmsg);
+						int source_type_start_index = Integer.valueOf(matcher.group(1));
+						if (!FinanceRecorderCmnDef.check_source_type_index_in_range(source_type_start_index))
+						{
+							errmsg = String.format("Unsupported source type index: %d", source_type_start_index);
+							show_error_and_exit(errmsg);
+						}
+						int source_type_end_index = Integer.valueOf(matcher.group(2));
+						if (!FinanceRecorderCmnDef.check_source_type_index_in_range(source_type_end_index))
+						{
+							errmsg = String.format("Unsupported source type index: %d", source_type_end_index);
+							show_error_and_exit(errmsg);
+						}
+						for (int source_type_index = source_type_start_index ; source_type_index <= source_type_end_index ; source_type_index++)
+							source_type_index_list.add(source_type_index);
 					}
-					source_type_index_list.add(source_type_index);
+					else
+					{
+						int source_type_index = Integer.valueOf(source_type_index_str);
+						if (!FinanceRecorderCmnDef.check_source_type_index_in_range(source_type_index))
+						{
+							errmsg = String.format("Unsupported source type index: %d", source_type_index);
+							show_error_and_exit(errmsg);
+						}
+						source_type_index_list.add(source_type_index);
+					}
 				}
 			}
-			else
-				source_type_index_list = FinanceRecorderCmnDef.get_all_source_type_index_list();
 			ret = finance_recorder_mgr.set_source_type(source_type_index_list);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				show_error_and_exit(String.format("Fail to set source type, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
@@ -741,8 +761,11 @@ public class FinanceRecorder
 		System.out.printf(String.format("--source_from_all_default_file\nDescription: The all finance data source in full time range from file: %s\nCaution: source is ignored when set\n", (FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE ? FinanceRecorderCmnDef.MARKET_ALL_CONFIG_FILENAME : FinanceRecorderCmnDef.STOCK_ALL_CONFIG_FILENAME)));
 		System.out.printf(String.format("--source_from_file\nDescription: The finance data source from file\nCaution: source is ignored when set\n", (FinanceRecorderCmnDef.IS_FINANCE_MARKET_MODE ? FinanceRecorderCmnDef.MARKET_ALL_CONFIG_FILENAME : FinanceRecorderCmnDef.STOCK_ALL_CONFIG_FILENAME)));
 		System.out.println("-s|--source\nDescription: Type of CSV date file\nCaution: Ignored when --source_from_file/--source_from_all_default_file set");
-		System.out.println("  Format: 1,2,3 (Start from 0)");
-		System.out.println("  all: All types");
+//		System.out.println("  Format: 1,2,3 (Start from 0)");
+		System.out.println("  Format 1: Source type (ex. 1,3,5)");
+		System.out.println("  Format 2: Source type range (ex. 2-6)");
+		System.out.println("  Format 3: Source type/type range hybrid (ex. 1,3-4,6)");
+//		System.out.println("  all: All types");
 //		int[] source_type_index_array = FinanceRecorderCmnDef.get_source_type_index_range();
 //		for (int index = source_type_index_array[0] ; index < source_type_index_array[1] ; index++)
 		LinkedList<Integer> whole_source_type_index_list = FinanceRecorderCmnDef.get_all_source_type_index_list();

@@ -151,33 +151,36 @@ public class FinanceRecorderCmnDefStockDatabase
 		"value40", // 非流動負債合計
 		"value41", // 負債總計
 		"value42", // 普通股股本
-		"value43", // 預收股本
-		"value44", // 待分配股票股利
-		"value45", // 股本合計
-		"value46", // 資本公積－發行溢價
-		"value47", // 資本公積－庫藏股票交易
-		"value48", // 資本公積－實際取得或處分子公司股權價格與帳面價值差額
-		"value49", // 資本公積－採用權益法認列關聯企業及合資股權淨值之變動數
-		"value50", // 資本公積－合併溢額
-		"value51", // 資本公積－員工認股權
-		"value52", // 資本公積－限制員工權利股票
-		"value53", // 資本公積－其他
-		"value54", // 資本公積－認股權
-		"value55", // 資本公積合計
-		"value56", // 法定盈餘公積
-		"value57", // 特別盈餘公積
-		"value58", // 未分配盈餘（或待彌補虧損）
-		"value59", // 保留盈餘合計
-		"value60", // 國外營運機構財務報表換算之兌換差額
-		"value61", // 備供出售金融資產未實現損益
-		"value62", // 其他權益－其他
-		"value63", // 其他權益合計
-		"value64", // 庫藏股票
-		"value65", // 歸屬於母公司業主之權益合計
-		"value66", // 非控制權益
-		"value67", // 權益總計
-		"value68", // 負債及權益總計
-		"value69", // 母公司暨子公司所持有之母公司庫藏股股數（單位：股）
+		"value43", // 債券換股權利證書
+		"value44", // 預收股本
+		"value45", // 待分配股票股利
+		"value46", // 股本合計
+		"value47", // 資本公積－發行溢價
+		"value48", // 資本公積－庫藏股票交易
+		"value49", // 資本公積－實際取得或處分子公司股權價格與帳面價值差額
+		"value50", // 資本公積－採用權益法認列關聯企業及合資股權淨值之變動數
+		"value51", // 資本公積－合併溢額
+		"value52", // 資本公積－員工認股權
+		"value53", // 資本公積－限制員工權利股票
+		"value54", // 資本公積－其他
+		"value55", // 資本公積－認股權
+		"value56", // 資本公積合計
+		"value57", // 法定盈餘公積
+		"value58", // 特別盈餘公積
+		"value59", // 未分配盈餘（或待彌補虧損）
+		"value60", // 保留盈餘合計
+		"value61", // 國外營運機構財務報表換算之兌換差額
+		"value62", // 備供出售金融資產未實現損益
+		"value63", // 其他權益－其他
+		"value64", // 其他權益合計
+		"value65", // 庫藏股票
+		"value66", // 歸屬於母公司業主之權益合計
+		"value67", // 非控制權益
+		"value68", // 權益總計
+		"value69", // 負債及權益總計
+		"value70", // 母公司暨子公司所持有之母公司庫藏股股數（單位：股）
+		"value71", // 母公司暨子公司所持有之母公司庫藏股股數（單位：股）
+		"value72", // 母公司暨子公司所持有之母公司庫藏股股數（單位：股）
 	};
 	static final String[] BALANCE_SHEET_TABLE_FIELD_TYPE_DEFINITION = new String[]
 	{
@@ -224,6 +227,7 @@ public class FinanceRecorderCmnDefStockDatabase
 		"BIGINT", // 非流動負債合計
 		"BIGINT", // 負債總計
 		"BIGINT", // 普通股股本
+		"BIGINT", // 債券換股權利證書
 		"BIGINT", // 預收股本
 		"BIGINT", // 待分配股票股利
 		"BIGINT", // 股本合計
@@ -250,6 +254,8 @@ public class FinanceRecorderCmnDefStockDatabase
 		"BIGINT", // 非控制權益
 		"BIGINT", // 權益總計
 		"BIGINT", // 負債及權益總計
+		"BIGINT", // 母公司暨子公司所持有之母公司庫藏股股數（單位：股）
+		"BIGINT", // 母公司暨子公司所持有之母公司庫藏股股數（單位：股）
 		"BIGINT", // 母公司暨子公司所持有之母公司庫藏股股數（單位：股）
 	};
 	static final String[] INCOME_STATEMENT_TABLE_FIELD_DEFINITION = new String[]

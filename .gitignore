@@ -5,6 +5,7 @@
 .workday_canlendar.conf
 finance_recorder.jar
 conf/.company_profile.conf
+conf/company_number_list.conf
 bin/
 lib/
 log/

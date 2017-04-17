@@ -3,6 +3,8 @@ package com.price.finance_recorder_base;
 import java.sql.*;
 import java.text.*;
 import java.util.*;
+import java.util.regex.Matcher;
+
 import com.price.finance_recorder_cmn.FinanceRecorderClassBase;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
@@ -53,6 +55,21 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 //	private static final String FORMAT_CMD_SELECT_QUARTER_RULE_LESS_THAN_FORMAT = " WHERE year(date) = '%d' AND quarter(date) < '%d'";
 //	private static final String FORMAT_CMD_SELECT_QUARTER_RULE_GREATER_EQUAL_THAN_FORMAT = " WHERE year(date) = '%d' AND quarter(date) >= '%d'";
 //	private static final String FORMAT_CMD_SELECT_QUARTER_RULE_LESS_EQUAL_THAN_FORMAT = " WHERE year(date) = '%d' AND quarter(date) <= '%d'";
+	private static final String FORMAT_SQL_FIELD_DATE_OF_QUARTER1 = "%s-01-01";
+	private static final String FORMAT_SQL_FIELD_DATE_OF_QUARTER2 = "%s-04-01";
+	private static final String FORMAT_SQL_FIELD_DATE_OF_QUARTER3 = "%s-07-01";
+	private static final String FORMAT_SQL_FIELD_DATE_OF_QUARTER4 = "%s-10-01";
+	private static final String[] FORMAT_SQL_FIELD_DATE_OF_QUARTER_LIST = new String[]{FORMAT_SQL_FIELD_DATE_OF_QUARTER1, FORMAT_SQL_FIELD_DATE_OF_QUARTER2, FORMAT_SQL_FIELD_DATE_OF_QUARTER3, FORMAT_SQL_FIELD_DATE_OF_QUARTER4};
+
+	private static String get_field_date_from_quarter(String quarter_str)
+	{
+		Matcher matcher = FinanceRecorderCmnDef.get_regex_matcher("([\\d]{4})[Qq]([1234])", quarter_str);
+		if (matcher == null)
+			throw new IllegalArgumentException(String.format("The %s is NOT a quarter string", quarter_str));
+		String year_string = matcher.group(1);
+		int quarter = Integer.valueOf(matcher.group(2));
+		return String.format(FORMAT_SQL_FIELD_DATE_OF_QUARTER_LIST[quarter - 1], year_string);
+	}
 
 	private static String field_array_to_string(String[] field_array)
 	{
@@ -170,7 +187,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 		{
 			FinanceRecorderCmnDef.FinanceTimeUnit finance_time_unit = finance_time_range.get_time_unit();
 			FinanceRecorderCmnDef.FinanceTimeRangeType finance_time_range_type = finance_time_range.get_time_range_type();
-			FinanceRecorderCmnDef.format_error("Time rangte, unit: %d, range type: %d", finance_time_unit.value(), finance_time_range_type.value());
+			FinanceRecorderCmnDef.format_error("Time range, unit: %d, range type: %d", finance_time_unit.value(), finance_time_range_type.value());
 			switch (finance_time_range.get_time_unit())
 			{
 			case FinanceTime_Date:
@@ -343,6 +360,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 //	private FinanceRecorderCmnDef.CreateThreadType database_create_thread_type = null;
 	private FinanceRecorderCmnDef.DatabaseEnableBatchType batch_operation = FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_No;
 	private FinanceRecorderCmnDef.NotExistIngoreType select_table_not_exist_type = FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes;
+	private FinanceRecorderCmnDef.FinanceTimeUnit csv_time_unit = FinanceRecorderCmnDef.DEF_CSV_TIME_UNIT;
 
 	protected FinanceRecorderSQLClient()
 	{
@@ -352,6 +370,9 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 		password = DEF_PASSWORD;
 //		finance_observer = observer;
 	}
+
+	public void set_csv_time_unit(FinanceRecorderCmnDef.FinanceTimeUnit new_csv_time_unit){csv_time_unit = new_csv_time_unit;}
+	public FinanceRecorderCmnDef.FinanceTimeUnit get_csv_time_unit(){return csv_time_unit;}
 
 	public short try_connect_mysql(
 			String database_name, 
@@ -658,6 +679,7 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 			return  FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 
+		boolean need_change_time_unit = (csv_time_unit != FinanceRecorderCmnDef.DEF_SQL_TIME_UNIT) ? true : false;
 		if (is_batch_operation())
 		{
 			// Disable Auto Commit
@@ -706,7 +728,23 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 				{
 //					SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
 //					java.util.Date dateStr = formatter.parse(element_list[0]);
-					java.util.Date dateStr = FinanceRecorderCmnDef.get_date(element_list[0]);
+					java.util.Date dateStr = null;
+					if (need_change_time_unit)
+					{
+						switch(csv_time_unit)
+						{
+						case FinanceTime_Quarter:
+						{
+							String csv_date_str = get_field_date_from_quarter(element_list[0]);
+							dateStr = FinanceRecorderCmnDef.get_date(csv_date_str);
+						}
+						break;
+						default:
+							throw new IllegalStateException("Unsupported time unit in CSV");
+						}
+					}
+					else
+						dateStr = FinanceRecorderCmnDef.get_date(element_list[0]);
 					sql_date = new java.sql.Date(dateStr.getTime());
 				}
 				catch (ParseException e)
@@ -770,7 +808,23 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 				{
 //					SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
 //					java.util.Date dateStr = formatter.parse(element_list[0]);
-					java.util.Date dateStr = FinanceRecorderCmnDef.get_date(element_list[0]);
+					java.util.Date dateStr = null;
+					if (need_change_time_unit)
+					{
+						switch(csv_time_unit)
+						{
+						case FinanceTime_Quarter:
+						{
+							String csv_date_str = get_field_date_from_quarter(element_list[0]);
+							dateStr = FinanceRecorderCmnDef.get_date(csv_date_str);
+						}
+						break;
+						default:
+							throw new IllegalStateException("Unsupported time unit in CSV");
+						}
+					}
+					else
+						dateStr = FinanceRecorderCmnDef.get_date(element_list[0]);
 					sql_date = new java.sql.Date(dateStr.getTime());
 				}
 				catch (ParseException e)

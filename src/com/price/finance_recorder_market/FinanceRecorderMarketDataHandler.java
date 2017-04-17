@@ -92,7 +92,7 @@ public class FinanceRecorderMarketDataHandler extends FinanceRecorderDataHandler
 	protected short parse_missing_csv()
 	{
 		LinkedList<String> config_line_list = new LinkedList<String>();
-		short ret = FinanceRecorderCmnDef.get_config_file_lines(FinanceRecorderCmnDef.MISSING_CSV_MARKET_FILENAME, current_csv_working_folerpath, config_line_list);
+		short ret = FinanceRecorderCmnDef.read_config_file_lines(FinanceRecorderCmnDef.MISSING_CSV_MARKET_FILENAME, current_csv_working_folerpath, config_line_list);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
 			if (!FinanceRecorderCmnDef.CheckFailureNotFound(ret))

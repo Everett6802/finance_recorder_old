@@ -76,6 +76,8 @@ public class FinanceRecorderStockSQLClient extends FinanceRecorderSQLClient
 	short insert_data(int source_type_index, String company_code_number, final FinanceRecorderCSVHandler csv_reader)
 	{
 		String table_name = get_table_name(source_type_index, company_code_number);
+		if (FinanceRecorderCmnDef.check_statement_source_type_index_in_range(source_type_index))
+			set_csv_time_unit(FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Quarter);
 		return insert_data(table_name, csv_reader);
 	}
 

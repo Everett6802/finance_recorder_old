@@ -121,7 +121,7 @@ public class FinanceRecorderStockDataHandler extends FinanceRecorderDataHandlerB
 	{
 //		String missing_csv_filepath = String.format("%s/%s", current_csv_working_folerpath, FinanceRecorderCmnDef.MISSING_CSV_STOCK_FILENAME);
 		LinkedList<String> config_line_list = new LinkedList<String>();
-		short ret = FinanceRecorderCmnDef.get_config_file_lines(FinanceRecorderCmnDef.MISSING_CSV_STOCK_FILENAME, current_csv_working_folerpath, config_line_list);
+		short ret = FinanceRecorderCmnDef.read_config_file_lines(FinanceRecorderCmnDef.MISSING_CSV_STOCK_FILENAME, current_csv_working_folerpath, config_line_list);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 		{
 			if (!FinanceRecorderCmnDef.CheckFailureNotFound(ret))

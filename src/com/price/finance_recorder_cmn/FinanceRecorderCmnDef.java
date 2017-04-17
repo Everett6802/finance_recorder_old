@@ -189,6 +189,8 @@ public class FinanceRecorderCmnDef
 	public static final int DEF_MIN_QUARTER_STRING_LENGTH = 4;
 	public static final int DEF_MAX_QUARTER_STRING_LENGTH = 6;
 
+	public static final FinanceRecorderCmnDef.FinanceTimeUnit DEF_CSV_TIME_UNIT = FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Date;
+	public static final FinanceRecorderCmnDef.FinanceTimeUnit DEF_SQL_TIME_UNIT = FinanceRecorderCmnDef.FinanceTimeUnit.FinanceTime_Date;
 	// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// enumeration
 	public static enum FinanceAnalysisMode 
@@ -550,6 +552,10 @@ public class FinanceRecorderCmnDef
 		///////////////////////////////////////////////////////////
 // Stock Start
 		"company_depository_shareholder_distribution_table",
+		"balance_sheet",
+		"income_statement",
+		"cash_flow_statement",
+		"statement_of_changes_in_equity",
 // Stock End
 	};
 	public static final String[] FINANCE_DATA_DESCRIPTION_LIST = new String[] 
@@ -604,6 +610,10 @@ public class FinanceRecorderCmnDef
 		///////////////////////////////////////////////////////////
 // Stock Start
 		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefStockDatabase.COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_TABLE_FIELD_DEFINITION, FinanceRecorderCmnDefStockDatabase.COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_TABLE_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefStockDatabase.BALANCE_SHEET_TABLE_FIELD_DEFINITION, FinanceRecorderCmnDefStockDatabase.BALANCE_SHEET_TABLE_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefStockDatabase.INCOME_STATEMENT_TABLE_FIELD_DEFINITION, FinanceRecorderCmnDefStockDatabase.INCOME_STATEMENT_TABLE_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefStockDatabase.CASH_FLOW_STATEMENT_TABLE_FIELD_DEFINITION, FinanceRecorderCmnDefStockDatabase.CASH_FLOW_STATEMENT_TABLE_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(FinanceRecorderCmnDefStockDatabase.STATEMENT_OF_CHANGES_IN_EQUITY_TABLE_FIELD_DEFINITION, FinanceRecorderCmnDefStockDatabase.STATEMENT_OF_CHANGES_IN_EQUITY_TABLE_FIELD_TYPE_DEFINITION)),
 // Stock End
 	};
 	public static final String[][] FINANCE_DATA_SQL_FIELD_DEFINITION_LIST = new String[][] 
@@ -621,6 +631,10 @@ public class FinanceRecorderCmnDef
 		///////////////////////////////////////////////////////////
 // Stock Start
 		FinanceRecorderCmnDefStockDatabase.COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_TABLE_FIELD_DEFINITION,
+		FinanceRecorderCmnDefStockDatabase.BALANCE_SHEET_TABLE_FIELD_DEFINITION,
+		FinanceRecorderCmnDefStockDatabase.INCOME_STATEMENT_TABLE_FIELD_DEFINITION,
+		FinanceRecorderCmnDefStockDatabase.CASH_FLOW_STATEMENT_TABLE_FIELD_DEFINITION,
+		FinanceRecorderCmnDefStockDatabase.STATEMENT_OF_CHANGES_IN_EQUITY_TABLE_FIELD_DEFINITION,
 // Stock End
 	};
 	public static final String[][] FINANCE_DATA_SQL_FIELD_TYPE_DEFINITION_LIST = new String[][] 
@@ -638,6 +652,10 @@ public class FinanceRecorderCmnDef
 		///////////////////////////////////////////////////////////
 // Stock Start
 		FinanceRecorderCmnDefStockDatabase.COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_TABLE_FIELD_TYPE_DEFINITION,
+		FinanceRecorderCmnDefStockDatabase.BALANCE_SHEET_TABLE_FIELD_TYPE_DEFINITION,
+		FinanceRecorderCmnDefStockDatabase.INCOME_STATEMENT_TABLE_FIELD_TYPE_DEFINITION,
+		FinanceRecorderCmnDefStockDatabase.CASH_FLOW_STATEMENT_TABLE_FIELD_TYPE_DEFINITION,
+		FinanceRecorderCmnDefStockDatabase.STATEMENT_OF_CHANGES_IN_EQUITY_TABLE_FIELD_TYPE_DEFINITION,
 // Stock End
 		};
 	public static final FinanceFieldType[][] FINANCE_DATABASE_FIELD_TYPE_LIST = new FinanceFieldType[][] 
@@ -655,6 +673,10 @@ public class FinanceRecorderCmnDef
 		///////////////////////////////////////////////////////////
 // Stock Start
 		TransformFieldTypeString2Enum(FinanceRecorderCmnDefStockDatabase.COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_TABLE_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(FinanceRecorderCmnDefStockDatabase.BALANCE_SHEET_TABLE_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(FinanceRecorderCmnDefStockDatabase.INCOME_STATEMENT_TABLE_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(FinanceRecorderCmnDefStockDatabase.CASH_FLOW_STATEMENT_TABLE_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(FinanceRecorderCmnDefStockDatabase.STATEMENT_OF_CHANGES_IN_EQUITY_TABLE_FIELD_TYPE_DEFINITION),
 // Stock End
 	};
 	public static final int FINANCE_DATABASE_FIELD_AMOUNT_LIST[] = 
@@ -672,6 +694,10 @@ public class FinanceRecorderCmnDef
 		///////////////////////////////////////////////////////////
 // Stock Start
 		FinanceRecorderCmnDefStockDatabase.COMPANY_DEPOSITORY_SHAREHOLDER_DISTRIBUTION_TABLE_FIELD_TYPE_DEFINITION.length,
+		FinanceRecorderCmnDefStockDatabase.BALANCE_SHEET_TABLE_FIELD_TYPE_DEFINITION.length,
+		FinanceRecorderCmnDefStockDatabase.INCOME_STATEMENT_TABLE_FIELD_TYPE_DEFINITION.length,
+		FinanceRecorderCmnDefStockDatabase.CASH_FLOW_STATEMENT_TABLE_FIELD_TYPE_DEFINITION.length,
+		FinanceRecorderCmnDefStockDatabase.STATEMENT_OF_CHANGES_IN_EQUITY_TABLE_FIELD_TYPE_DEFINITION.length,
 // Stock End
 	};
 
@@ -680,6 +706,11 @@ public class FinanceRecorderCmnDef
 	public static final int FINANCE_DATA_SOURCE_MARKET_END = Arrays.asList(FINANCE_DATA_FOLDER_MAPPING).indexOf("stock");
 	public static final int FINANCE_DATA_SOURCE_STOCK_START = FINANCE_DATA_SOURCE_MARKET_END;
 	public static final int FINANCE_DATA_SOURCE_STOCK_END = FINANCE_DATA_FOLDER_MAPPING.length;
+	public static final int FINANCE_DATA_SOURCE_MARKET_SIZE = FINANCE_DATA_SOURCE_MARKET_END - FINANCE_DATA_SOURCE_MARKET_START;
+	public static final int FINANCE_DATA_SOURCE_STOCK_SIZE = FINANCE_DATA_SOURCE_STOCK_END - FINANCE_DATA_SOURCE_STOCK_START;
+
+	public static final int FINANCE_DATA_SOURCE_STOCK_STATMENT_START = Arrays.asList(FINANCE_DATA_NAME_LIST).indexOf("balance_sheet");
+	public static final int FINANCE_DATA_SOURCE_STOCK_STATMENT_END = Arrays.asList(FINANCE_DATA_NAME_LIST).indexOf("statement_of_changes_in_equity") + 1;
 
 	// Setter and Getter
 	// Allow to assign the variable only once
@@ -711,7 +742,7 @@ public class FinanceRecorderCmnDef
 		String errmsg;
 		// Read the data from the config file
 		LinkedList<String> config_line_list = new LinkedList<String>();
-		short res = get_config_file_lines(MARKET_STOCK_SWITCH_CONF_FILENAME, config_line_list);
+		short res = read_config_file_lines(MARKET_STOCK_SWITCH_CONF_FILENAME, config_line_list);
 		if (CheckFailure(res)) 
 		{
 			errmsg = String.format("Fail to parse the config file: %s, due to: %s", MARKET_STOCK_SWITCH_CONF_FILENAME, GetErrorDescription(res));
@@ -764,6 +795,22 @@ public class FinanceRecorderCmnDef
 		else if (IS_FINANCE_STOCK_MODE)
 		{
 			if (source_type_index >= FINANCE_DATA_SOURCE_STOCK_START && source_type_index < FINANCE_DATA_SOURCE_STOCK_END)
+				return true;
+			else
+				return false;
+		}
+		throw new IllegalStateException("Unknown finance mode");
+	}
+
+	public static boolean check_statement_source_type_index_in_range(int source_type_index)
+	{
+		if (IS_FINANCE_MARKET_MODE)
+		{
+			return false;
+		}
+		else if (IS_FINANCE_STOCK_MODE)
+		{
+			if (source_type_index >= FINANCE_DATA_SOURCE_STOCK_STATMENT_START && source_type_index < FINANCE_DATA_SOURCE_STOCK_STATMENT_END)
 				return true;
 			else
 				return false;
@@ -1385,7 +1432,7 @@ public class FinanceRecorderCmnDef
 		return check_file_exist(conf_filepath);
 	}
 
-	public static short get_config_file_lines(String filename, String conf_folderpath, LinkedList<String> config_line_list) 
+	public static short read_config_file_lines(String filename, String conf_folderpath, LinkedList<String> config_line_list) 
 	{
 		String conf_filepath = null;
 		if (conf_folderpath == null)
@@ -1454,9 +1501,25 @@ public class FinanceRecorderCmnDef
 		return ret;
 	}
 
-	public static short get_config_file_lines(String filename, LinkedList<String> config_line_list) 
+	public static short read_config_file_lines(String filename, LinkedList<String> config_line_list) 
 	{
-		return get_config_file_lines(filename, null, config_line_list);
+		return read_config_file_lines(filename, null, config_line_list);
+	}
+
+	public static short read_company_config_file(String conf_filename, LinkedList<String> company_config_list)
+	{
+		LinkedList<String> config_line_list = new LinkedList<String>();
+		short ret = RET_SUCCESS;
+		ret = read_config_file_lines(conf_filename, config_line_list);
+		if (CheckFailure(ret))
+			return ret;
+		for (String line : config_line_list)
+		{
+			String[] param_list = line.split(SPACE_DATA_SPLIT);
+			for (String param : param_list)
+				company_config_list.addLast(param);
+		}
+		return RET_SUCCESS;
 	}
 
 	public static short create_folder(final String path) 

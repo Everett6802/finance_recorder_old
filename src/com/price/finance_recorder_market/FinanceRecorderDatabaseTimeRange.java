@@ -62,7 +62,7 @@ public class FinanceRecorderDatabaseTimeRange
 		}
 // Start to parse the time range from the config files if the file exists
 		LinkedList<String> config_line_list = new LinkedList<String>();
-		short ret = FinanceRecorderCmnDef.get_config_file_lines(FinanceRecorderCmnDef.MARKET_DATABASE_TIME_RANGE_CONF_FILENAME, config_line_list);
+		short ret = FinanceRecorderCmnDef.read_config_file_lines(FinanceRecorderCmnDef.MARKET_DATABASE_TIME_RANGE_CONF_FILENAME, config_line_list);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;// Open the file
 // Try to parse the content of the config file

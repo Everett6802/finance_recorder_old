@@ -153,7 +153,7 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		LinkedList<String> config_line_list = new LinkedList<String>();
 // Read the content from the config file
-		ret = FinanceRecorderCmnDef.get_config_file_lines(filename, config_line_list);
+		ret = FinanceRecorderCmnDef.read_config_file_lines(filename, config_line_list);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 OUT:
@@ -192,6 +192,8 @@ OUT:
 			FinanceRecorderCmnDef.error("The manager class has been initialized....");
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
+		if (in_source_type_index_list == null)
+			in_source_type_index_list = FinanceRecorderCmnDef.get_all_source_type_index_list();
 		for (Integer source_type_index : in_source_type_index_list)
 			source_type_index_list.add(source_type_index);
 		return FinanceRecorderCmnDef.RET_SUCCESS;

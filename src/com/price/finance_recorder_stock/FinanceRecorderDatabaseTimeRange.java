@@ -71,7 +71,7 @@ public class FinanceRecorderDatabaseTimeRange
 				continue OUT;
 			}
 			LinkedList<String> config_line_list = new LinkedList<String>();
-			ret = FinanceRecorderCmnDef.get_config_file_lines(conf_filename, conf_folderpath, config_line_list);
+			ret = FinanceRecorderCmnDef.read_config_file_lines(conf_filename, conf_folderpath, config_line_list);
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				break OUT;// Open the file
 			ArrayList<FinanceRecorderCmnClass.FinanceTimeRange> database_time_range_list = new ArrayList<FinanceRecorderCmnClass.FinanceTimeRange>(stock_source_type_amount);

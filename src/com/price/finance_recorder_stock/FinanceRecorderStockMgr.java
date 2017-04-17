@@ -30,7 +30,7 @@ public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 
 	public void set_delete_sql_accuracy(FinanceRecorderCmnDef.DeleteSQLAccurancyType accurancy_type){delete_sql_accurancy_type = accurancy_type;}
 
-	private short transform_company_list_to_group_set(List<String> company_number_list)
+	private short transform_company_word_list_to_group_set(List<String> company_word_list)
 	{
 /*
         The argument type:
@@ -41,7 +41,7 @@ public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 */
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		company_group_set = new FinanceRecorderCompanyGroupSet();
-		for (String company_number : company_number_list)
+		for (String company_number : company_word_list)
 		{
 			Matcher matcher = FinanceRecorderCmnDef.get_regex_matcher("([\\d]{4})-([\\d]{4})", company_number);
 			if (matcher == null)
@@ -92,13 +92,13 @@ public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 		}
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		LinkedList<String> config_line_list = new LinkedList<String>();
+		LinkedList<String> company_word_list = new LinkedList<String>();
 // Read the content from the config file
-		ret = FinanceRecorderCmnDef.get_config_file_lines(filename, config_line_list);
+		ret = FinanceRecorderCmnDef.read_company_config_file(filename, company_word_list);
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			return ret;
 
-		return transform_company_list_to_group_set(config_line_list);
+		return set_company(company_word_list);
 	}
 
 	public short set_company(List<String> company_number_list)
@@ -109,7 +109,7 @@ public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 			return FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
 		}
 
-		return transform_company_list_to_group_set(company_number_list);
+		return transform_company_word_list_to_group_set(company_number_list);
 	}
 
 	public short initialize()
