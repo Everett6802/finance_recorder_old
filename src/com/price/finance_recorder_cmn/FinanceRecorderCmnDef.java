@@ -130,11 +130,21 @@ public class FinanceRecorderCmnDef
 	public static final String CSV_RESTORE_ROOT_FOLDERPATH = CSV_BACKUP_ROOT_FOLDERPATH;
 	public static final String CSV_MARKET_FOLDERNAME = "market";
 	public static final String CSV_STOCK_FOLDERNAME = "stock";
+	public static final String RESULT_FOLDERNAME = "result";
+	public static final String CONF_FOLDERNAME = "conf";
+	public static final String DEFAULT_FINANCE_ROOT_FOLDERPATH = "/opt/finance";
+	public static final String SCRAPY_PROJECT_NAME = "finance_scrapy_python";
+	public static final String RECORDER_PROJECT_NAME = "finance_recorder_java";
+	public static final String ANALYZER_PROJECT_NAME = "finance_analyzer";
+	public static final String FINANCE_SCRAPY_ROOT_FOLDERPATH = String.format("%s/%s", DEFAULT_FINANCE_ROOT_FOLDERPATH, SCRAPY_PROJECT_NAME);
+	public static final String FINANCE_RECORDER_ROOT_FOLDERPATH = String.format("%s/%s", DEFAULT_FINANCE_ROOT_FOLDERPATH, RECORDER_PROJECT_NAME);
+	public static final String FINANCE_ANALYZER_ROOT_FOLDERPATH = String.format("%s/%s", DEFAULT_FINANCE_ROOT_FOLDERPATH, ANALYZER_PROJECT_NAME);
+	public static final String DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH = String.format("%s/%s", FINANCE_SCRAPY_ROOT_FOLDERPATH, CONF_FOLDERNAME); 
+	// public static final String DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH = "/home/super/Projects/finance_scrapy_python/conf"; 
+	public static final String CONFIG_TIMESTAMP_STRING_PREFIX = "#time@";
 //	public static final String CSV_FOLDERPATH = String.format("%s/%s", CSV_ROOT_FOLDERPATH, (IS_FINANCE_MARKET_MODE ? CSV_MARKET_FOLDERNAME : CSV_STOCK_FOLDERNAME));
 	public static final String SQL_MARKET_DATABASE_NAME = "market";
 	public static final String SQL_STOCK_DATABASE_NAME = "stock";
-	public static final String RESULT_FOLDERNAME = "result";
-	public static final String CONF_FOLDERNAME = "conf";
 //	public static final String BACKUP_FOLDERNAME = ".backup";
 	public static final String MARKET_ALL_CONFIG_FILENAME = "market_all.conf";
 	public static final String STOCK_ALL_CONFIG_FILENAME = "stock_all.conf";
@@ -1321,6 +1331,13 @@ public class FinanceRecorderCmnDef
 		return RET_SUCCESS;
 	}
 
+	public static short copy_config_file(String config_filename, String src_config_folderpath) 
+	{
+		String src_filepath = String.format("%s/%s", src_config_folderpath, config_filename);
+		String dst_filepath = String.format("%s/%s/%s", get_current_path(), CONF_FOLDERNAME, config_filename);
+		return copy_file(src_filepath, dst_filepath);
+	}
+
 	public static short direct_string_to_output_stream(String data, String filepath) 
 	{
 		// Open the config file for writing
@@ -1416,34 +1433,34 @@ public class FinanceRecorderCmnDef
 		return exist;
 	}
 
-	public static boolean check_config_file_exist(final String config_filename, String conf_folderpath) 
+	public static boolean check_config_file_exist(final String config_filename, String config_folderpath) 
 	{
-		String conf_filepath = null;
-		if (conf_folderpath == null)
-			conf_filepath = String.format("%s/%s/%s", get_current_path(), CONF_FOLDERNAME, config_filename);
+		String config_filepath = null;
+		if (config_folderpath == null)
+			config_filepath = String.format("%s/%s/%s", get_current_path(), CONF_FOLDERNAME, config_filename);
 		else
-			conf_filepath = String.format("%s/%s", conf_folderpath, config_filename);
-		return check_file_exist(conf_filepath);
+			config_filepath = String.format("%s/%s", config_folderpath, config_filename);
+		return check_file_exist(config_filepath);
 	}
 
 	public static boolean check_config_file_exist(final String config_filename) 
 	{
-		String conf_filepath = String.format("%s/%s/%s", get_current_path(), CONF_FOLDERNAME, config_filename);
-		return check_file_exist(conf_filepath);
+		String config_filepath = String.format("%s/%s/%s", get_current_path(), CONF_FOLDERNAME, config_filename);
+		return check_file_exist(config_filepath);
 	}
 
-	public static short read_config_file_lines(String filename, String conf_folderpath, LinkedList<String> config_line_list) 
+	public static short read_config_file_lines(String filename, String config_folderpath, LinkedList<String> config_line_list) 
 	{
-		String conf_filepath = null;
-		if (conf_folderpath == null)
-			conf_filepath = String.format("%s/%s/%s", get_current_path(), CONF_FOLDERNAME, filename);
+		String config_filepath = null;
+		if (config_folderpath == null)
+			config_filepath = String.format("%s/%s/%s", get_current_path(), CONF_FOLDERNAME, filename);
 		else
-			conf_filepath = String.format("%s/%s", conf_folderpath, filename);
-//		debug(String.format("Check the config file[%s] exist", conf_filepath));
-		File f = new File(conf_filepath);
+			config_filepath = String.format("%s/%s", config_folderpath, filename);
+//		debug(String.format("Check the config file[%s] exist", config_filepath));
+		File f = new File(config_filepath);
 		if (!f.exists()) 
 		{
-			format_error("The configration file[%s] does NOT exist", conf_filepath);
+			format_error("The configration file[%s] does NOT exist", config_filepath);
 			return RET_FAILURE_NOT_FOUND;
 		}
 
@@ -1457,7 +1474,7 @@ public class FinanceRecorderCmnDef
 		} 
 		catch (IOException e) 
 		{
-			format_error("Fails to open %s file, due to: %s", conf_filepath, e.toString());
+			format_error("Fails to open %s file, due to: %s", config_filepath, e.toString());
 			return RET_FAILURE_IO_OPERATION;
 		}
 
@@ -1806,7 +1823,89 @@ public class FinanceRecorderCmnDef
 			tarEntry = tain.getNextTarEntry();
 		}
 		tain.close();
-	} 
+	}
+
+	public static short get_config_file_timestamp(StringBuilder timestamp_string_builder, final String config_filename, final String config_folderpath)
+	{
+		String config_filepath = null;
+		if (config_folderpath != null)
+		{
+			config_filepath = String.format("%s/%s", config_folderpath, config_filename);
+		}
+		else
+		{
+			config_filepath = String.format("%s/%s/%s", get_current_path(), CONF_FOLDERNAME, config_filename);
+		}
+		File f = new File(config_filepath);
+		if (!f.exists()) 
+		{
+			format_error("The configration file[%s] does NOT exist", config_filepath);
+			return RET_FAILURE_NOT_FOUND;
+		}
+
+		// Open the config file for reading
+		BufferedReader br = null;
+		try 
+		{
+			FileInputStream fis = new FileInputStream(f);
+			InputStreamReader isr = new InputStreamReader(fis);
+			br = new BufferedReader(isr);
+		} 
+		catch (IOException e) 
+		{
+			format_error("Fails to open %s file, due to: %s", config_filepath, e.toString());
+			return RET_FAILURE_IO_OPERATION;
+		}
+
+		short ret = RET_SUCCESS;
+// Read the conf file
+		String line = null;
+		try 
+		{
+			if ((line = br.readLine()) == null) 
+			{
+				throw new IOException(String.format("Fail to read the config file[%s]", config_filename));
+			}
+			String[] timestamp_element_array = line.split(" ");
+			if (timestamp_element_array.length != 3)
+			{
+				throw new IllegalStateException(String.format("Incorrect format in the first line of the config[%s]: %s", config_filename, line));
+			}
+			if (!timestamp_element_array[0].equals(CONFIG_TIMESTAMP_STRING_PREFIX))
+			{
+				throw new IllegalStateException(String.format("Incorrect time stamp prefix in config[%s]: %s", config_filename, timestamp_element_array[0]));
+			}
+			timestamp_string_builder.append(String.format("%s %s", timestamp_element_array[1], timestamp_element_array[2]));
+		} 
+		catch (IllegalStateException e) 
+		{
+			format_error("Incorrect time stamp format, due to: %s", e.toString());
+			ret = RET_FAILURE_INCORRECT_CONFIG;
+		} 
+		catch (IOException e) 
+		{
+			format_error("IO Error occur while parsing the config file, due to: %s", e.toString());
+			ret = RET_FAILURE_IO_OPERATION;
+		} 
+		catch (Exception e) 
+		{
+			format_error("Error occur while parsing the config file, due to: %s", e.toString());
+			ret = RET_FAILURE_UNKNOWN;
+		} 
+		finally 
+		{
+			if (br != null) 
+			{
+				try 
+				{
+					br.close();
+				} 
+				catch (Exception e) {}
+				br = null;
+			}
+		}
+		return ret;
+	}
 
 	// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Interface

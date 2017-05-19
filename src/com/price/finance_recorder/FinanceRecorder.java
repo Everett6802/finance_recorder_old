@@ -27,6 +27,8 @@ public class FinanceRecorder
 	private static final byte DATABASE_OPERATION_CHECK_EXIST_MASK = 0x1 << 5;
 
 	private static boolean help_param = false;
+	private static String renew_company_profile_filepath_param = null;
+	private static boolean renew_company_param = false;
 	private static String finance_folderpath_param = null;
 	private static String finance_backup_folderpath_param = null;
 	private static String finance_restore_folderpath_param = null;
@@ -97,6 +99,16 @@ public class FinanceRecorder
 			{
 				FinanceRecorderCmnDef.enable_show_console(true);
 				help_param = true;
+				index_offset = 1;
+			}
+			else if (option.equals("--renew_company_profile_filepath"))
+			{
+				renew_company_profile_filepath_param = args[index + 1];
+				index_offset = 2;
+			}
+			else if (option.equals("--renew_company"))
+			{
+				renew_company_param = true;
 				index_offset = 1;
 			}
 			else if (option.equals("--silent"))
@@ -425,6 +437,16 @@ public class FinanceRecorder
 				company_param = null;
 				FinanceRecorderCmnDef.warn("The 'company' argument is ignored since it's Market mode");
 			}
+			if (renew_company_param)
+			{
+				renew_company_param = false;
+				FinanceRecorderCmnDef.warn("The 'renew_company' argument is ignored since it's Market mode");
+			}
+			if (renew_company_profile_filepath_param != null)
+			{
+				renew_company_profile_filepath_param = null;
+				FinanceRecorderCmnDef.warn("The 'renew_company_profile_filepath' argument is ignored since it's Market mode");
+			}
 			if (company_from_file_param != null)
 			{
 				company_from_file_param = null;
@@ -438,6 +460,19 @@ public class FinanceRecorder
 		}
 		else
 		{
+			if (renew_company_param)
+			{
+				if (renew_company_profile_filepath_param == null)
+					renew_company_profile_filepath_param = FinanceRecorderCmnDef.DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH;
+			}
+			else
+			{
+				if (renew_company_profile_filepath_param != null)
+				{
+					renew_company_profile_filepath_param = null;
+					FinanceRecorderCmnDef.warn("The 'renew_company_profile_filepath' argument is ignored since 'renew_company' is NOT set");
+				}
+			}
 			if (company_from_file_param != null)
 			{
 				if (company_param != null)
@@ -783,6 +818,8 @@ public class FinanceRecorder
 			System.out.println("  Format 2 Company code number range: 2100-2200");
 			System.out.println("  Format 3 Company group number: [Gg]12");
 			System.out.println("  Format 4 Company code number/number range/group hybrid: 2347,2100-2200,G12,2362,g2,1500-1510");
+			System.out.println("--renew_company\nDescription: Renew the table of the company profile\nCaution: Exit after renewing the company profile\n");
+			System.out.printf("--renew_company_profile_filepath\nDescription: The company profile filepath for renewing the table of the company profile\nDefault: %s\n", FinanceRecorderCmnDef.DEFAULT_SOURCE_COMPANY_PROFILE_CONF_FOLDERPATH);
 		}
 //		System.out.println("--compress_file\nDescription: Access the compressed file for the backup/restore operation\nDefault: true\nCaution: Only take effect for Database Operation: B(backup) R(restore)");
 //		System.out.println("--delete_old\nDescription: delete the old MySQL databases\nCaution: Ignored if --restore set");
@@ -793,6 +830,66 @@ public class FinanceRecorder
 //		System.out.println("--check_error\nDescription: Check if the data in the MySQL database is correct");
 //		System.out.println("--run_daily\nDescription: Run daily data\nCaution: Executed after writing MySQL data if set");
 		System.out.println("===================================================");
+		System.exit(0);
+	}
+
+	private static void renew_company_and_exit(final String source_company_profile_conf_folderpath)
+	{
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		assert source_company_profile_conf_folderpath != null : "source_company_profile_conf_folderpath should NOT be NULL";
+		StringBuilder timestamp_src_builder = new StringBuilder();
+		StringBuilder timestamp_dst_builder = new StringBuilder();
+		ret = FinanceRecorderCmnDef.get_config_file_timestamp(timestamp_src_builder, FinanceRecorderCmnDef.COMPANY_PROFILE_CONF_FILENAME, source_company_profile_conf_folderpath);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+			String errmsg = String.format("Fails to get time stamp from srouce file[%s], due to: %s", FinanceRecorderCmnDef.COMPANY_PROFILE_CONF_FILENAME, FinanceRecorderCmnDef.GetErrorDescription(ret));
+			show_error_and_exit(errmsg);
+		}
+		boolean need_renew = false;
+		ret = FinanceRecorderCmnDef.get_config_file_timestamp(timestamp_dst_builder, FinanceRecorderCmnDef.COMPANY_PROFILE_CONF_FILENAME, null);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+		{
+			if (ret == FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND)
+			{
+				FinanceRecorderCmnDef.format_warn("The company profile file[%s] does NOT exist", FinanceRecorderCmnDef.COMPANY_PROFILE_CONF_FILENAME);
+				need_renew = true;
+			}
+			else if (ret == FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG)
+			{
+				FinanceRecorderCmnDef.format_warn("Fails to get time stamp from destination file[%s]", FinanceRecorderCmnDef.COMPANY_PROFILE_CONF_FILENAME);
+				need_renew = true;
+			}
+			else
+			{
+				String errmsg = String.format("Error occurs while trying to get time stamp from the source company profile file[%s], due to: %s", FinanceRecorderCmnDef.COMPANY_PROFILE_CONF_FILENAME, FinanceRecorderCmnDef.GetErrorDescription(ret));
+				show_error_and_exit(errmsg);
+			}
+		}
+// Check if the time stamps are identical
+		if (!need_renew)
+			need_renew = (timestamp_src_builder.toString() != timestamp_dst_builder.toString() ? true : false);
+		if (!need_renew)
+		{
+			System.out.println("The time stamp is equal, NO NEED to renew......");
+		}
+		else
+		{
+			System.out.printf("Renew company profile: %s -> %s\n", timestamp_src_builder.toString(), timestamp_dst_builder.toString());
+// Copy the company profile from the finance_scrapy_python project
+			ret = FinanceRecorderCmnDef.copy_config_file(FinanceRecorderCmnDef.COMPANY_PROFILE_CONF_FILENAME, source_company_profile_conf_folderpath);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+			{
+				String errmsg = String.format("Fails to copy the company profile config file[%s] from: %s, due to: %s", FinanceRecorderCmnDef.COMPANY_PROFILE_CONF_FILENAME, source_company_profile_conf_folderpath, FinanceRecorderCmnDef.GetErrorDescription(ret));
+				show_error_and_exit(errmsg);
+			}
+// Copy the company group from the finance_scrapy_python project
+			ret = FinanceRecorderCmnDef.copy_config_file(FinanceRecorderCmnDef.COMPANY_GROUP_CONF_FILENAME, source_company_profile_conf_folderpath);
+			if (FinanceRecorderCmnDef.CheckFailure(ret))
+			{
+				String errmsg = String.format("Fails to copy the company group config file[%s] from: %s, due to: %s", FinanceRecorderCmnDef.COMPANY_GROUP_CONF_FILENAME, source_company_profile_conf_folderpath, FinanceRecorderCmnDef.GetErrorDescription(ret));
+				show_error_and_exit(errmsg);
+			}
+		}
 		System.exit(0);
 	}
 
@@ -1219,11 +1316,14 @@ public class FinanceRecorder
 		else
 			throw new IllegalStateException("Unknown finance mode");
 
-		if (help_param)
-			show_usage_and_exit();
-
 		if (FinanceRecorderCmnDef.CheckFailure(check_param()))
 			show_error_and_exit("Fail to check the parameters ......");
+
+		if (help_param)
+			show_usage_and_exit();
+		if (renew_company_param)
+			renew_company_and_exit(renew_company_profile_filepath_param);
+
 		if (FinanceRecorderCmnDef.CheckFailure(setup_param()))
 			show_error_and_exit("Fail to setup the parameters ......");
 

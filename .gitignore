@@ -1,11 +1,11 @@
 .classpath
 .project
 .settings/
-.database_time_range.conf
-.workday_canlendar.conf
+#.database_time_range.conf
+#.workday_canlendar.conf
 finance_recorder.jar
-conf/.company_profile.conf
-conf/company_number_list.conf
+#conf/.company_profile.conf
+#conf/company_number_list.conf
 bin/
 lib/
 log/
@@ -14,3 +14,4 @@ publish/
 result/
 .backup/
 *.log
+*.conf*
