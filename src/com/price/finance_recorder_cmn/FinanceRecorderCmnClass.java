@@ -1646,13 +1646,13 @@ public class FinanceRecorderCmnClass
 				if (query_map.get(source_type_index).indexOf(field_index) != -1)
 				{
 					FinanceRecorderCmnDef.format_warn("Duplicate index: %d in %s", field_index, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index]);
-					return FinanceRecorderCmnDef.RET_WARN_INDEX_DUPLICATE;
+					return FinanceRecorderCmnDef.RET_FAILURE_WARN_INDEX_DUPLICATE;
 				}
 // If all fields are selected, it's no need to add extra index
 				if (!query_map.get(source_type_index).isEmpty() && query_map.get(source_type_index).get(0) == -1)
 				{
 					FinanceRecorderCmnDef.format_warn("Ignore index: %d in %s", field_index, FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[source_type_index]);
-					return FinanceRecorderCmnDef.RET_WARN_INDEX_IGNORE;
+					return FinanceRecorderCmnDef.RET_FAILURE_WARN_INDEX_IGNORE;
 				}
 // Clear the old index if all data are selected
 				if (field_index == -1)

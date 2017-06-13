@@ -1,16 +1,12 @@
 package com.price.finance_recorder_base;
 
-//import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
-//import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnClass;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
-//import com.price.finance_recorder_market.FinanceRecorderDatabaseTimeRange;
 
 
 public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
@@ -72,7 +68,7 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 //	private HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg> finance_source_time_range_table = null;
 //	private HashMap<Integer, FinanceRecorderCmnClass.TimeRangeCfg> finance_backup_source_time_range_table = null;
 //	private HashMap<Integer, LinkedList<Integer>> finance_backup_source_field_table = null;
-	private LinkedList<String> email_address_list = new LinkedList<String>();
+//	private LinkedList<String> email_address_list = new LinkedList<String>();
 	protected LinkedList<Integer> source_type_index_list = new LinkedList<Integer>();
 	protected boolean setup_param_done = false;
 	protected String finance_root_folderpath = FinanceRecorderCmnDef.CSV_ROOT_FOLDERPATH;
@@ -82,6 +78,7 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 	protected FinanceRecorderCmnDef.CSVWorkingFolderType csv_working_folder_type = FinanceRecorderCmnDef.CSVWorkingFolderType.CSVWorkingFolder_Unknown;
 	protected String current_csv_working_folerpath = null;
 	protected FinanceRecorderCmnDef.DeleteSQLAccurancyType delete_sql_accurancy_type = FinanceRecorderCmnDef.DeleteSQLAccurancyType.DeleteSQLAccurancyType_SOURCE_TYPE_ONLY;
+	protected boolean operation_continue = true;
 
 	protected abstract FinanceRecorderDataHandlerInf get_data_handler();
 
@@ -105,6 +102,9 @@ public abstract class FinanceRecorderMgrBase implements FinanceRecorderMgrInf
 		csv_working_folder_type = working_folder_type;
 		current_csv_working_folerpath = finance_root_folderpath_array[csv_working_folder_type.value()];
 	}
+
+	public void enable_operation_continue(boolean enable){operation_continue = enable;}
+	public boolean is_operation_continue(){return operation_continue;}
 
 	public short get_backup_foldername_list(List<String> sorted_sub_foldername_list)
 	{
@@ -228,7 +228,7 @@ OUT:
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
-	public short transfrom_csv_to_sql(boolean stop_when_csv_not_foud)
+	public short transfrom_csv_to_sql()
 	{
 		if (current_csv_working_folerpath == null)
 		{
@@ -237,16 +237,17 @@ OUT:
 		}
 		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
 		finance_recorder_data_handler.set_current_csv_working_folerpath(current_csv_working_folerpath);
-		short ret = finance_recorder_data_handler.transfrom_csv_to_sql(stop_when_csv_not_foud);
+		finance_recorder_data_handler.enable_operation_continue(operation_continue);
+		short ret = finance_recorder_data_handler.transfrom_csv_to_sql();
 		return ret;
 	}
 
-	public short transfrom_csv_to_sql_multithread(int sub_company_group_set_amount, boolean stop_when_csv_not_foud)
+	public short transfrom_csv_to_sql_multithread(int sub_company_group_set_amount)
 	{
 		throw new RuntimeException("Not support multh-thread !!!");
 	}
 
-	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, boolean stop_when_sql_not_foud)
+	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.QuerySet query_set, FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
 	{
 		if (current_csv_working_folerpath == null)
 		{
@@ -255,11 +256,12 @@ OUT:
 		}
 		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
 		finance_recorder_data_handler.set_current_csv_working_folerpath(current_csv_working_folerpath);
-		short ret = finance_recorder_data_handler.transfrom_sql_to_csv(query_set, finance_time_range, stop_when_sql_not_foud);
+		finance_recorder_data_handler.enable_operation_continue(operation_continue);
+		short ret = finance_recorder_data_handler.transfrom_sql_to_csv(query_set, finance_time_range);
 		return ret;
 	}
 
-	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range, boolean stop_when_sql_not_foud)
+	public short transfrom_sql_to_csv(FinanceRecorderCmnClass.FinanceTimeRange finance_time_range)
 	{
 		FinanceRecorderCmnClass.QuerySet query_set = new FinanceRecorderCmnClass.QuerySet();
 		for (Integer source_type_index : source_type_index_list)
@@ -270,12 +272,13 @@ OUT:
 			FinanceRecorderCmnDef.error("Fail to set add-done flag in query_set to true");
 			return FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
 		}
-		return transfrom_sql_to_csv(query_set, finance_time_range, stop_when_sql_not_foud);
+		return transfrom_sql_to_csv(query_set, finance_time_range);
 	}
 
 	public short delete_sql()
 	{
 		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
+		finance_recorder_data_handler.enable_operation_continue(operation_continue);
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		switch (delete_sql_accurancy_type)
 		{
@@ -297,6 +300,7 @@ OUT:
 	public short cleanup_sql()
 	{
 		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
+		finance_recorder_data_handler.enable_operation_continue(operation_continue);
 		short ret = finance_recorder_data_handler.cleanup_sql();
 		return ret;
 	}
@@ -304,6 +308,7 @@ OUT:
 	public short check_sql_exist(ArrayList<String> not_exist_list)
 	{
 		FinanceRecorderDataHandlerInf finance_recorder_data_handler = get_data_handler();
+		finance_recorder_data_handler.enable_operation_continue(operation_continue);
 		short ret = finance_recorder_data_handler.check_sql_exist(not_exist_list);
 		return ret;
 	}

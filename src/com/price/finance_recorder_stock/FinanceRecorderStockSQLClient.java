@@ -9,7 +9,7 @@ import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 public class FinanceRecorderStockSQLClient extends FinanceRecorderSQLClient
 {
-	public static String get_database_name(int company_group_number)
+	private static String get_database_name(int company_group_number)
 	{
 		if (!FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
 		{
@@ -19,7 +19,7 @@ public class FinanceRecorderStockSQLClient extends FinanceRecorderSQLClient
 		return String.format("%s%02d", FinanceRecorderCmnDef.SQL_STOCK_DATABASE_NAME, company_group_number);
 	}
 
-	public static String get_table_name(int source_type_index, String company_code_number)
+	private static String get_table_name(int source_type_index, String company_code_number)
 	{
 		if (!FinanceRecorderCmnDef.IS_FINANCE_STOCK_MODE)
 		{
@@ -39,14 +39,16 @@ public class FinanceRecorderStockSQLClient extends FinanceRecorderSQLClient
 		}
 	}
 
-	short try_connect_mysql(
-			int company_group_number,
-			FinanceRecorderCmnDef.NotExistIngoreType database_not_exist_ignore_type,
-			FinanceRecorderCmnDef.CreateThreadType database_create_thread_type
-		)
+	short try_connect_mysql(int company_group_number)
 	{
 		String database_name = get_database_name(company_group_number);
-		return try_connect_mysql(database_name, database_not_exist_ignore_type, database_create_thread_type);
+		return try_connect_mysql(database_name);
+	}
+
+	short create_database(int company_group_number)
+	{
+		String database_name = get_database_name(company_group_number);
+		return create_database(database_name);
 	}
 
 	short delete_database(int company_group_number)

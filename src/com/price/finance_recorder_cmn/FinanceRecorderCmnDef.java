@@ -34,9 +34,10 @@ public class FinanceRecorderCmnDef
 	// Return values
 	public static final short RET_SUCCESS = 0;
 
-	public static final short RET_WARN_BASE = 0x1;
-	public static final short RET_WARN_INDEX_DUPLICATE = RET_WARN_BASE + 1;
-	public static final short RET_WARN_INDEX_IGNORE = RET_WARN_BASE + 2;
+	public static final short RET_FAILURE_WARN_BASE = 0x1;
+	public static final short RET_FAILURE_WARN_INDEX_DUPLICATE = RET_FAILURE_WARN_BASE + 1;
+	public static final short RET_FAILURE_WARN_INDEX_IGNORE = RET_FAILURE_WARN_BASE + 2;
+	public static final short RET_FAILURE_WARN_PROCESS_CONTINUE = RET_FAILURE_WARN_BASE + 3;
 
 	public static final short RET_FAILURE_BASE = 0x100;
 	public static final short RET_FAILURE_UNKNOWN = RET_FAILURE_BASE + 1;
@@ -63,6 +64,7 @@ public class FinanceRecorderCmnDef
 
 	public static boolean CheckFailure(short x) {return !CheckSuccess(x);}
 
+	public static boolean CheckFailureWarnProcessContinue(short x) {return (x == RET_FAILURE_WARN_PROCESS_CONTINUE ? true : false);}
 	public static boolean CheckFailureNotFound(short x) {return (x == RET_FAILURE_NOT_FOUND ? true : false);}
 
 	public static boolean CheckMySQLFailureUnknownDatabase(short x) {return (x == RET_FAILURE_MYSQL_UNKNOWN_DATABASE ? true : false);}
@@ -71,7 +73,8 @@ public class FinanceRecorderCmnDef
 	{
 		"Warning Base", 
 		"Warning Index Duplicate", 
-		"Warning Index Ignore" 
+		"Warning Index Ignore",
+		"Warning Process Continue" 
 	};
 
 	private static final String[] ErrorRetDescription = new String[] 
@@ -107,8 +110,8 @@ public class FinanceRecorderCmnDef
 			return SQLErrorRetDescription[error_code - RET_FAILURE_MYSQL_BASE];
 		else if (error_code >= RET_FAILURE_BASE && error_code < RET_FAILURE_MYSQL_BASE)
 			return ErrorRetDescription[error_code - RET_FAILURE_BASE];
-		else if (error_code >= RET_WARN_BASE)
-			return WarnRetDescription[error_code - RET_WARN_BASE];
+		else if (error_code >= RET_FAILURE_WARN_BASE)
+			return WarnRetDescription[error_code - RET_FAILURE_WARN_BASE];
 		else
 			return "Success";
 	}
@@ -508,7 +511,7 @@ public class FinanceRecorderCmnDef
 
 	public static enum DatabaseEnableBatchType {DatabaseEnableBatch_Yes, DatabaseEnableBatch_No,};
 	public static enum CreateThreadType {CreateThread_Single, CreateThread_Multiple,};
-	public static enum NotExistIngoreType {NotExistIngore_Yes, NotExistIngore_No,};
+	public static enum OperationType {Operation_Continue, Operation_Stop,};
 	public static enum ResultSetDataUnit {ResultSetDataUnit_NoSourceType, ResultSetDataUnit_SourceType};
 	public static enum CSVWorkingFolderType 
 	{

@@ -12,6 +12,7 @@ import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 
 public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 {
+	private static boolean need_check_mysql_driver_exist = true;
 	private static final String DEF_SERVER = "localhost";
 	private static final String DEF_USERNAME = "root";
 	private static final String DEF_PASSWORD = "lab4man1";
@@ -60,6 +61,29 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 	private static final String FORMAT_SQL_FIELD_DATE_OF_QUARTER3 = "%s-07-01";
 	private static final String FORMAT_SQL_FIELD_DATE_OF_QUARTER4 = "%s-10-01";
 	private static final String[] FORMAT_SQL_FIELD_DATE_OF_QUARTER_LIST = new String[]{FORMAT_SQL_FIELD_DATE_OF_QUARTER1, FORMAT_SQL_FIELD_DATE_OF_QUARTER2, FORMAT_SQL_FIELD_DATE_OF_QUARTER3, FORMAT_SQL_FIELD_DATE_OF_QUARTER4};
+
+	private static synchronized void check_mysql_driver_exist()
+	{
+		try 
+		{
+// Java要連接資料庫時，需使用到JDBC-Driver，連接MySQL資料庫使用Connector/j，下載後解開壓縮，mysql-connector-java-5.1.15-bin.jar就是MySQL的JDBC-Driver.
+// Go to http://blog.yslifes.com/archives/918 for more detailed info
+// JDBC API is a Java API that can access any kind of tabular data, especially data stored in a Relational Database. 
+// JDBC works with Java on a variety of platforms, such as Windows, Mac OS, and the various versions of UNIX.
+// Go to http://www.tutorialspoint.com/jdbc/index.htm to see the example of MySQL command by JDBC
+//註冊driver
+			Class.forName("com.mysql.jdbc.Driver");
+			need_check_mysql_driver_exist = false;
+		}
+		catch(ClassNotFoundException ex)
+		{
+			String errmsg = "DriverClassNotFound:" + ex.toString();
+			FinanceRecorderCmnDef.error(errmsg);
+			if(FinanceRecorderCmnDef.is_show_console())
+				System.err.println(errmsg);
+			throw new IllegalStateException(errmsg);
+		}
+	}
 
 	private static String get_field_date_from_quarter(String quarter_str)
 	{
@@ -352,14 +376,11 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 	private String server = null;
 	private String username = null;
 	private String password = null;
-//	private String database_name = null;
-//	private String table_name = null;
-//	private FinanceRecorderCmnDef.FinanceObserverInf finance_observer = null;
-//	private int source_type_index;
-//	private FinanceRecorderCmnDef.NotExistIngoreType database_not_exist_ignore_type = null; 
-//	private FinanceRecorderCmnDef.CreateThreadType database_create_thread_type = null;
+	private FinanceRecorderCmnDef.CreateThreadType database_create_thread_type = FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single;
 	private FinanceRecorderCmnDef.DatabaseEnableBatchType batch_operation = FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_No;
-	private FinanceRecorderCmnDef.NotExistIngoreType select_table_not_exist_type = FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes;
+// For the Create/Write operation, operation continues even if data exists
+// For the Delete/Read operation. operation continues even if data does NOT exist
+	private FinanceRecorderCmnDef.OperationType operation_type = FinanceRecorderCmnDef.OperationType.Operation_Continue;
 	private FinanceRecorderCmnDef.FinanceTimeUnit csv_time_unit = FinanceRecorderCmnDef.DEF_CSV_TIME_UNIT;
 
 	protected FinanceRecorderSQLClient()
@@ -374,75 +395,28 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 	public void set_csv_time_unit(FinanceRecorderCmnDef.FinanceTimeUnit new_csv_time_unit){csv_time_unit = new_csv_time_unit;}
 	public FinanceRecorderCmnDef.FinanceTimeUnit get_csv_time_unit(){return csv_time_unit;}
 
-	public short try_connect_mysql(
-			String database_name, 
-			FinanceRecorderCmnDef.NotExistIngoreType database_not_exist_ignore_type, 
-			FinanceRecorderCmnDef.CreateThreadType database_create_thread_type
-		)
+	public short try_connect_mysql(String database_name)
 	{
-//		database_name = database;
+// Check the MySQL driver exist
+		if (need_check_mysql_driver_exist)
+			check_mysql_driver_exist();
+// Disconnect old mysql connection
+		if (connection != null)
+			disconnect_mysql();
 		FinanceRecorderCmnDef.format_debug("Try to connect to the MySQL database server[%s]......", database_name);
-//		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-// Create the connection to the MySQL server and database
-		String cmd_create_database = String.format(FORMAT_CMD_CREATE_DATABASE, database_name);
-		FinanceRecorderCmnDef.format_debug("Create database by command: %s", cmd_create_database);
-
-		FinanceRecorderCmnDef.debug("Try to connect to the MySQL database server...");
 		try 
 		{
-// Java要連接資料庫時，需使用到JDBC-Driver，連接MySQL資料庫使用Connector/j，下載後解開壓縮，mysql-connector-java-5.1.15-bin.jar就是MySQL的JDBC-Driver.
-// Go to http://blog.yslifes.com/archives/918 for more detailed info
-// JDBC API is a Java API that can access any kind of tabular data, especially data stored in a Relational Database. 
-// JDBC works with Java on a variety of platforms, such as Windows, Mac OS, and the various versions of UNIX.
-// Go to http://www.tutorialspoint.com/jdbc/index.htm to see the example of MySQL command by JDBC
-//註冊driver
-			Class.forName("com.mysql.jdbc.Driver");
 //jdbc:mysql://localhost/test?useUnicode=true&amp;characterEncoding=Big5: localhost是主機名, test是database名, useUnicode=true&amp;characterEncoding=Big5使用的編碼
 			connection = DriverManager.getConnection(String.format("jdbc:mysql://localhost/%s?useUnicode=true&amp;characterEncoding=utf-8", database_name), username, password);
 		}
-		catch(ClassNotFoundException ex)
-		{
-			String errmsg = "DriverClassNotFound:" + ex.toString();
-			FinanceRecorderCmnDef.error(errmsg);
-			if(FinanceRecorderCmnDef.is_show_console())
-				System.err.println(errmsg);
-			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_NO_DRIVER;
-		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{
-			if (database_not_exist_ignore_type == FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes)
+			if (ex.getErrorCode() == 1049)
 			{
-				FinanceRecorderCmnDef.format_debug("The %s database does NOT exist, create a NEW one", database_name);
-				try
-				{
-					connection = DriverManager.getConnection(String.format("jdbc:mysql://localhost/?user=%s&password=%s", username, password)); 
-					Statement s = connection.createStatement();
-					FinanceRecorderCmnDef.format_debug("Try to create database by command: %s", cmd_create_database);
-					try
-					{
-						s.executeUpdate(cmd_create_database);
-					}
-					catch(SQLException ex1) //有可能會產生sql exception
-					{
-						if (database_create_thread_type == FinanceRecorderCmnDef.CreateThreadType.CreateThread_Multiple && ex.getErrorCode() == 1049)
-							FinanceRecorderCmnDef.format_warn("The database[%s] has already existed", database_name);
-						else
-							throw ex1;
-					}
-// Destroy the connection first
-					disconnect_mysql();
-// Reconnect to MySQL
-//					database_name = database;
-					connection = DriverManager.getConnection(String.format("jdbc:mysql://localhost/%s?useUnicode=true&amp;characterEncoding=utf-8", database_name), username, password);
-				}
-				catch(SQLException ex1) //有可能會產生sql exception
-				{
-					String errmsg = "Exception:" + ex1.toString();
-					FinanceRecorderCmnDef.error(errmsg);
-					if(FinanceRecorderCmnDef.is_show_console())
-						System.err.println(errmsg);
-					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
-				}
+// Handle the situation when the database does NOT exist
+				String errmsg = String.format("The database[%s] does NOT exist", database_name);
+				FinanceRecorderCmnDef.error(errmsg);
+				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_UNKNOWN_DATABASE;
 			}
 			else
 			{
@@ -450,13 +424,9 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 				FinanceRecorderCmnDef.error(errmsg);
 				if(FinanceRecorderCmnDef.is_show_console())
 					System.err.println(errmsg);
-				if (ex.getErrorCode() == 1049)
-					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_UNKNOWN_DATABASE;
-				else
-					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
+				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL;
 			}
 		}
-
 		FinanceRecorderCmnDef.format_debug("Try to connect to the MySQL database server[%s]...... Successfully", database_name);
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
@@ -481,6 +451,57 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
+	protected short create_database(String database_name)
+	{
+// Check if the old connection still exists
+		if (connection != null)
+		{
+			FinanceRecorderCmnDef.error("The old connection STILL exists");
+			return  FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
+
+		String cmd_create_database = String.format(FORMAT_CMD_CREATE_DATABASE, database_name);
+		FinanceRecorderCmnDef.format_debug("Create database by command: %s", cmd_create_database);
+		try
+		{
+			connection = DriverManager.getConnection(String.format("jdbc:mysql://localhost/?user=%s&password=%s", username, password)); 
+			Statement s = connection.createStatement();
+			FinanceRecorderCmnDef.format_debug("Try to create database by command: %s", cmd_create_database);
+			s.executeUpdate(cmd_create_database);
+		}
+		catch(SQLException ex) //有可能會產生sql exception
+		{
+			if (ex.getErrorCode() == 1049)
+			{
+// Handle the situation when the database has already existed
+				String errmsg = String.format("The database[%s] has already existed", database_name);
+				if (operation_type == FinanceRecorderCmnDef.OperationType.Operation_Continue)
+				{
+					FinanceRecorderCmnDef.warn(errmsg);
+					return FinanceRecorderCmnDef.RET_FAILURE_WARN_PROCESS_CONTINUE;
+				}
+				else
+				{
+					FinanceRecorderCmnDef.error(errmsg);
+					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+				}
+			}
+			else
+			{
+				String errmsg = String.format("Fails to create database[%s], due to: %s", database_name, ex.getMessage());
+				FinanceRecorderCmnDef.error(errmsg);
+				if(FinanceRecorderCmnDef.is_show_console())
+					System.err.println(errmsg);
+				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+			}
+		}
+// Close the connection to MySQL
+		disconnect_mysql();
+
+		FinanceRecorderCmnDef.format_debug("Create database[%s]...... Successfully", database_name);
+		return FinanceRecorderCmnDef.RET_SUCCESS;
+	}
+
 	protected short delete_database(String database_name)
 	{
 // Check if the connection is established
@@ -501,8 +522,29 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{
-			FinanceRecorderCmnDef.format_error("Fails to delete database[%s], due to: %s", database_name, ex.getMessage());
-			return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+			if (ex.getErrorCode() == 1146)
+			{
+// Handle the situation when the database does NOT exist
+				String errmsg = String.format("The database[%s] does NOT exist", database_name);
+				if (operation_type == FinanceRecorderCmnDef.OperationType.Operation_Continue)
+				{
+					FinanceRecorderCmnDef.warn(errmsg);
+					return FinanceRecorderCmnDef.RET_FAILURE_WARN_PROCESS_CONTINUE;
+				}
+				else
+				{
+					FinanceRecorderCmnDef.error(errmsg);
+					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+				}
+			}
+			else
+			{
+				String errmsg = String.format("Fails to delete database[%s], due to: %s", database_name, ex.getMessage());
+				FinanceRecorderCmnDef.error(errmsg);
+				if(FinanceRecorderCmnDef.is_show_console())
+					System.err.println(errmsg);
+				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+			}
 		}
 // Close the connection to MySQL
 		disconnect_mysql();
@@ -532,19 +574,35 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 			Statement s = connection.createStatement();
 			FinanceRecorderCmnDef.format_debug("Try to create table[%s] by command: %s", table_name, cmd_create_table);
 			s.executeUpdate(cmd_create_table);
-//			FinanceRecorderCmnDef.format_debug("Try to open the MySQL table[%s]...... Successfully", table_name);
 		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{
 			if (ex.getErrorCode() == 1050)
-				FinanceRecorderCmnDef.format_debug("The table[%s] has already existed", table_name);
+			{
+// Handle the situation when the database has already existed
+				String errmsg = String.format("The table[%s] has already existed", table_name);
+				if (operation_type == FinanceRecorderCmnDef.OperationType.Operation_Continue)
+				{
+					FinanceRecorderCmnDef.warn(errmsg);
+					return FinanceRecorderCmnDef.RET_FAILURE_WARN_PROCESS_CONTINUE;
+				}
+				else
+				{
+					FinanceRecorderCmnDef.error(errmsg);
+					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+				}
+			}
 			else
 			{
-				FinanceRecorderCmnDef.format_error("Fails to create table[%s], due to: %s", table_name, ex.getMessage());
+				String errmsg = String.format("Fails to create table[%s], due to: %s", table_name, ex.getMessage());
+				FinanceRecorderCmnDef.error(errmsg);
+				if(FinanceRecorderCmnDef.is_show_console())
+					System.err.println(errmsg);
 				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
 			}
 		}
 
+//		FinanceRecorderCmnDef.format_debug("Open the MySQL table[%s]...... Successfully", table_name);
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
@@ -571,16 +629,32 @@ public class FinanceRecorderSQLClient extends FinanceRecorderClassBase
 		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{
-			if (ex.getErrorCode() == 1050)
-				FinanceRecorderCmnDef.format_info("The table[%s] has already existed", table_name);
+			if (ex.getErrorCode() == 1146)
+			{
+// Handle the situation when the table does NOT exist
+				String errmsg = String.format("The table[%s] does NOT exist", table_name);
+				if (operation_type == FinanceRecorderCmnDef.OperationType.Operation_Continue)
+				{
+					FinanceRecorderCmnDef.warn(errmsg);
+					return FinanceRecorderCmnDef.RET_FAILURE_WARN_PROCESS_CONTINUE;
+				}
+				else
+				{
+					FinanceRecorderCmnDef.error(errmsg);
+					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+				}
+			}
 			else
 			{
-				FinanceRecorderCmnDef.format_error("Fails to create table[%s], due to: %s", table_name, ex.getMessage());
+				String errmsg = String.format("Fails to delete table[%s], due to: %s", table_name, ex.getMessage());
+				FinanceRecorderCmnDef.error(errmsg);
+				if(FinanceRecorderCmnDef.is_show_console())
+					System.err.println(errmsg);
 				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
 			}
 		}
 
-		FinanceRecorderCmnDef.format_debug("Try to open the MySQL table[%s]...... Successfully", table_name);
+//		FinanceRecorderCmnDef.format_debug("Delete the MySQL table[%s]...... Successfully", table_name);
 		return FinanceRecorderCmnDef.RET_SUCCESS;
 	}
 
@@ -955,15 +1029,28 @@ OUT:
 		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{
-			if (select_table_not_exist_type == FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes && ex.getErrorCode() == 1146)
+			if (ex.getErrorCode() == 1146)
 			{
-				FinanceRecorderCmnDef.format_warn("The table[%s] does NOT exist", table_name);
-				ret = FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+// Handle the situation when the database has already existed
+				String errmsg = String.format("The table[%s] does NOT exist", table_name);
+				if (operation_type == FinanceRecorderCmnDef.OperationType.Operation_Continue)
+				{
+					FinanceRecorderCmnDef.warn(errmsg);
+					return FinanceRecorderCmnDef.RET_FAILURE_WARN_PROCESS_CONTINUE;
+				}
+				else
+				{
+					FinanceRecorderCmnDef.error(errmsg);
+					return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+				}
 			}
 			else
 			{
-				FinanceRecorderCmnDef.format_error("Fail to select from data by command[%s], due to: %s", pstmt, ex.getMessage());
-				ret = FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
+				String errmsg = String.format("Fail to select from data by command[%s], due to: %s", pstmt, ex.getMessage());
+				FinanceRecorderCmnDef.error(errmsg);
+				if(FinanceRecorderCmnDef.is_show_console())
+					System.err.println(errmsg);
+				return FinanceRecorderCmnDef.RET_FAILURE_MYSQL_EXECUTE_COMMAND;
 			}
 		}
 		catch(Exception ex)
@@ -1006,12 +1093,21 @@ OUT:
 	}
 	public boolean is_batch_operation(){return (batch_operation == FinanceRecorderCmnDef.DatabaseEnableBatchType.DatabaseEnableBatch_Yes ? true : false);}
 
-	public void enable_ignore_select_not_exist(boolean enable)
+	public void enable_multi_thread_type(boolean enable)
 	{
 		if (enable)
-			select_table_not_exist_type = FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes;
+			database_create_thread_type = FinanceRecorderCmnDef.CreateThreadType.CreateThread_Multiple;
 		else
-			select_table_not_exist_type = FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_No;
+			database_create_thread_type = FinanceRecorderCmnDef.CreateThreadType.CreateThread_Single;
 	}
-	public boolean is_ignore_select_not_exist(){return (select_table_not_exist_type == FinanceRecorderCmnDef.NotExistIngoreType.NotExistIngore_Yes ? true : false);}
+
+	public void enable_check_point_process_continue(boolean enable)
+	{
+		if (enable)
+			operation_type = FinanceRecorderCmnDef.OperationType.Operation_Continue;
+		else
+			operation_type = FinanceRecorderCmnDef.OperationType.Operation_Stop;
+	}
+	public boolean is_check_point_process_continue(){return (operation_type == FinanceRecorderCmnDef.OperationType.Operation_Continue ? true : false);}
+	public boolean is_check_point_process_stop(){return (operation_type == FinanceRecorderCmnDef.OperationType.Operation_Stop ? true : false);}
 }

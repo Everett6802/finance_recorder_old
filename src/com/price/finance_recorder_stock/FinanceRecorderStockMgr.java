@@ -13,10 +13,14 @@ import com.price.finance_recorder_base.*;
 import com.price.finance_recorder_cmn.FinanceRecorderCmnDef;
 import com.price.finance_recorder_stock.FinanceRecorderDatabaseTimeRange;
 import com.price.finance_recorder_stock.FinanceRecorderStockDataHandler;
+import com.price.finance_recorder_stock.FinanceRecorderCompanyProfile;
 
 
 public class FinanceRecorderStockMgr extends FinanceRecorderMgrBase
 {
+	static final public int COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER = FinanceRecorderCompanyProfile.COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER;
+	static final public int COMPANY_PROFILE_ENTRY_FIELD_SIZE = FinanceRecorderCompanyProfile.COMPANY_PROFILE_ENTRY_FIELD_SIZE;
+
 	private FinanceRecorderCompanyGroupSet company_group_set = null;
 	private FinanceRecorderDatabaseTimeRange database_time_range = null;
 

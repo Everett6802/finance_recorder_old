@@ -18,12 +18,14 @@ public class FinanceRecorderMarketSQLClient extends FinanceRecorderSQLClient
 		}
 	}
 
-	short try_connect_mysql(
-			FinanceRecorderCmnDef.NotExistIngoreType database_not_exist_ignore_type,
-			FinanceRecorderCmnDef.CreateThreadType database_create_thread_type
-		)
+	short try_connect_mysql()
 	{
-		return try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME, database_not_exist_ignore_type, database_create_thread_type);
+		return try_connect_mysql(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME);
+	}
+
+	short create_database()
+	{
+		return create_database(FinanceRecorderCmnDef.SQL_MARKET_DATABASE_NAME);
 	}
 
 	short delete_database()

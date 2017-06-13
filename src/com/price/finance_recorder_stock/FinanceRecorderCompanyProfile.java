@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 //import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -149,57 +150,76 @@ public class FinanceRecorderCompanyProfile
 	private short parse_company_profile_conf()
 	{
 		company_profile_map = new TreeMap<String, CompanyProfileEntry>();
-
 // Open the file
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		BufferedReader reader = null;
-		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.COMPANY_PROFILE_CONF_FILENAME);
-		FinanceRecorderCmnDef.format_debug("Try to parse the configuration in %s", conf_filepath);
+//		BufferedReader reader = null;
+//		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.COMPANY_PROFILE_CONF_FILENAME);
+//		FinanceRecorderCmnDef.format_debug("Try to parse the configuration in %s", conf_filepath);
 // Check the file exists or not
-		File fp = new File(conf_filepath);
-		if (!fp.exists())
+//		File fp = new File(conf_filepath);
+//		if (!fp.exists())
+//		{
+//			FinanceRecorderCmnDef.format_error("The configration file[%s] does NOT exist", conf_filepath);
+//			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+//		}
+//		FinanceRecorderCmnDef.format_debug("Try to parse the config: %s", conf_filepath);
+//// Try to parse the content of the config file
+//		try
+//		{
+//			reader = new BufferedReader(new FileReader(fp));
+//			String buf;
+//			OUT:
+//			while ((buf = reader.readLine()) != null)
+//			{
+//				if (buf.length() == 0)
+//					continue;
+//// Check if the source type in the config file is in order
+//				String data_array[] = buf.split(FinanceRecorderCmnDef.COMMA_DATA_SPLIT);
+//				if (data_array.length != COMPANY_PROFILE_ENTRY_FIELD_SIZE)
+//				{
+//					FinanceRecorderCmnDef.format_error("Incorrect config format: %s", buf);
+//					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+//					break OUT;
+//				}
+//				CompanyProfileEntry company_profile_entry = new CompanyProfileEntry();
+//				for (String data : data_array)
+//					company_profile_entry.add(data);
+//				company_profile_map.put(company_profile_entry.get(COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER), company_profile_entry);
+//			}
+//		}
+//		catch (IOException ex)
+//		{
+//			FinanceRecorderCmnDef.format_error("Error occur due to %s", ex.toString());
+//			ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
+//		}
+//		finally 
+//		{
+//// Close the file
+//			if (reader != null)
+//			{
+//				try {reader.close();}
+//				catch (IOException e){}// nothing to do here except log the exception
+//			}
+//		}
+		LinkedList<String> config_line_list = new LinkedList<String>();
+		ret = FinanceRecorderCmnDef.read_config_file_lines(FinanceRecorderCmnDef.COMPANY_PROFILE_CONF_FILENAME, config_line_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+OUT:
+		for (String line : config_line_list)
 		{
-			FinanceRecorderCmnDef.format_error("The configration file[%s] does NOT exist", conf_filepath);
-			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
-		}
-		FinanceRecorderCmnDef.format_debug("Try to parse the config: %s", conf_filepath);
-// Try to parse the content of the config file
-		try
-		{
-			reader = new BufferedReader(new FileReader(fp));
-			String buf;
-			OUT:
-			while ((buf = reader.readLine()) != null)
+		// Check if the source type in the config file is in order
+			String data_array[] = line.split(FinanceRecorderCmnDef.COMMA_DATA_SPLIT);
+			if (data_array.length != COMPANY_PROFILE_ENTRY_FIELD_SIZE)
 			{
-				if (buf.length() == 0)
-					continue;
-// Check if the source type in the config file is in order
-				String data_array[] = buf.split(FinanceRecorderCmnDef.COMMA_DATA_SPLIT);
-				if (data_array.length != COMPANY_PROFILE_ENTRY_FIELD_SIZE)
-				{
-					FinanceRecorderCmnDef.format_error("Incorrect config format: %s", buf);
-					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
-					break OUT;
-				}
-				CompanyProfileEntry company_profile_entry = new CompanyProfileEntry();
-				for (String data : data_array)
-					company_profile_entry.add(data);
-				company_profile_map.put(company_profile_entry.get(COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER), company_profile_entry);
+				FinanceRecorderCmnDef.format_error("Incorrect config format: %s", line);
+				ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+				break OUT;
 			}
-		}
-		catch (IOException ex)
-		{
-			FinanceRecorderCmnDef.format_error("Error occur due to %s", ex.toString());
-			ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
-		}
-		finally 
-		{
-// Close the file
-			if (reader != null)
-			{
-				try {reader.close();}
-				catch (IOException e){}// nothing to do here except log the exception
-			}
+			CompanyProfileEntry company_profile_entry = new CompanyProfileEntry();
+			for (String data : data_array)
+				company_profile_entry.add(data);
+			company_profile_map.put(company_profile_entry.get(COMPANY_PROFILE_ENTRY_FIELD_INDEX_COMPANY_CODE_NUMBER), company_profile_entry);
 		}
 		return ret;
 	}
@@ -209,68 +229,99 @@ public class FinanceRecorderCompanyProfile
 		company_group_description_list = new ArrayList<String>();
 // Open the file
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
-		BufferedReader reader = null;
-		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.COMPANY_GROUP_CONF_FILENAME);
-		FinanceRecorderCmnDef.format_debug("Try to parse the configuration in %s", conf_filepath);
-// First check if the config file exists
-		File fp = new File(conf_filepath);
-		if (!fp.exists())
+//		BufferedReader reader = null;
+//		String conf_filepath = String.format("%s/%s/%s", FinanceRecorderCmnDef.get_current_path(), FinanceRecorderCmnDef.CONF_FOLDERNAME, FinanceRecorderCmnDef.COMPANY_GROUP_CONF_FILENAME);
+//		FinanceRecorderCmnDef.format_debug("Try to parse the configuration in %s", conf_filepath);
+//// First check if the config file exists
+//		File fp = new File(conf_filepath);
+//		if (!fp.exists())
+//		{
+//			FinanceRecorderCmnDef.format_error("The configration file[%s] does NOT exist", conf_filepath);
+//			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
+//		}
+//		FinanceRecorderCmnDef.format_debug("Try to parse the config: %s", conf_filepath);
+//// Try to parse the content of the config file
+//		try
+//		{
+//			reader = new BufferedReader(new FileReader(fp));
+//			String buf;
+//			int line_cnt = 0;
+//			String group_number = null;
+//			String group_description = null;
+//			OUT:
+//			while ((buf = reader.readLine()) != null)
+//			{
+//				if (buf.length() == 0)
+//					continue;
+//// Check if the source type in the config file is in order
+//				String data_array[] = buf.split(FinanceRecorderCmnDef.SPACE_DATA_SPLIT);
+//				if (data_array.length != COMPANY_GROUP_ENTRY_FIELD_SIZE)
+//				{
+//					FinanceRecorderCmnDef.format_error("Incorrect config format: %s", buf);
+//					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+//					break OUT;
+//				}
+//				group_number = data_array[0];
+//				group_description = data_array[1];
+//				if (Integer.valueOf(group_number) != line_cnt)
+//				{
+//					FinanceRecorderCmnDef.format_error("Incorrect company group number, expected: %d, actual: %d", line_cnt, Integer.valueOf(group_number));
+//					ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
+//					break OUT;		
+//				}
+//				company_group_description_list.add(group_description);
+//				line_cnt++;
+//
+//				assert(company_group_description_list.size() == line_cnt) : "The company_group_description_list size is NOT correct";
+//				company_group_size = line_cnt;
+//			}
+//			
+//		}
+//		catch (IOException ex)
+//		{
+//			FinanceRecorderCmnDef.format_error("Error occur due to %s", ex.toString());
+//			ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
+//		}
+//		finally 
+//		{
+//// Close the file
+//			if (reader != null)
+//			{
+//				try {reader.close();}
+//				catch (IOException e){}// nothing to do here except log the exception
+//			}
+//		}
+		LinkedList<String> config_line_list = new LinkedList<String>();
+		ret = FinanceRecorderCmnDef.read_config_file_lines(FinanceRecorderCmnDef.COMPANY_GROUP_CONF_FILENAME, config_line_list);
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			return ret;
+		int line_cnt = 0;
+		String group_number = null;
+		String group_description = null;
+OUT:
+		for (String line : config_line_list)
 		{
-			FinanceRecorderCmnDef.format_error("The configration file[%s] does NOT exist", conf_filepath);
-			return FinanceRecorderCmnDef.RET_FAILURE_NOT_FOUND;
-		}
-		FinanceRecorderCmnDef.format_debug("Try to parse the config: %s", conf_filepath);
-// Try to parse the content of the config file
-		try
-		{
-			reader = new BufferedReader(new FileReader(fp));
-			String buf;
-			int line_cnt = 0;
-			String group_number = null;
-			String group_description = null;
-			OUT:
-			while ((buf = reader.readLine()) != null)
-			{
-				if (buf.length() == 0)
-					continue;
 // Check if the source type in the config file is in order
-				String data_array[] = buf.split(FinanceRecorderCmnDef.SPACE_DATA_SPLIT);
-				if (data_array.length != COMPANY_GROUP_ENTRY_FIELD_SIZE)
-				{
-					FinanceRecorderCmnDef.format_error("Incorrect config format: %s", buf);
-					ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
-					break OUT;
-				}
-				group_number = data_array[0];
-				group_description = data_array[1];
-				if (Integer.valueOf(group_number) != line_cnt)
-				{
-					FinanceRecorderCmnDef.format_error("Incorrect company group number, expected: %d, actual: %d", line_cnt, Integer.valueOf(group_number));
-					ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
-					break OUT;		
-				}
-				company_group_description_list.add(group_description);
-				line_cnt++;
-
-				assert(company_group_description_list.size() == line_cnt) : "The company_group_description_list size is NOT correct";
-				company_group_size = line_cnt;
-			}
-			
-		}
-		catch (IOException ex)
-		{
-			FinanceRecorderCmnDef.format_error("Error occur due to %s", ex.toString());
-			ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
-		}
-		finally 
-		{
-// Close the file
-			if (reader != null)
+			String data_array[] = line.split(FinanceRecorderCmnDef.SPACE_DATA_SPLIT);
+			if (data_array.length != COMPANY_GROUP_ENTRY_FIELD_SIZE)
 			{
-				try {reader.close();}
-				catch (IOException e){}// nothing to do here except log the exception
+				FinanceRecorderCmnDef.format_error("Incorrect config format: %s", line);
+				ret = FinanceRecorderCmnDef.RET_FAILURE_INCORRECT_CONFIG;
+				break OUT;
 			}
+			group_number = data_array[0];
+			group_description = data_array[1];
+			if (Integer.valueOf(group_number) != line_cnt)
+			{
+				FinanceRecorderCmnDef.format_error("Incorrect company group number, expected: %d, actual: %d", line_cnt, Integer.valueOf(group_number));
+				ret = FinanceRecorderCmnDef.RET_FAILURE_INVALID_ARGUMENT;
+				break OUT;		
+			}
+			company_group_description_list.add(group_description);
+			line_cnt++;
 		}
+		assert(company_group_description_list.size() == line_cnt) : "The company_group_description_list size is NOT correct";
+		company_group_size = line_cnt;
 		return ret;
 	}
 
