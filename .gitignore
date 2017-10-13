@@ -12,6 +12,7 @@ log/
 data/
 publish/
 result/
+target/
 .backup/
 *.log
 *.conf*
