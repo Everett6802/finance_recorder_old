@@ -871,7 +871,7 @@ public class FinanceRecorderCmdlineTest
 //
 	private static void cleanup_operation() 
 	{
-		PRINT_STDOUT("Cleanup old MySQL data......");
+		PRINT_STDOUT("Cleanup old MySQL data......\n");
 
 		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
 		ret = FinanceRecorder.operation_cleanup();
@@ -881,7 +881,7 @@ public class FinanceRecorderCmdlineTest
 
 //	private static void delete_operation() {
 //		if (show_console)
-//			System.out.println("Delete old MySQL data......");
+//			System.out.println("Delete old MySQL data......\n");
 //
 //		short ret = CmnDef.RET_SUCCESS;
 //		ret = FinanceRecorder.operation_delete();
@@ -938,7 +938,7 @@ public class FinanceRecorderCmdlineTest
 //
 //	private static void check_exist_operation() {
 //		if (show_console)
-//			System.out.println("Check MySQL exist......");
+//			System.out.println("Check MySQL exist......\n");
 //
 //		ArrayList<String> not_exist_list = new ArrayList<String>();
 //		short ret = CmnDef.RET_SUCCESS;

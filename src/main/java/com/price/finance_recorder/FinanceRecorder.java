@@ -346,15 +346,15 @@ public class FinanceRecorder extends ClassCmnBase
 		return compare_company_profile_change(new_company_profile_config_folderpath, lost_company_number_list, new_company_number_list);
 	}
 
-	public static short check_statement_profile_change(String statement_method_word_list_string, final String new_statement_profile_config_folderpath, HashMap<Integer, ArrayList<String>> lost_company_number_map, HashMap<Integer, ArrayList<String>> new_company_number_map)
+	public static short check_statement_profile_change(String statement_method_word_list_string, final String new_statement_profile_config_folderpath, HashMap<Integer, ArrayList<String>> lost_statement_profile_map, HashMap<Integer, ArrayList<String>> new_statement_profile_map)
 	{
-		assert lost_company_number_map.isEmpty() : "lost_company_number_map is NOT empty";
-		assert new_company_number_map.isEmpty() : "new_company_number_map is NOT empty";
+		assert lost_statement_profile_map.isEmpty() : "lost_statement_profile_map is NOT empty";
+		assert new_statement_profile_map.isEmpty() : "new_statement_profile_map is NOT empty";
 		LinkedList<Integer> statement_method_index_list = new LinkedList<Integer>(); 
 		short ret = parse_method_index_from_param(statement_method_index_list, statement_method_word_list_string);
 		if (CmnDef.CheckFailure(ret))
 			return ret;
-		return compare_statement_profile_change(new_statement_profile_config_folderpath, statement_method_index_list, lost_company_number_map, new_company_number_map);
+		return compare_statement_profile_change(new_statement_profile_config_folderpath, statement_method_index_list, lost_statement_profile_map, new_statement_profile_map);
 	}
 
 	public static short operation_write()
