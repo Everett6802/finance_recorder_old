@@ -90,8 +90,8 @@ public class CmnDef extends FinanceRecorderCmnDef
 	static final String RESULT_FOLDERNAME = "result";
 	static final String CONF_FOLDERNAME = "conf";
 	static final String DEFAULT_FINANCE_ROOT_FOLDERPATH = "/opt/finance";
-	static final String SCRAPY_PROJECT_NAME = "finance_scrapy_python";
-	static final String RECORDER_PROJECT_NAME = "finance_recorder_java";
+	static final String SCRAPY_PROJECT_NAME = "finance_scrapy";
+	static final String RECORDER_PROJECT_NAME = "finance_recorder";
 	static final String ANALYZER_PROJECT_NAME = "finance_analyzer";
 	static final String FINANCE_SCRAPY_ROOT_FOLDERPATH = String.format("%s/%s", DEFAULT_FINANCE_ROOT_FOLDERPATH, SCRAPY_PROJECT_NAME);
 	static final String FINANCE_RECORDER_ROOT_FOLDERPATH = String.format("%s/%s", DEFAULT_FINANCE_ROOT_FOLDERPATH, RECORDER_PROJECT_NAME);
@@ -193,8 +193,10 @@ public class CmnDef extends FinanceRecorderCmnDef
 		FinanceMethod_IncomeStatement(10),
 		FinanceMethod_CashFlowStatement(11),
 		FinanceMethod_StatementOfChangesInEquity(12),
-		FinanceMethod_StockEnd(13), // Keep in mind to update the value at the right time, semi-open interval
-		FinanceMethod_StockStatementEnd(13); // Keep in mind to update the value at the right time
+		FinanceMethod_StockStatementEnd(13), // Keep in mind to update the value at the right time
+		FinanceMethod_DailyStockPriceAndVolume(13),
+		FinanceMethod_Top3LegalPersonsStockNetBuyOrSellSummary(14),
+		FinanceMethod_StockEnd(15); // Keep in mind to update the value at the right time, semi-open interval
 
 		private int value = 0;
 
@@ -237,6 +239,10 @@ public class CmnDef extends FinanceRecorderCmnDef
 				return FinanceMethod_CashFlowStatement;
 			case 12:
 				return FinanceMethod_StatementOfChangesInEquity;
+			case 13:
+				return FinanceMethod_DailyStockPriceAndVolume;
+			case 14:
+				return FinanceMethod_Top3LegalPersonsStockNetBuyOrSellSummary;
 // Stock End
 			default:
 				return null;
@@ -514,6 +520,8 @@ public class CmnDef extends FinanceRecorderCmnDef
 		"income_statement",
 		"cash_flow_statement",
 		"statement_of_changes_in_equity",
+		"daily_stock_price_and_volume",
+		"top3_legal_persons_stock_net_buy_and_sell_summary",
 // Stock End
 	};
 	static final String[] FINANCE_METHOD_DESCRIPTION_LIST = new String[] 
@@ -535,6 +543,8 @@ public class CmnDef extends FinanceRecorderCmnDef
 		"損益表",
 		"現金流量表",
 		"股東權益變動表",
+		"個股日股價及成交量",
+		"三大法人個股買賣超日報",
 // Stock End
 	};
 	static final String[] FINANCE_DATA_FOLDER_MAPPING = new String[] 
@@ -547,6 +557,8 @@ public class CmnDef extends FinanceRecorderCmnDef
 		"market",
 		"market",
 		"market",
+		"stock",
+		"stock",
 		"stock",
 		"stock",
 		"stock",
@@ -572,6 +584,8 @@ public class CmnDef extends FinanceRecorderCmnDef
 		transform_array_to_sql_string(merge_string_array_element(CmnDefStockDB.INCOME_STATEMENT_TABLE_FIELD_DEFINITION, CmnDefStockDB.INCOME_STATEMENT_TABLE_FIELD_TYPE_DEFINITION)),
 		transform_array_to_sql_string(merge_string_array_element(CmnDefStockDB.CASH_FLOW_STATEMENT_TABLE_FIELD_DEFINITION, CmnDefStockDB.CASH_FLOW_STATEMENT_TABLE_FIELD_TYPE_DEFINITION)),
 		transform_array_to_sql_string(merge_string_array_element(CmnDefStockDB.STATEMENT_OF_CHANGES_IN_EQUITY_TABLE_FIELD_DEFINITION, CmnDefStockDB.STATEMENT_OF_CHANGES_IN_EQUITY_TABLE_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(CmnDefStockDB.DAILY_STOCK_PRICE_AND_VOLUME_TABLE_FIELD_DEFINITION, CmnDefStockDB.DAILY_STOCK_PRICE_AND_VOLUME_TABLE_FIELD_TYPE_DEFINITION)),
+		transform_array_to_sql_string(merge_string_array_element(CmnDefStockDB.TOP3_LEGAL_PERSONS_STOCK_NET_BUY_AND_SELL_SUMMARY_TABLE_FIELD_DEFINITION, CmnDefStockDB.TOP3_LEGAL_PERSONS_STOCK_NET_BUY_AND_SELL_SUMMARY_TABLE_FIELD_TYPE_DEFINITION)),
 // Stock End
 	};
 	static final String[][] FINANCE_DATA_SQL_FIELD_DEFINITION_LIST = new String[][] 
@@ -593,6 +607,8 @@ public class CmnDef extends FinanceRecorderCmnDef
 		CmnDefStockDB.INCOME_STATEMENT_TABLE_FIELD_DEFINITION,
 		CmnDefStockDB.CASH_FLOW_STATEMENT_TABLE_FIELD_DEFINITION,
 		CmnDefStockDB.STATEMENT_OF_CHANGES_IN_EQUITY_TABLE_FIELD_DEFINITION,
+		CmnDefStockDB.DAILY_STOCK_PRICE_AND_VOLUME_TABLE_FIELD_DEFINITION,
+		CmnDefStockDB.TOP3_LEGAL_PERSONS_STOCK_NET_BUY_AND_SELL_SUMMARY_TABLE_FIELD_DEFINITION,
 // Stock End
 	};
 	static final String[][] FINANCE_DATA_SQL_FIELD_TYPE_DEFINITION_LIST = new String[][] 
@@ -614,6 +630,8 @@ public class CmnDef extends FinanceRecorderCmnDef
 		CmnDefStockDB.INCOME_STATEMENT_TABLE_FIELD_TYPE_DEFINITION,
 		CmnDefStockDB.CASH_FLOW_STATEMENT_TABLE_FIELD_TYPE_DEFINITION,
 		CmnDefStockDB.STATEMENT_OF_CHANGES_IN_EQUITY_TABLE_FIELD_TYPE_DEFINITION,
+		CmnDefStockDB.DAILY_STOCK_PRICE_AND_VOLUME_TABLE_FIELD_TYPE_DEFINITION,
+		CmnDefStockDB.TOP3_LEGAL_PERSONS_STOCK_NET_BUY_AND_SELL_SUMMARY_TABLE_FIELD_TYPE_DEFINITION,
 // Stock End
 	};
 	static final FinanceFieldType[][] FINANCE_DATABASE_FIELD_TYPE_LIST = new FinanceFieldType[][] 
@@ -635,6 +653,8 @@ public class CmnDef extends FinanceRecorderCmnDef
 		TransformFieldTypeString2Enum(CmnDefStockDB.INCOME_STATEMENT_TABLE_FIELD_TYPE_DEFINITION),
 		TransformFieldTypeString2Enum(CmnDefStockDB.CASH_FLOW_STATEMENT_TABLE_FIELD_TYPE_DEFINITION),
 		TransformFieldTypeString2Enum(CmnDefStockDB.STATEMENT_OF_CHANGES_IN_EQUITY_TABLE_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(CmnDefStockDB.DAILY_STOCK_PRICE_AND_VOLUME_TABLE_FIELD_TYPE_DEFINITION),
+		TransformFieldTypeString2Enum(CmnDefStockDB.TOP3_LEGAL_PERSONS_STOCK_NET_BUY_AND_SELL_SUMMARY_TABLE_FIELD_TYPE_DEFINITION),
 // Stock End
 	};
 	static final int FINANCE_DATABASE_FIELD_AMOUNT_LIST[] = 
@@ -656,6 +676,8 @@ public class CmnDef extends FinanceRecorderCmnDef
 		CmnDefStockDB.INCOME_STATEMENT_TABLE_FIELD_TYPE_DEFINITION.length,
 		CmnDefStockDB.CASH_FLOW_STATEMENT_TABLE_FIELD_TYPE_DEFINITION.length,
 		CmnDefStockDB.STATEMENT_OF_CHANGES_IN_EQUITY_TABLE_FIELD_TYPE_DEFINITION.length,
+		CmnDefStockDB.DAILY_STOCK_PRICE_AND_VOLUME_TABLE_FIELD_TYPE_DEFINITION.length,
+		CmnDefStockDB.TOP3_LEGAL_PERSONS_STOCK_NET_BUY_AND_SELL_SUMMARY_TABLE_FIELD_TYPE_DEFINITION.length,
 // Stock End
 	};
 

@@ -23,9 +23,17 @@ public class FinanceRecorder extends ClassCmnBase
 		CmnDef.DEFAULT_STATEMENT_PROFILE_CONF_FOLDERPATH
 	};
 
+	private static CompanyProfile company_profile = null;
 	private static CmnInf.MgrInf finance_recorder_mgr = null;
 	private static CmnDef.FinanceAnalysisMode finance_analysis_mode = CmnDef.FinanceAnalysisMode.FinanceAnalysis_None;
 	private static CmnClass.FinanceTimeRange finance_time_range = null;
+
+	private static CompanyProfile get_company_profile()
+	{
+		if (company_profile == null)
+			company_profile = CompanyProfile.get_instance();
+		return company_profile;
+	}
 
 	private static short init_finance_manager(CmnDef.FinanceAnalysisMode new_finance_analysis_mode)
 	{
@@ -304,20 +312,30 @@ public class FinanceRecorder extends ClassCmnBase
 		finance_recorder_mgr.set_finance_backup_folderpath(finance_backup_folderpath);
 	}
 
+	public static String get_finance_backup_folderpath()
+	{	
+		return finance_recorder_mgr.get_finance_backup_folderpath();
+	}
+
 	public static void set_finance_restore_folderpath(String finance_restore_folderpath)
 	{
 		finance_recorder_mgr.set_finance_restore_folderpath(finance_restore_folderpath);
 	}
 
-	public static void set_finance_backup_foldername(String finance_backup_foldername)
-	{
-		finance_recorder_mgr.set_finance_backup_foldername(finance_backup_foldername);
+	public static String get_finance_restore_folderpath()
+	{	
+		return finance_recorder_mgr.get_finance_restore_folderpath();
 	}
 
-	public static void set_finance_restore_foldername(String finance_restore_foldername)
-	{
-		finance_recorder_mgr.set_finance_restore_foldername(finance_restore_foldername);
-	}
+//	public static void set_finance_backup_foldername(String finance_backup_foldername)
+//	{
+//		finance_recorder_mgr.set_finance_backup_foldername(finance_backup_foldername);
+//	}
+//
+//	public static void set_finance_restore_foldername(String finance_restore_foldername)
+//	{
+//		finance_recorder_mgr.set_finance_restore_foldername(finance_restore_foldername);
+//	}
 
 	public static void set_delete_sql_accurancy(CmnDef.DeleteSQLAccurancyType delete_sql_accurancy_type)
 	{
@@ -372,6 +390,38 @@ public class FinanceRecorder extends ClassCmnBase
 	public static short operation_backup()
 	{
 		finance_recorder_mgr.switch_current_csv_working_folerpath(CmnDef.CSVWorkingFolderType.CSVWorkingFolder_Backup);
+// It's required to create the root folders before backup
+		String root_backup_folderpath = finance_recorder_mgr.get_finance_backup_folderpath();
+		CmnLogger.debug(String.format("Create the root backup folder: %s", root_backup_folderpath));
+		short ret = CmnFunc.create_folder_if_not_exist(root_backup_folderpath);
+		if (CmnDef.CheckFailure(ret))
+			return ret;
+		switch (finance_analysis_mode)
+		{
+		case FinanceAnalysis_Market:
+		{
+			String market_folderpath = String.format("%s/%s", root_backup_folderpath, CmnDef.CSV_MARKET_FOLDERNAME);
+			ret = CmnFunc.create_folder_if_not_exist(market_folderpath);
+			if (CmnDef.CheckFailure(ret))
+				return ret;
+		}
+		break;
+		case FinanceAnalysis_Stock:
+		{
+			int company_group_size = get_company_profile().get_company_group_size();
+			for (int i = 0 ; i < company_group_size ; i++)
+			{
+				String stock_folderpath = String.format("%s/%s%02d", root_backup_folderpath, CmnDef.CSV_STOCK_FOLDERNAME, i);
+				ret = CmnFunc.create_folder_if_not_exist(stock_folderpath);
+				if (CmnDef.CheckFailure(ret))
+					return ret;
+			}
+		}
+		break;
+		default:
+			CmnLogger.error(String.format("Unknown finance analysis mode: %d", finance_analysis_mode));
+			return CmnDef.RET_FAILURE_INCORRECT_OPERATION;
+		}
 		return finance_recorder_mgr.transfrom_sql_to_csv(finance_time_range);
 	}
 

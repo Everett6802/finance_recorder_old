@@ -595,4 +595,16 @@ class CmnDefStockDB
 	static final String[] STATEMENT_OF_CHANGES_IN_EQUITY_TABLE_FIELD_TYPE_DEFINITION = new String[]
 	{
 	};
+	static final String[] DAILY_STOCK_PRICE_AND_VOLUME_TABLE_FIELD_DEFINITION = new String[]
+	{
+	};
+	static final String[] DAILY_STOCK_PRICE_AND_VOLUME_TABLE_FIELD_TYPE_DEFINITION = new String[]
+	{
+	};
+	static final String[] TOP3_LEGAL_PERSONS_STOCK_NET_BUY_AND_SELL_SUMMARY_TABLE_FIELD_DEFINITION = new String[]
+	{
+	};
+	static final String[] TOP3_LEGAL_PERSONS_STOCK_NET_BUY_AND_SELL_SUMMARY_TABLE_FIELD_TYPE_DEFINITION = new String[]
+	{
+	};
 }

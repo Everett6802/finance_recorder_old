@@ -42,14 +42,14 @@ class CmnInf
 	{
 		void set_finance_folderpath(String finance_folderpath);
 		void set_finance_backup_folderpath(String finance_folderpath);
-		void set_finance_backup_foldername(String finance_foldername);
+//		void set_finance_backup_foldername(String finance_foldername);
 		void set_finance_restore_folderpath(String finance_folderpath);
-		void set_finance_restore_foldername(String finance_foldername);
+//		void set_finance_restore_foldername(String finance_foldername);
 		String get_finance_folderpath();
 		String get_finance_backup_folderpath();
-		String get_finance_backup_foldername();
+//		String get_finance_backup_foldername();
 		String get_finance_restore_folderpath();
-		String get_finance_restore_foldername();
+//		String get_finance_restore_foldername();
 		void switch_current_csv_working_folerpath(CmnDef.CSVWorkingFolderType working_folder_type);
 		void set_operation_non_stop(boolean enable);
 		boolean is_operation_non_stop();

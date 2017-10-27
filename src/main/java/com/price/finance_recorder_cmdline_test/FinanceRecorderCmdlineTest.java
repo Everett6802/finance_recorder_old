@@ -33,8 +33,8 @@ public class FinanceRecorderCmdlineTest
 	private static String finance_folderpath_param = null;
 	private static String finance_backup_folderpath_param = null;
 	private static String finance_restore_folderpath_param = null;
-	private static String finance_backup_foldername_param = null;
-	private static String finance_restore_foldername_param = null;
+//	private static String finance_backup_foldername_param = null;
+//	private static String finance_restore_foldername_param = null;
 	private static boolean show_finance_backup_list_param = false;
 	private static boolean show_finance_restore_list_param = false;
 	private static String delete_sql_accurancy_param = null;
@@ -365,26 +365,26 @@ public class FinanceRecorderCmdlineTest
 				}
 				index_offset = 2;
 			}
-			else if (option.equals("--finance_backup_foldername"))
-			{
-				if (!early_parse_param) 
-				{
-					if (index + 1 >= args_len)
-						show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
-					finance_backup_foldername_param = args[index + 1];
-				}
-				index_offset = 2;
-			}
-			else if (option.equals("--finance_restore_foldername"))
-			{
-				if (!early_parse_param) 
-				{
-					if (index + 1 >= args_len)
-						show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
-					finance_restore_foldername_param = args[index + 1];
-				}
-				index_offset = 2;
-			}
+//			else if (option.equals("--finance_backup_foldername"))
+//			{
+//				if (!early_parse_param) 
+//				{
+//					if (index + 1 >= args_len)
+//						show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
+//					finance_backup_foldername_param = args[index + 1];
+//				}
+//				index_offset = 2;
+//			}
+//			else if (option.equals("--finance_restore_foldername"))
+//			{
+//				if (!early_parse_param) 
+//				{
+//					if (index + 1 >= args_len)
+//						show_error_and_exit(String.format("The option[%s] does NOT contain value", option));
+//					finance_restore_foldername_param = args[index + 1];
+//				}
+//				index_offset = 2;
+//			}
 			else if (option.equals("--delete_sql_accurancy"))
 			{
 				if (!early_parse_param) 
@@ -574,25 +574,25 @@ public class FinanceRecorderCmdlineTest
 				PRINT_STDOUT("WARNING: The 'finance_restore_folderpath_param' argument is ignored since Restore action is NOT set");
 			}
 		}
-		if (finance_backup_foldername_param != null) 
-		{
-			if (!is_backup_operation_enabled()) 
-			{
-				finance_backup_foldername_param = null;
-				PRINT_STDOUT("WARNING: The 'finance_backup_foldername_param' argument is ignored since Backup action is NOT set");
-			}
-		}
-		if (finance_restore_foldername_param != null) 
-		{
-			if (!is_restore_operation_enabled()) 
-			{
-				if (finance_restore_foldername_param != null) 
-				{
-					finance_restore_foldername_param = null;
-					PRINT_STDOUT("WARNING: The 'finance_restore_foldername_param' argument is ignored since Restore action is NOT set");
-				}
-			}
-		}
+//		if (finance_backup_foldername_param != null) 
+//		{
+//			if (!is_backup_operation_enabled()) 
+//			{
+//				finance_backup_foldername_param = null;
+//				PRINT_STDOUT("WARNING: The 'finance_backup_foldername_param' argument is ignored since Backup action is NOT set");
+//			}
+//		}
+//		if (finance_restore_foldername_param != null) 
+//		{
+//			if (!is_restore_operation_enabled()) 
+//			{
+//				if (finance_restore_foldername_param != null) 
+//				{
+//					finance_restore_foldername_param = null;
+//					PRINT_STDOUT("WARNING: The 'finance_restore_foldername_param' argument is ignored since Restore action is NOT set");
+//				}
+//			}
+//		}
 		if (delete_sql_accurancy_param != null) 
 		{
 			if (is_delete_operation_enabled()) 
@@ -756,16 +756,16 @@ public class FinanceRecorderCmdlineTest
 		{
 			if (finance_backup_folderpath_param != null) 
 				FinanceRecorder.set_finance_backup_folderpath(finance_backup_folderpath_param);
-			if (finance_backup_foldername_param != null)
-				FinanceRecorder.set_finance_backup_foldername(finance_backup_foldername_param);
+//			if (finance_backup_foldername_param != null)
+//				FinanceRecorder.set_finance_backup_foldername(finance_backup_foldername_param);
 		}
 // Setup the finance restore root folder path
 		if (is_restore_operation_enabled()) 
 		{
 			if (finance_restore_folderpath_param != null) 
 				FinanceRecorder.set_finance_restore_folderpath(finance_restore_folderpath_param);
-			if (finance_restore_foldername_param != null)
-				FinanceRecorder.set_finance_restore_foldername(finance_restore_foldername_param);
+//			if (finance_restore_foldername_param != null)
+//				FinanceRecorder.set_finance_restore_foldername(finance_restore_foldername_param);
 		}
 // Set the delete SQL accurancy
 		if (delete_sql_accurancy_param != null)
@@ -818,57 +818,27 @@ public class FinanceRecorderCmdlineTest
 		if (FinanceRecorderCmnDef.CheckFailure(ret))
 			show_error_and_exit(String.format("Fail to write CSV data into MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
 		long time_end_millisecond = System.currentTimeMillis();
-		PRINT_STDOUT("Write CSV data to SQL...... Done");
+		PRINT_STDOUT("Write CSV data to SQL...... Done\n");
 // Calculate the time elapse
 		PRINT_STDOUT(get_time_elapse_string(time_start_millisecond, time_end_millisecond));
+		PRINT_STDOUT("\n");
 	}
-//
-//	private static void backup_operation() 
-//	{
-//		if (show_console)
-//			System.out.printf("Backup SQL to CSV[%s]......\n",
-//					FinanceRecorder.get_finance_backup_folderpath());
-//		FinanceRecorder
-//				.switch_current_csv_working_folerpath(CmnDef.CSVWorkingFolderType.CSVWorkingFolder_Backup);
-//		short ret = CmnDef.RET_SUCCESS;
-//		long time_start_millisecond = System.currentTimeMillis();
-//		// Create the finance backup folder
-//		ret = CmnDef.create_folder_if_not_exist(finance_backup_folderpath_param);
-//		if (CmnDef.CheckFailure(ret))
-//			CmnDef.format_error(
-//					"Fail to create finance backup root folder[%s], due to: %s",
-//					finance_backup_folderpath_param,
-//					CmnDef.GetErrorDescription(ret));
-//		ret = FinanceRecorder.transfrom_sql_to_csv(finance_time_range);
-//		if (CmnDef.CheckFailure(ret))
-//			show_error_and_exit(String.format(
-//					"Fail to backup MySQL to CSV, due to: %s",
-//					CmnDef.GetErrorDescription(ret)));
-//		long time_end_millisecond = System.currentTimeMillis();
-//
-//		if (show_console)
-//			System.out.println("Backup SQL to CSV...... Done");
-//
-//		long time_lapse_millisecond = time_end_millisecond
-//				- time_start_millisecond;
-//		String time_lapse_msg;
-//		if (time_lapse_millisecond >= 100 * 1000)
-//			time_lapse_msg = String
-//					.format("######### Time Lapse: %d second(s) #########",
-//							(int) ((time_end_millisecond - time_start_millisecond) / 1000));
-//		else if (time_lapse_millisecond >= 10 * 1000)
-//			time_lapse_msg = String
-//					.format("######### Time Lapse: %d second(s) #########",
-//							(int) ((time_end_millisecond - time_start_millisecond) / 1000));
-//		else
-//			time_lapse_msg = String
-//					.format("######### Time Lapse: %d second(s) #########",
-//							(int) ((time_end_millisecond - time_start_millisecond) / 1000));
-//		CmnDef.info(time_lapse_msg);
-//		if (show_console)
-//			System.out.println(time_lapse_msg);
-//	}
-//
+
+	private static void backup_operation() 
+	{
+		PRINT_STDOUT(String.format("Backup CSV[%s] data from SQL......\n", FinanceRecorder.get_finance_backup_folderpath()));
+		short ret = FinanceRecorderCmnDef.RET_SUCCESS;
+		long time_start_millisecond = System.currentTimeMillis();
+		ret = FinanceRecorder.operation_backup();
+		if (FinanceRecorderCmnDef.CheckFailure(ret))
+			show_error_and_exit(String.format("Fail to backup CSV data from MySQL, due to: %s", FinanceRecorderCmnDef.GetErrorDescription(ret)));
+		long time_end_millisecond = System.currentTimeMillis();
+		PRINT_STDOUT("Backup CSV data from SQL...... Done\n");
+// Calculate the time elapse
+		PRINT_STDOUT(get_time_elapse_string(time_start_millisecond, time_end_millisecond));
+		PRINT_STDOUT("\n");
+	}
+
 	private static void cleanup_operation() 
 	{
 		PRINT_STDOUT("Cleanup old MySQL data......\n");
@@ -997,8 +967,8 @@ public class FinanceRecorderCmdlineTest
 			write_operation();
 //		else if (is_restore_operation_enabled())
 //			restore_operation();
-//		if (is_backup_operation_enabled())
-//			backup_operation();
+		if (is_backup_operation_enabled())
+			backup_operation();
 
 //		wait_to_exit();
 	}
