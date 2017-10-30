@@ -533,6 +533,25 @@ class CmnFunc
 		return copy_file(src_filepath, dst_filepath);
 	}
 
+	static short create_symbolic_link(String newlink_filepath, String target_filepath)
+	{
+		if (check_file_exist(target_filepath))
+		{
+			CmnLogger.format_error("The file[%s] does NOT exist", target_filepath);
+			return CmnDef.RET_FAILURE_NOT_FOUND;
+		}
+		try 
+		{
+			Files.createSymbolicLink(Paths.get(newlink_filepath), Paths.get(target_filepath));
+		} 
+		catch (IOException x) 
+		{
+			CmnLogger.format_error("Fail to create the symbolic link of the file%s: %s", target_filepath);
+			return CmnDef.RET_FAILURE_IO_OPERATION;
+		}
+		return CmnDef.RET_SUCCESS;
+	}
+
 	static short direct_string_to_output_stream(String data, String filepath) 
 	{
 		// Open the config file for writing

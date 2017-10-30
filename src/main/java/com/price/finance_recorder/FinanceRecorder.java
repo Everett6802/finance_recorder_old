@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 
 
-public class FinanceRecorder extends ClassCmnBase
+public final class FinanceRecorder extends ClassCmnBase
 {
 	private static final String PARAM_SPLIT = ",";
 	private static final String[] DEFAULT_CONST_ARRAY = new String[]
@@ -438,6 +438,13 @@ public class FinanceRecorder extends ClassCmnBase
 	public static short operation_restore()
 	{
 		finance_recorder_mgr.switch_current_csv_working_folerpath(CmnDef.CSVWorkingFolderType.CSVWorkingFolder_Restore);
+// Check the finance restore folder exist
+		String root_restore_folderpath = finance_recorder_mgr.get_finance_restore_folderpath();
+		if (!CmnFunc.check_file_exist(root_restore_folderpath))
+		{	
+			CmnLogger.error(String.format("The finance restore root folder[%s] does NOT exist", root_restore_folderpath));
+			return CmnDef.RET_FAILURE_INCORRECT_PATH;
+		}
 		return finance_recorder_mgr.transfrom_csv_to_sql();
 	}
 
@@ -447,7 +454,7 @@ public class FinanceRecorder extends ClassCmnBase
 		return finance_recorder_mgr.transfrom_csv_to_sql_multithread(thread_count);
 	}
 
-	public static short check_exist(ArrayList<String> not_exist_list)
+	public static short operation_check_exist(ArrayList<String> not_exist_list)
 	{
 		return finance_recorder_mgr.check_sql_exist(not_exist_list);
 	}
