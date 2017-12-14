@@ -12,6 +12,12 @@ class StockDataHandler extends DataHandlerBase
 	{
 		return String.format("%s/%s%02d/%s/%s.csv", csv_folderpath, CmnDef.CSV_STOCK_FOLDERNAME, company_group_number, company_code_number, CmnDef.FINANCE_DATA_NAME_LIST[method_index]);
 	}
+	private static String get_csv_urlpath(String csv_server_ip, int method_index, int company_group_number, String company_code_number)
+	{
+		//"http://localhost/finance_data/finance/stock00/1101/stock_exchange_and_volume.csv"
+		String csv_url_folderpath = String.format(CmnDef.CSV_REMOTE_ROOT_FOLDERPATH_FORMAT, csv_server_ip);
+		return String.format("%s/%s%02d/%s/%s.csv", csv_url_folderpath, CmnDef.CSV_STOCK_FOLDERNAME, company_group_number, company_code_number, CmnDef.FINANCE_DATA_NAME_LIST[method_index]);
+	}
 	private static String get_database_name(int company_group_number)
 	{
 		return String.format("%s%02d", CmnDef.SQL_STOCK_DATABASE_NAME, company_group_number);

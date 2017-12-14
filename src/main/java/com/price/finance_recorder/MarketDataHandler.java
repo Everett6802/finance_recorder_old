@@ -2,18 +2,6 @@ package com.price.finance_recorder;
 
 import java.util.*;
 
-//import com.price.finance_recorder_base.CSVHandler;
-//import com.price.finance_recorder_base.CSVHandlerMap;
-//import com.price.finance_recorder_base.DataHandlerBase;
-//import com.price.finance_recorder_base.DataHandlerInf;
-////import com.price.finance_recorder_cmn.ClassBase;
-//import com.price.finance_recorder_cmn.CmnClass;
-//import com.price.finance_recorder_cmn.CmnClass.FinanceTimeRange;
-//import com.price.finance_recorder_cmn.CmnClass.QuerySet;
-////import com.price.finance_recorder_cmn.CmnClass.FinanceTimeRange;
-////import com.price.finance_recorder_cmn.CmnClass.QuerySet;
-//import com.price.finance_recorder_cmn.CmnDef;
-
 
 class MarketDataHandler extends DataHandlerBase
 {
@@ -21,6 +9,12 @@ class MarketDataHandler extends DataHandlerBase
 	private static String get_csv_filepath(String csv_folderpath, int method_index)
 	{
 		return String.format("%s/%s/%s.csv", csv_folderpath, CmnDef.CSV_MARKET_FOLDERNAME, CmnDef.FINANCE_DATA_NAME_LIST[method_index]);
+	}
+	private static String get_csv_urlpath(String csv_server_ip, int method_index)
+	{
+		//"http://localhost/finance_data/finance/market/stock_exchange_and_volume.csv"
+		String csv_url_folderpath = String.format(CmnDef.CSV_REMOTE_ROOT_FOLDERPATH_FORMAT, csv_server_ip);
+		return String.format("%s/%s/%s.csv", csv_url_folderpath, CmnDef.CSV_MARKET_FOLDERNAME, CmnDef.FINANCE_DATA_NAME_LIST[method_index]);
 	}
 
 //	private static String get_sql_database_name()

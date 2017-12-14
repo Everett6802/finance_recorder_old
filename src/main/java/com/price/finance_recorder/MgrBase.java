@@ -90,11 +90,13 @@ abstract class MgrBase implements CmnInf.MgrInf
 //	protected String finance_backup_foldername = null;
 	protected String finance_restore_folderpath = CmnDef.CSV_RESTORE_FOLDERPATH;
 //	protected String finance_restore_foldername = null;
-	protected String[] finance_root_folderpath_array = new String[]{finance_root_folderpath, finance_backup_folderpath, finance_restore_folderpath};
+	protected String[] finance_root_folderpath_array = new String[]{CmnDef.CSV_ROOT_FOLDERPATH, CmnDef.CSV_BACKUP_FOLDERPATH, CmnDef.CSV_RESTORE_FOLDERPATH};
+//	protected String[] finance_remote_root_folderpath_array = new String[]{CmnDef.CSV_ROOT_FOLDERPATH, CmnDef.CSV_BACKUP_FOLDERPATH, CmnDef.CSV_RESTORE_FOLDERPATH};
 	protected CmnDef.CSVWorkingFolderType csv_working_folder_type = CmnDef.CSVWorkingFolderType.CSVWorkingFolder_Unknown;
 	protected String current_csv_working_folerpath = null;
 	protected CmnDef.DeleteSQLAccurancyType delete_sql_accurancy_type = CmnDef.DeleteSQLAccurancyType.DeleteSQLAccurancyType_METHOD_ONLY;
 	protected boolean operation_non_stop = true;
+	protected String remote_csv_server_ip = null;
 
 	protected abstract CmnInf.DataHandlerInf get_data_handler();
 
@@ -134,6 +136,9 @@ abstract class MgrBase implements CmnInf.MgrInf
 
 	public void set_operation_non_stop(boolean enable){operation_non_stop = enable;}
 	public boolean is_operation_non_stop(){return operation_non_stop;}
+
+	public void set_csv_remote_source(String server_ip) {remote_csv_server_ip = server_ip;}// disable remote source while server_ip = null 
+	public boolean is_csv_remote_source(){return remote_csv_server_ip != null ? true : false;}
 
 	public short get_backup_foldername_list(List<String> sorted_sub_foldername_list)
 	{
@@ -293,6 +298,7 @@ OUT:
 		CmnInf.DataHandlerInf finance_recorder_data_handler = get_data_handler();
 		finance_recorder_data_handler.set_current_csv_working_folerpath(current_csv_working_folerpath);
 		finance_recorder_data_handler.set_operation_non_stop(operation_non_stop);
+		finance_recorder_data_handler.set_csv_remote_source(remote_csv_server_ip);
 		short ret = finance_recorder_data_handler.transfrom_csv_to_sql();
 		return ret;
 	}

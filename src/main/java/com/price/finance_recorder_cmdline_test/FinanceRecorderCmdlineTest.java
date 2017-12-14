@@ -1,13 +1,12 @@
 package com.price.finance_recorder_cmdline_test;
 
 import java.util.ArrayList;
-//import java.util.LinkedList;
-
 import com.price.finance_recorder.FinanceRecorder;
 import com.price.finance_recorder.FinanceRecorderCmnDef;
 import com.price.finance_recorder.FinanceRecorderCmnDef.FinanceAnalysisMode;
 import com.price.finance_recorder.FinanceRecorderCmnDef.DeleteSQLAccurancyType;
 import com.price.finance_recorder.FinanceRecorderCmnDef.DefaultConstType;
+
 
 public class FinanceRecorderCmdlineTest 
 {
@@ -157,6 +156,7 @@ public class FinanceRecorderCmdlineTest
 		PRINT_STDOUT("  The D(d) attribute is ignored if C(c) set\n");
 		PRINT_STDOUT("  The C(c) attribute is enabled if R(r) set\n");
 		PRINT_STDOUT("--set_operation_non_stop\nDescription: Keep running or stop while accessing data and error occurs\nDefault: True\n");
+		PRINT_STDOUT("--csv_remote_server_ip\nDescription: The IP of the server where CSV files are stored\nCaution: Only takes effect for Write/Restore operation\n");
 		PRINT_STDOUT("  Type: TRUE/True/true FALSE/False/false\n");
 		PRINT_STDOUT("  TRUE/True/true: Keep running while accessing data and error occurs\n");
 		PRINT_STDOUT("  FALSE/False/false: Stop while accessing data and error occurs\n");
@@ -175,7 +175,7 @@ public class FinanceRecorderCmdlineTest
 		assert all_method_index_list.size() == all_method_description_list.size() : "The dimensions of all method index/description are NOT identical";
 		for (int i = 0 ; i < all_method_index_list.size() ; i++)
 			PRINT_STDOUT(String.format("  %d: %s\n", all_method_index_list.get(i), all_method_description_list.get(i)));
-		PRINT_STDOUT("-t|--time_range\nDescription: The time range of the SQL\nDefault: full range in SQL\nCaution: Only take effect for Database Operation: B(backup)\n");
+		PRINT_STDOUT("-t|--time_range\nDescription: The time range of the SQL\nDefault: full range in SQL\nCaution: Only take effect for Backup operation\n");
 		PRINT_STDOUT("  Format 1 (start_time): 2015-09\n");
 		PRINT_STDOUT("  Format 1 (,end_time): ,2015-09\n");
 		PRINT_STDOUT("  Format 2 (start_time,end_time): 2015-01,2015-09\n");
@@ -185,7 +185,7 @@ public class FinanceRecorderCmdlineTest
 			PRINT_STDOUT("  Format 1 Method Only: 0\n");
 			PRINT_STDOUT("  Format 2 Company Only: 1\n");
 			PRINT_STDOUT("  Format 3 Method and Company: 2\n");
-			PRINT_STDOUT("--multi_thread\nDescription: Execute actions by using multiple threads\nCaution: Only take effect for Write action\n");
+			PRINT_STDOUT("--multi_thread\nDescription: Execute operations by using multiple threads\nCaution: Only take effect for Write operation\n");
 			PRINT_STDOUT("--company_from_file\nDescription: The company code number from file\nDefault: All company code nubmers\nCaution: company is ignored when set\n");
 			PRINT_STDOUT("-c|--company\nDescription: The list of the company code number\nDefault: All company code nubmers\nCaution: Only work when company_from_file is NOT set\n");
 			PRINT_STDOUT("  Format 1 Company code number: 2347\n");
@@ -549,13 +549,12 @@ public class FinanceRecorderCmdlineTest
 				show_error_and_exit(String.format("Unknown value of the set_operation_non_stop attribute: %d", set_operation_non_stop_param));
 			}
 		}
-
 		if (finance_backup_folderpath_param != null) 
 		{
 			if (!is_backup_operation_enabled()) 
 			{
 				finance_backup_folderpath_param = null;
-				PRINT_STDOUT("WARNING: The 'finance_backup_folderpath_param' argument is ignored since Backup action is NOT set");
+				PRINT_STDOUT("WARNING: The 'finance_backup_folderpath_param' argument is ignored since Backup operation is NOT set");
 			}
 		}
 		if (finance_restore_folderpath_param != null) 
@@ -563,7 +562,7 @@ public class FinanceRecorderCmdlineTest
 			if (!is_restore_operation_enabled()) 
 			{
 				finance_restore_folderpath_param = null;
-				PRINT_STDOUT("WARNING: The 'finance_restore_folderpath_param' argument is ignored since Restore action is NOT set");
+				PRINT_STDOUT("WARNING: The 'finance_restore_folderpath_param' argument is ignored since Restore operation is NOT set");
 			}
 		}
 //		if (finance_backup_foldername_param != null) 
@@ -571,7 +570,7 @@ public class FinanceRecorderCmdlineTest
 //			if (!is_backup_operation_enabled()) 
 //			{
 //				finance_backup_foldername_param = null;
-//				PRINT_STDOUT("WARNING: The 'finance_backup_foldername_param' argument is ignored since Backup action is NOT set");
+//				PRINT_STDOUT("WARNING: The 'finance_backup_foldername_param' argument is ignored since Backup operation is NOT set");
 //			}
 //		}
 //		if (finance_restore_foldername_param != null) 
@@ -581,7 +580,7 @@ public class FinanceRecorderCmdlineTest
 //				if (finance_restore_foldername_param != null) 
 //				{
 //					finance_restore_foldername_param = null;
-//					PRINT_STDOUT("WARNING: The 'finance_restore_foldername_param' argument is ignored since Restore action is NOT set");
+//					PRINT_STDOUT("WARNING: The 'finance_restore_foldername_param' argument is ignored since Restore operation is NOT set");
 //				}
 //			}
 //		}
@@ -600,7 +599,7 @@ public class FinanceRecorderCmdlineTest
 			else 
 			{
 				delete_sql_accurancy_param = null;
-				PRINT_STDOUT("WARNING: The 'delete_sql_accurancy' argument is ignored since Delete action is NOT set");
+				PRINT_STDOUT("WARNING: The 'delete_sql_accurancy' argument is ignored since Delete operation is NOT set");
 			}
 		}
 
@@ -609,7 +608,7 @@ public class FinanceRecorderCmdlineTest
 			if (!is_write_operation_enabled())
 			{
 				multi_thread_param = null;
-				PRINT_STDOUT("WARNING: The 'multi_thread_param' argument is ignored since Write action is NOT set");
+				PRINT_STDOUT("WARNING: The 'multi_thread_param' argument is ignored since Write operation is NOT set");
 			}
 		}
 		if (method_from_file_param != null) 
@@ -905,6 +904,8 @@ public class FinanceRecorderCmdlineTest
 // Parse the parameters
 		if (FinanceRecorderCmnDef.CheckFailure(parse_param(args, false)))
 			show_error_and_exit("Fail to parse the parameters ......");
+//		FinanceRecorder.test();
+//		System.exit(0);
 // Execute some parameters before checking and exit
 // Run the parameters and then exit......
 		if (help_param)

@@ -82,9 +82,14 @@ public class CmnDef extends FinanceRecorderCmnDef
 
 	static final String FINANCE_MARKET_MODE_DESCRIPTION = "market";
 	static final String FINANCE_STOCK_MODE_DESCRIPTION = "stock";
-	static final String CSV_ROOT_FOLDERPATH = "/var/tmp/finance";
-	static final String CSV_BACKUP_FOLDERPATH = "/tmp/.finance_backup";
+	static final String CSV_ROOT_FOLDERNAME = "finance";
+	static final String CSV_ROOT_FOLDERPATH = "/var/tmp/" + CSV_ROOT_FOLDERNAME;
+	static final String CSV_REMOTE_ROOT_FOLDERPATH_FORMAT = "http://%s/finance_data/" + CSV_ROOT_FOLDERNAME;
+	static final String CSV_REMOTE_SERVER_IP = "localhost";
+	static final String CSV_BACKUP_FOLDERNAME = ".finance_backup";
+	static final String CSV_BACKUP_FOLDERPATH = "/tmp/" + CSV_BACKUP_FOLDERNAME;
 	static final String CSV_RESTORE_FOLDERPATH = CSV_BACKUP_FOLDERPATH;
+	static final String CSV_REMOTE_RESTORE_FOLDERPATH_FORMAT = "http://%s/finance_data/" + CSV_ROOT_FOLDERNAME;
 	static final String CSV_MARKET_FOLDERNAME = "market";
 	static final String CSV_STOCK_FOLDERNAME = "stock";
 	static final String RESULT_FOLDERNAME = "result";
@@ -490,6 +495,40 @@ public class CmnDef extends FinanceRecorderCmnDef
 				return CSVWorkingFolder_Restore;
 			case 3:
 				return CSVWorkingFolder_Unknown;
+			default:
+				return null;
+			}
+		}
+
+		public int value() 
+		{
+			return this.value;
+		}
+	};
+
+	static enum CSVSourceLocationType 
+	{
+		CSVSourceLocation_Local(0),
+		CSVSourceLocation_Remote(1),
+		CSVSourceLocation_Unknown(3);
+
+		private int value = 0;
+
+		private CSVSourceLocationType(int value) 
+		{
+			this.value = value;
+		}
+
+		static CSVSourceLocationType valueOf(int value) 
+		{
+			switch (value) 
+			{
+			case 0:
+				return CSVSourceLocation_Local;
+			case 1:
+				return CSVSourceLocation_Remote;
+			case 2:
+				return CSVSourceLocation_Unknown;
 			default:
 				return null;
 			}

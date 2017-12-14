@@ -1,6 +1,8 @@
 package com.price.finance_recorder;
 
 //import java.io.File;
+//import java.io.*;
+//import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -522,4 +524,23 @@ public final class FinanceRecorder extends ClassCmnBase
 			company_word_list.add(company_number);
 		return finance_recorder_mgr.set_company(company_word_list);
 	}
+
+//	public static short test()
+//	{
+//		try
+//		{
+//			URL url = new URL("http://localhost/finance_data/finance/market/stock_exchange_and_volume.csv");
+//			URLConnection conn = url.openConnection();
+//			InputStream is = conn.getInputStream();
+//			BufferedReader br = new BufferedReader(new InputStreamReader(is));
+//			String line = null;
+//			while ((line = br.readLine()) != null)
+//				System.out.println(line);
+//		}
+//		catch(IOException e)
+//		{
+//			e.printStackTrace();
+//		}
+//		return CmnDef.RET_SUCCESS;
+//	}
 }

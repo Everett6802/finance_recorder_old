@@ -1,6 +1,8 @@
 package com.price.finance_recorder;
 
 import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.*;
 
 
@@ -8,12 +10,12 @@ class CSVHandler implements Iterable<String>
 {
 	public enum HandlerMode{HandlerMode_Read, HandlerMode_Write};
 
-	public static CSVHandler get_csv_reader(String csv_filepath, boolean no_not_foud_exception)
+	public static CSVHandler get_csv_reader(String csv_resource_path, boolean no_not_foud_exception)
 	{
 		CSVHandler csv_reader = new CSVHandler();
 		csv_reader.handler_mode = HandlerMode.HandlerMode_Read;
-		CmnLogger.debug(String.format("Ready to read CSV from: %s", csv_filepath));
-		csv_reader.csv_filepath = csv_filepath;
+		CmnLogger.debug(String.format("Ready to read CSV from: %s", csv_resource_path));
+		csv_reader.csv_resource_path = csv_resource_path;
 		short ret = csv_reader.initialize_read_stream();
 		if (CmnDef.CheckFailure(ret))
 		{
@@ -27,13 +29,13 @@ class CSVHandler implements Iterable<String>
 		}
 		return csv_reader;
 	}
-	public static CSVHandler get_csv_reader(String csv_filepath){return get_csv_reader(csv_filepath, true);}
+	public static CSVHandler get_csv_reader(String csv_resource_path){return get_csv_reader(csv_resource_path, true);}
 
-	public static CSVHandler get_csv_writer(String csv_filepath, boolean no_not_foud_exception)
+	public static CSVHandler get_csv_writer(String csv_resource_path, boolean no_not_foud_exception)
 	{
 		CSVHandler csv_writer = new CSVHandler();
 		csv_writer.handler_mode = HandlerMode.HandlerMode_Write;
-		csv_writer.csv_filepath = csv_filepath;
+		csv_writer.csv_resource_path = csv_resource_path;
 		short ret = csv_writer.initialize_write_stream();
 		if (CmnDef.CheckFailure(ret))
 		{
@@ -47,15 +49,16 @@ class CSVHandler implements Iterable<String>
 		}
 		return csv_writer;
 	}
-	public static CSVHandler get_csv_writer(String csv_filepath){return get_csv_writer(csv_filepath, false);}
+	public static CSVHandler get_csv_writer(String csv_resource_path){return get_csv_writer(csv_resource_path, false);}
 
 	private final String NEW_LINE = "\n";
-	private String csv_filepath;
+	private String csv_resource_path;
 	private BufferedReader br = null;
 	private BufferedWriter bw = null;
 //	private CmnDef.FinanceObserverInf parent_observer = null;
 	private HandlerMode handler_mode;
 	private ArrayList<String> data_list = null;
+	private CmnDef.CSVSourceLocationType csv_source_location_type = CmnDef.CSVSourceLocationType.CSVSourceLocation_Local;
 //	private boolean IgnoreErrorIfFileNotExist = true;
 
 	private CSVHandler()
@@ -66,27 +69,46 @@ class CSVHandler implements Iterable<String>
 
 	private short initialize_read_stream() 
 	{
-		try
+		switch (csv_source_location_type)
 		{
-			br = new BufferedReader(new FileReader(csv_filepath));
-		}
-		catch (FileNotFoundException e)
+		case CSVSourceLocation_Local:
 		{
-			CmnLogger.format_error("The data file[%s] is NOT found", csv_filepath);
-			return CmnDef.RET_FAILURE_NOT_FOUND;
+			try
+			{
+				File file = new File(csv_resource_path);
+				br = new BufferedReader(new FileReader(file));
+			}
+			catch (FileNotFoundException e)
+			{
+				CmnLogger.format_error("The csv data file path[%s] is NOT found", csv_resource_path);
+				return CmnDef.RET_FAILURE_NOT_FOUND;
+			}
 		}
-//		catch (IOException e)
-//		{
-//			CmnLogger.format_error("Error occur, due to: %s", e.toString());
-//			return CmnDef.RET_FAILURE_IO_OPERATION;
-//		} 
-
+		break;
+		case CSVSourceLocation_Remote:
+		{
+			try
+			{
+				URL url = new URL(csv_resource_path);
+				URLConnection conn = url.openConnection();
+				br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			}
+			catch (IOException e)
+			{
+				CmnLogger.format_error("The csv data URL path[%s] is NOT found", csv_resource_path);
+				return CmnDef.RET_FAILURE_NOT_FOUND;
+			}
+		}
+		break;
+		default:
+			throw new IllegalArgumentException(String.format("Unknown CSVSourceLocationType: %d", csv_source_location_type.value()));
+		}
 		return CmnDef.RET_SUCCESS;
 	}
 
 	private short initialize_write_stream()
 	{
-		File file = new File(csv_filepath);
+		File file = new File(csv_resource_path);
 		try
 		{
 			file.createNewFile();
@@ -94,7 +116,7 @@ class CSVHandler implements Iterable<String>
 		}
 		catch (FileNotFoundException e)
 		{
-			CmnLogger.format_error("The data file[%s] is NOT found", csv_filepath);
+			CmnLogger.format_error("The data file[%s] is NOT found", csv_resource_path);
 			return CmnDef.RET_FAILURE_NOT_FOUND;
 		}
 		catch (IOException e)
@@ -108,9 +130,9 @@ class CSVHandler implements Iterable<String>
 
 //	public short initialize(String data_filepath, HandlerMode mode)
 //	{
-//		csv_filepath = data_filepath;
+//		csv_resource_path = data_filepath;
 //		handler_mode = mode;
-////		CmnLogger.format_debug("Open the CSV file: %s", csv_filepath);
+////		CmnLogger.format_debug("Open the CSV file: %s", csv_resource_path);
 //		return ((mode == HandlerMode.HandlerMode_Read) ? initialize_read_stream() : initialize_write_stream());
 //	}
 
@@ -134,7 +156,7 @@ class CSVHandler implements Iterable<String>
 			catch (IOException e){}
 		}
 
-		csv_filepath = null;
+		csv_resource_path = null;
 		return CmnDef.RET_SUCCESS;
 	}
 
@@ -172,7 +194,7 @@ class CSVHandler implements Iterable<String>
 			CmnLogger.format_error("Error occur while reading the data, due to: %s", e.toString());
 			ret = CmnDef.RET_FAILURE_IO_OPERATION;
 		}
-		CmnLogger.format_debug("Read %d data in: %s", count, csv_filepath);
+		CmnLogger.format_debug("Read %d data in: %s", count, csv_resource_path);
 
 		return ret;
 	}
@@ -218,7 +240,7 @@ class CSVHandler implements Iterable<String>
 			CmnLogger.format_error("Error occur while writing the data, due to: %s", e.toString());
 			ret = CmnDef.RET_FAILURE_IO_OPERATION;
 		}
-		CmnLogger.format_debug("Write %d data in: %s", count, csv_filepath);
+		CmnLogger.format_debug("Write %d data in: %s", count, csv_resource_path);
 
 		return ret;
 	}

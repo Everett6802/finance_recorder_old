@@ -16,6 +16,8 @@ class CmnInf
 		void set_current_csv_working_folerpath(String csv_working_folerpath);
 		void set_operation_non_stop(boolean enable);
 		boolean is_operation_non_stop();
+		void set_csv_remote_source(String server_ip);
+		boolean is_csv_remote_source();
 	// CSV -> SQL related function
 	// For transforming data from CSV into SQL, I assumed the time range of each CSV data source can be different
 		short read_from_csv(CSVHandlerMap csv_data_map);
