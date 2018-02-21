@@ -7,6 +7,7 @@
 
   <modules>
     <module>../finance_recorder_lib/pom.xml</module>
+    <module>../finance_recorder_cmd/pom.xml</module>
     <module>../finance_recorder_rest/pom.xml</module>
   </modules>
 
