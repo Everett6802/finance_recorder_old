@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Finance Recorder Help</title>
+</head>
+<body>
+  <h3>********** Finance Recorder Usage **********</h3>
+	<strong>--market_mode --stock_mode</strong>
+	<p>
+	  &nbsp;Description: Switch the market/stock mode<br>
+	  &nbsp;Caution: Read parameters from market_stock_switch.conf when NOT set<br>
+	</p>
+	<strong>--silent</strong>
+	<p>
+	  &nbsp;Description: True for disabling STDOUR/STDERR<br>
+	</p>
+	<strong>-h|--help</strong>
+	<p>
+	  &nbsp;Description: The usage<br>
+	</p>
+	<strong>--finance_folderpath</strong>
+	<p>
+	  &nbsp;Description: The finance folder path<br>
+	  &nbsp;Default: /var/tmp/finance<br>
+	</p>
+	<strong>--finance_backup_folderpath</strong>
+	<p>
+	  &nbsp;Description: The finance backup folder path<br>
+	  &nbsp;Default: /tmp/.finance_backup<br>
+	</p>
+	<strong>--finance_restore_folderpath</strong>
+	<p>
+	  &nbsp;Description: The finance restore folder path<br>
+	  &nbsp;Default: /tmp/.finance_backup<br>
+	</p>
+	<strong>-o|--database_operation</strong>
+	<p>
+	  &nbsp;Description: Operate the MySQL<br>
+	  &nbsp;&nbsp;Type: {W(w), B(b), D(d), C(c), R(r), E(e)<br>
+	  &nbsp;&nbsp;&nbsp;W(w): Write into SQL from CSV files<br>
+	  &nbsp;&nbsp;&nbsp;B(b): Backup SQL to CSV files<br>
+	  &nbsp;&nbsp;&nbsp;D(d): delete existing SQL<br>
+	  &nbsp;&nbsp;&nbsp;C(c): Clean-up all existing SQL<br>
+	  &nbsp;&nbsp;&nbsp;R(r): Restore SQL from CSV file<br>
+	  &nbsp;&nbsp;&nbsp;E(e): check SQL Exist<br>
+	  &nbsp;Caution:<br>
+	  &nbsp;&nbsp;The R(r) attribute is ignored if W(w) set<br>
+	  &nbsp;&nbsp;The D(d) attribute is ignored if C(c) set<br>
+	  &nbsp;&nbsp;The C(c) attribute is enabled if R(r) set<br>
+	</p>
+	<strong>--set_operation_non_stop</strong>
+	<p>
+	  &nbsp;Description: Keep running or stop while accessing data and error occurs<br>
+	  &nbsp;Default: True<br>
+	</p>
+	<strong>--csv_remote_server_ip</strong>
+	<p>
+	  &nbsp;Description: The IP of the server where CSV files are stored<br>
+	  &nbsp;Caution: Only takes effect for Write/Restore operation<br>
+	  &nbsp;&nbsp;Type: TRUE/True/true FALSE/False/false<br>
+	  &nbsp;&nbsp;TRUE/True/true: Keep running while accessing data and error occurs<br>
+	  &nbsp;&nbsp;FALSE/False/false: Stop while accessing data and error occurs<br>
+	</p>
+	<strong>--backup_list</strong>
+	<p>
+	  &nbsp;Description: List database backup folder<br>
+	</p>
+	<strong>--restore_list</strong>
+	<p>
+	  &nbsp;Description: List database restore folder<br>
+	</p>
+	<strong>--method_from_all_default_file</strong>
+	<p>
+	  &nbsp;Description: The all finance method in full time range from file: stock_all.conf<br>
+	  &nbsp;Caution: method is ignored when set<br>
+	</p>
+	<strong>--method_from_file</strong>
+	<p>
+	  &nbsp;Description: The finance method from file<br>
+	  &nbsp;Caution: method is ignored when set<br>
+	</p>
+	<strong>-m|--method</strong>
+	<p>
+	  &nbsp;Description: Data method<br>
+	  &nbsp;Caution: Ignored when --method_from_file/--method_from_all_default_file set<br>
+	  &nbsp;&nbsp;Format 1: Method (ex. 1,3,5)<br>
+	  &nbsp;&nbsp;Format 2: Method range (ex. 2-6)<br>
+	  &nbsp;&nbsp;Format 3: Method/Method range hybrid (ex. 1,3-4,6)<br>
+	  &nbsp;&nbsp;8: 個股集保戶股權分散表<br>
+	  &nbsp;&nbsp;9: 資產負債表<br>
+	  &nbsp;&nbsp;10: 損益表<br>
+	  &nbsp;&nbsp;11: 現金流量表<br>
+	  &nbsp;&nbsp;12: 股東權益變動表<br>
+	  &nbsp;&nbsp;13: 個股日股價及成交量<br>
+	  &nbsp;&nbsp;14: 三大法人個股買賣超日報<br>
+	</p>
+	<strong>-t|--time_range</strong>
+	<p>
+	  &nbsp;Description: The time range of the SQL<br>
+	  &nbsp;Default: full range in SQL<br>
+	  &nbsp;Caution: Only take effect for Backup operation<br>
+	  &nbsp;&nbsp;Format 1 (start_time): 2015-09<br>
+	  &nbsp;&nbsp;Format 1 (,end_time): ,2015-09<br>
+	  &nbsp;&nbsp;Format 2 (start_time,end_time): 2015-01,2015-09<br>
+	</p>
+	<strong>--delete_sql_accurancy</strong>
+	<p>
+	  &nbsp;Description: The accurancy of delete SQL<br>
+	  &nbsp;Default: Method only<br>
+	  &nbsp;Caution: Only take effect for Delete operation<br>
+	  &nbsp;&nbsp;Format 1 Method Only: 0<br>
+	  &nbsp;&nbsp;Format 2 Company Only: 1<br>
+	  &nbsp;&nbsp;Format 3 Method and Company: 2<br>
+	</p>
+	<strong>--multi_thread</strong>
+	<p>
+	  &nbsp;Description: Execute operations by using multiple threads<br>
+	  &nbsp;Caution: Only take effect for Write operation<br>
+	</p>
+	<strong>--company_from_file</strong>
+	<p>
+	  &nbsp;Description: The company code number from file<br>
+	  &nbsp;Default: All company code numbers<br>
+	  &nbsp;Caution: company is ignored when set<br>
+	</p>
+	<strong>-c|--company</strong>
+	<p>
+	  &nbsp;Description: The list of the company code number<br>
+	  &nbsp;Default: All company code numbers<br>
+	  &nbsp;Caution: Only work when company_from_file is NOT set<br>
+	  &nbsp;&nbsp;Format 1 Company code number: 2347<br>
+	  &nbsp;&nbsp;Format 2 Company code number range: 2100-2200<br>
+	  &nbsp;&nbsp;Format 3 Company group number: [Gg]12<br>
+	  &nbsp;&nbsp;Format 4 Company code number/number range/group hybrid: 2347,2100-2200,G12,2362,g2,1500-1510<br>
+	</p>
+	<strong>--compare_company</strong>
+	<p>
+	  &nbsp;Description: Compare the table of the company profile<br>
+	  &nbsp;Caution: Exit after comparing the company profile<br>
+	</p>
+	-<strong>-renew_company</strong>
+	<p>
+	  &nbsp;Description: Compare the table of the company profile and Renew it if necessary<br>
+	  &nbsp;Caution: The old companies are removed and the new ones are added after renewing. Exit after renewing the company profile<br>
+	</p>
+	<strong>--company_profile_filepath</strong>
+	<p>
+	  &nbsp;Description: The company profile filepath<br>
+	  &nbsp;Default: /opt/finance/finance_scrapy/conf<br>
+	</p>
+	<strong>--compare_statement</strong>
+	<p>
+	  &nbsp;Description: Compare the table of the statement profile<br>
+	  &nbsp;Caution: Exit after comparing the statement<br>
+	</p>
+	<strong>--renew_statement</strong>
+	<p>
+	  &nbsp;Description: Compare the table of the statement profile and Renew it if necessary<br>
+	  &nbsp;Caution: All data in the database are cleaned-up after renewing. Exit after renewing the company profile<br>
+	</p>
+	<strong>--statement_profile_filepath</strong>
+	<p>
+	  &nbsp;Description: The statement profile filepath<br>
+	  &nbsp;Default: /opt/finance/finance_scrapy/conf<br>
+    </p>
+</body>
+</html>

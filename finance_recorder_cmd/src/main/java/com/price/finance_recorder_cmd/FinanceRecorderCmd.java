@@ -1,5 +1,8 @@
 package com.price.finance_recorder_cmd;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import com.price.finance_recorder_lib.FinanceRecorder;
@@ -135,138 +138,22 @@ public class FinanceRecorderCmd
 	
 	private static void show_usage_and_exit()
 	{
-		PRINT_STDOUT("====================== Usage ======================\n");
-		PRINT_STDOUT(String.format(
-				"--market_mode --stock_mode\nDescription: Switch the market/stock mode\nCaution: Read parameters from %s when NOT set\n",
-				lib_const(DefaultConstType.DefaultConstType_MARKET_STOCK_SWITCH_CONF_FILENAME)));
-		PRINT_STDOUT("--silent\nDescription: True for disabling STDOUR/STDERR\n");
-		PRINT_STDOUT("-h|--help\nDescription: The usage\n");
-		PRINT_STDOUT(String.format("--finance_folderpath\nDescription: The finance folder path\nDefault: %s\n",
-				lib_const(DefaultConstType.DefaultConstType_CSV_ROOT_FOLDERPATH)));
-		PRINT_STDOUT(
-				String.format("--finance_backup_folderpath\nDescription: The finance backup folder path\nDefault: %s\n",
-						lib_const(DefaultConstType.DefaultConstType_CSV_BACKUP_FOLDERPATH)));
-		PRINT_STDOUT(String.format(
-				"--finance_restore_folderpath\nDescription: The finance restore folder path\nDefault: %s\n",
-				lib_const(DefaultConstType.DefaultConstType_CSV_RESTORE_FOLDERPATH)));
-		// System.out.println("--finance_backup_foldername\nDescription: Select
-		// an folder under the finance backup root folder\nDefault:
-		// Auto-generate the folder from the current time\nCaution: Only take
-		// effect for Database Operation: B(backup)");
-		// System.out.println("--finance_restore_foldername\nDescription: Select
-		// an folder under the finance restore root folder\nDefault: The latest
-		// operation folder\nCaution: Only take effect for Database Operation:
-		// R(restore)");
-		// System.out.println(" Format: 160313060053");
-		// System.out.println("--operation_latest_folder\nDescription: Select
-		// the latest operation folder from the specfic finance root
-		// folder\nCaution: Only take effect for Database Operation:
-		// B(backup),R(restore)");
-		// PRINT_STDOUT(String.format("--show_finance_backup_list\nDescription:
-		// Show backup subfolder name list in a specific folder\nDefault folder:
-		// %s\n",
-		// lib_const(DefaultConstType.DefaultConstType_CSV_BACKUP_FOLDERPATH)));
-		// PRINT_STDOUT(String.format("--show_finance_restore_list\nDescription:
-		// Show restore subfolder name list in a specific folder\nDefault
-		// folder: %s\n",
-		// lib_const(DefaultConstType.DefaultConstType_CSV_RESTORE_FOLDERPATH)));
-		PRINT_STDOUT("-o|--database_operation\nDescription: Operate the MySQL\n");
-		PRINT_STDOUT("  Type: {W(w), B(b), D(d), C(c), R(r), E(e)\n");
-		PRINT_STDOUT("  W(w): Write into SQL from CSV files\n");
-		PRINT_STDOUT("  B(b): Backup SQL to CSV files\n");
-		PRINT_STDOUT("  D(d): delete existing SQL\n");
-		PRINT_STDOUT("  C(c): Clean-up all existing SQL\n");
-		PRINT_STDOUT("  R(r): Restore SQL from CSV file\n");
-		PRINT_STDOUT("  E(e): check SQL Exist\n");
-		PRINT_STDOUT("Caution:\n");
-		PRINT_STDOUT("  The R(r) attribute is ignored if W(w) set\n");
-		PRINT_STDOUT("  The D(d) attribute is ignored if C(c) set\n");
-		PRINT_STDOUT("  The C(c) attribute is enabled if R(r) set\n");
-		PRINT_STDOUT(
-				"--set_operation_non_stop\nDescription: Keep running or stop while accessing data and error occurs\nDefault: True\n");
-		PRINT_STDOUT(
-				"--csv_remote_server_ip\nDescription: The IP of the server where CSV files are stored\nCaution: Only takes effect for Write/Restore operation\n");
-		PRINT_STDOUT("  Type: TRUE/True/true FALSE/False/false\n");
-		PRINT_STDOUT("  TRUE/True/true: Keep running while accessing data and error occurs\n");
-		PRINT_STDOUT("  FALSE/False/false: Stop while accessing data and error occurs\n");
-		PRINT_STDOUT("--backup_list\nDescription: List database backup folder\n");
-		PRINT_STDOUT("--restore_list\nDescription: List database restore folder\n");
-		PRINT_STDOUT(
-				String.format(String
-						.format("--method_from_all_default_file\nDescription: The all finance method in full time range from file: %s\nCaution: method is ignored when set\n",
-								(is_market_mode()
-										? lib_const(DefaultConstType.DefaultConstType_MARKET_ALL_CONFIG_FILENAME)
-										: lib_const(DefaultConstType.DefaultConstType_STOCK_ALL_CONFIG_FILENAME)))));
-		PRINT_STDOUT(
-				String.format(String
-						.format("--method_from_file\nDescription: The finance method from file\nCaution: method is ignored when set\n",
-								(is_market_mode()
-										? lib_const(DefaultConstType.DefaultConstType_MARKET_ALL_CONFIG_FILENAME)
-										: lib_const(DefaultConstType.DefaultConstType_STOCK_ALL_CONFIG_FILENAME)))));
-		PRINT_STDOUT(
-				"-m|--method\nDescription: Data method\nCaution: Ignored when --method_from_file/--method_from_all_default_file set\n");
-		PRINT_STDOUT("  Format 1: Method (ex. 1,3,5)\n");
-		PRINT_STDOUT("  Format 2: Method range (ex. 2-6)\n");
-		PRINT_STDOUT("  Format 3: Method/Method range hybrid (ex. 1,3-4,6)\n");
-		ArrayList<Integer> all_method_index_list = new ArrayList<Integer>();
-		ArrayList<String> all_method_description_list = new ArrayList<String>();
-		FinanceRecorder.get_all_method_index_list(all_method_index_list);
-		FinanceRecorder.get_all_method_description_list(all_method_description_list);
-		assert all_method_index_list.size() == all_method_description_list
-				.size() : "The dimensions of all method index/description are NOT identical";
-		for (int i = 0; i < all_method_index_list.size(); i++)
-			PRINT_STDOUT(String.format("  %d: %s\n", all_method_index_list.get(i), all_method_description_list.get(i)));
-		PRINT_STDOUT(
-				"-t|--time_range\nDescription: The time range of the SQL\nDefault: full range in SQL\nCaution: Only take effect for Backup operation\n");
-		PRINT_STDOUT("  Format 1 (start_time): 2015-09\n");
-		PRINT_STDOUT("  Format 1 (,end_time): ,2015-09\n");
-		PRINT_STDOUT("  Format 2 (start_time,end_time): 2015-01,2015-09\n");
-		if (is_stock_mode())
+		try
 		{
-			PRINT_STDOUT(
-					"--delete_sql_accurancy\nDescription: The accurancy of delete SQL\nDefault: Method only\nCaution: Only take effect for Delete operation\n");
-			PRINT_STDOUT("  Format 1 Method Only: 0\n");
-			PRINT_STDOUT("  Format 2 Company Only: 1\n");
-			PRINT_STDOUT("  Format 3 Method and Company: 2\n");
-			PRINT_STDOUT(
-					"--multi_thread\nDescription: Execute operations by using multiple threads\nCaution: Only take effect for Write operation\n");
-			PRINT_STDOUT(
-					"--company_from_file\nDescription: The company code number from file\nDefault: All company code nubmers\nCaution: company is ignored when set\n");
-			PRINT_STDOUT(
-					"-c|--company\nDescription: The list of the company code number\nDefault: All company code nubmers\nCaution: Only work when company_from_file is NOT set\n");
-			PRINT_STDOUT("  Format 1 Company code number: 2347\n");
-			PRINT_STDOUT("  Format 2 Company code number range: 2100-2200\n");
-			PRINT_STDOUT("  Format 3 Company group number: [Gg]12\n");
-			PRINT_STDOUT(
-					"  Format 4 Company code number/number range/group hybrid: 2347,2100-2200,G12,2362,g2,1500-1510\n");
-			PRINT_STDOUT(
-					"--compare_company\nDescription: Compare the table of the company profile\nCaution: Exit after comparing the company profile\n");
-			PRINT_STDOUT(
-					"--renew_company\nDescription: Compare the table of the company profile and Renew it if necessary\nCaution: The old companies are removed and the new ones are added after renewing. Exit after renewing the company profile\n");
-			PRINT_STDOUT(String.format(
-					"--company_profile_filepath\nDescription: The company profile filepath\nDefault: %s\n",
-					lib_const(DefaultConstType.DefaultConstType_DEFAULT_COMPANY_PROFILE_CONF_FOLDERPATH)));
-			PRINT_STDOUT(
-					"--compare_statement\nDescription: Compare the table of the statement profile\nCaution: Exit after comparing the statement\n");
-			PRINT_STDOUT(
-					"--renew_statement\nDescription: Compare the table of the statement profile and Renew it if necessary\nCaution: All data in the database are cleaned-up after renewing. Exit after renewing the company profile\n");
-			// System.out.println("--statement_source\nDescription: Statement
-			// Data source type");
-			// System.out.println(" Format 1: Statement type (ex. 0,2)");
-			// System.out.println(" Format 2: Statement type range (ex. 1-3)");
-			// System.out.println(" Format 3: Statement type/type range hybrid
-			// (ex. 0,2-3)");
-			// LinkedList<Integer> whole_stock_statement_method_index_list =
-			// FinanceRecorderCmnDef.get_all_stock_statement_method_index_list();
-			// for (Integer index : whole_stock_statement_method_index_list)
-			// System.out.printf(" %d: %s\n", index +
-			// FinanceRecorderCmnDef.FINANCE_DATA_SOURCE_STOCK_STATMENT_START,
-			// FinanceRecorderCmnDef.FINANCE_DATA_DESCRIPTION_LIST[index]);
-			PRINT_STDOUT(String.format(
-					"--statement_profile_filepath\nDescription: The statement profile filepath\nDefault: %s\n",
-					lib_const(DefaultConstType.DefaultConstType_DEFAULT_STATEMENT_PROFILE_CONF_FOLDERPATH)));
+			BufferedReader br = new BufferedReader(
+					new InputStreamReader(FinanceRecorder.class.getClassLoader().getResourceAsStream("help.txt")));
+			String line = null;
+			while ((line = br.readLine()) != null)
+			{
+				PRINT_STDOUT(line);
+				PRINT_STDOUT("\n");
+			}
+		} catch (IOException e)
+		{
+			String err = String.format("Error occur while reading the data, due to: %s", e.toString());
+			PRINT_STDERR(err);
 		}
-		PRINT_STDOUT("===================================================\n");
+		
 		System.exit(0);
 	}
 	

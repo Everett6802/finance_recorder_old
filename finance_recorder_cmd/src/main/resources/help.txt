@@ -1,0 +1,110 @@
+====================== Usage ======================
+--market_mode --stock_mode
+Description: Switch the market/stock mode
+Caution: Read parameters from market_stock_switch.conf when NOT set
+--silent
+Description: True for disabling STDOUR/STDERR
+-h|--help
+Description: The usage
+--finance_folderpath
+Description: The finance folder path
+Default: /var/tmp/finance
+--finance_backup_folderpath
+Description: The finance backup folder path
+Default: /tmp/.finance_backup
+--finance_restore_folderpath
+Description: The finance restore folder path
+Default: /tmp/.finance_backup
+-o|--database_operation
+Description: Operate the MySQL
+  Type: {W(w), B(b), D(d), C(c), R(r), E(e)
+  W(w): Write into SQL from CSV files
+  B(b): Backup SQL to CSV files
+  D(d): delete existing SQL
+  C(c): Clean-up all existing SQL
+  R(r): Restore SQL from CSV file
+  E(e): check SQL Exist
+Caution:
+  The R(r) attribute is ignored if W(w) set
+  The D(d) attribute is ignored if C(c) set
+  The C(c) attribute is enabled if R(r) set
+--set_operation_non_stop
+Description: Keep running or stop while accessing data and error occurs
+Default: True
+--csv_remote_server_ip
+Description: The IP of the server where CSV files are stored
+Caution: Only takes effect for Write/Restore operation
+  Type: TRUE/True/true FALSE/False/false
+  TRUE/True/true: Keep running while accessing data and error occurs
+  FALSE/False/false: Stop while accessing data and error occurs
+--backup_list
+Description: List database backup folder
+--restore_list
+Description: List database restore folder
+--method_from_all_default_file
+Description: The all finance method in full time range from file: stock_all.conf
+Caution: method is ignored when set
+--method_from_file
+Description: The finance method from file
+Caution: method is ignored when set
+-m|--method
+Description: Data method
+Caution: Ignored when --method_from_file/--method_from_all_default_file set
+  Format 1: Method (ex. 1,3,5)
+  Format 2: Method range (ex. 2-6)
+  Format 3: Method/Method range hybrid (ex. 1,3-4,6)
+  8: 個股集保戶股權分散表
+  9: 資產負債表
+  10: 損益表
+  11: 現金流量表
+  12: 股東權益變動表
+  13: 個股日股價及成交量
+  14: 三大法人個股買賣超日報
+-t|--time_range
+Description: The time range of the SQL
+Default: full range in SQL
+Caution: Only take effect for Backup operation
+  Format 1 (start_time): 2015-09
+  Format 1 (,end_time): ,2015-09
+  Format 2 (start_time,end_time): 2015-01,2015-09
+--delete_sql_accurancy
+Description: The accurancy of delete SQL
+Default: Method only
+Caution: Only take effect for Delete operation
+  Format 1 Method Only: 0
+  Format 2 Company Only: 1
+  Format 3 Method and Company: 2
+--multi_thread
+Description: Execute operations by using multiple threads
+Caution: Only take effect for Write operation
+--company_from_file
+Description: The company code number from file
+Default: All company code nubmers
+Caution: company is ignored when set
+-c|--company
+Description: The list of the company code number
+Default: All company code nubmers
+Caution: Only work when company_from_file is NOT set
+  Format 1 Company code number: 2347
+  Format 2 Company code number range: 2100-2200
+  Format 3 Company group number: [Gg]12
+  Format 4 Company code number/number range/group hybrid: 2347,2100-2200,G12,2362,g2,1500-1510
+--compare_company
+Description: Compare the table of the company profile
+Caution: Exit after comparing the company profile
+--renew_company
+Description: Compare the table of the company profile and Renew it if necessary
+Caution: The old companies are removed and the new ones are added after renewing. Exit after renewing the company profile
+--company_profile_filepath
+Description: The company profile filepath
+Default: /opt/finance/finance_scrapy/conf
+--compare_statement
+Description: Compare the table of the statement profile
+Caution: Exit after comparing the statement
+--renew_statement
+Description: Compare the table of the statement profile and Renew it if necessary
+Caution: All data in the database are cleaned-up after renewing. Exit after renewing the company profile
+--statement_profile_filepath
+Description: The statement profile filepath
+Default: /opt/finance/finance_scrapy/conf
+===================================================
