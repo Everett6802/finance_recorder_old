@@ -148,7 +148,8 @@ public class FinanceRecorderCmd
 				PRINT_STDOUT(line);
 				PRINT_STDOUT("\n");
 			}
-		} catch (IOException e)
+		}
+		catch (IOException e)
 		{
 			String err = String.format("Error occur while reading the data, due to: %s", e.toString());
 			PRINT_STDERR(err);
@@ -164,19 +165,22 @@ public class FinanceRecorderCmd
 		if (market_mode_param && stock_mode_param)
 		{
 			show_error_and_exit("Fail to determine the finance mode !!! Both Market/Stock mode are set");
-		} else if (market_mode_param)
+		}
+		else if (market_mode_param)
 		{
 			ret = FinanceRecorder.set_market_mode();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				show_error_and_exit(String.format("Fail to set the MARKET mode !!! Due to: %s",
 						FinanceRecorderCmnDef.GetErrorDescription(ret)));
-		} else if (stock_mode_param)
+		}
+		else if (stock_mode_param)
 		{
 			ret = FinanceRecorder.set_stock_mode();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
 				show_error_and_exit(String.format("Fail to set the STOCK mode !!! Due to: %s",
 						FinanceRecorderCmnDef.GetErrorDescription(ret)));
-		} else
+		}
+		else
 		{
 			ret = FinanceRecorder.set_mode_from_cfg();
 			if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -201,70 +205,80 @@ public class FinanceRecorderCmd
 					market_mode_param = true;
 				}
 				index_offset = 1;
-			} else if (option.equals("--stock_mode")) // Need to be parsed first
+			}
+			else if (option.equals("--stock_mode")) // Need to be parsed first
 			{
 				if (early_parse_param)
 				{
 					stock_mode_param = true;
 				}
 				index_offset = 1;
-			} else if (option.equals("--silent"))
+			}
+			else if (option.equals("--silent"))
 			{
 				if (early_parse_param)
 				{
 					show_console = false;
 				}
 				index_offset = 1;
-			} else if (option.equals("-h") || option.equals("--help"))
+			}
+			else if (option.equals("-h") || option.equals("--help"))
 			{
 				if (!early_parse_param)
 				{
 					help_param = true;
 				}
 				index_offset = 1;
-			} else if (option.equals("--company_profile_filepath"))
+			}
+			else if (option.equals("--company_profile_filepath"))
 			{
 				if (!early_parse_param)
 				{
 					company_profile_filepath_param = args[index + 1];
 				}
 				index_offset = 2;
-			} else if (option.equals("--compare_company"))
+			}
+			else if (option.equals("--compare_company"))
 			{
 				if (!early_parse_param)
 				{
 					compare_company_param = true;
 				}
 				index_offset = 1;
-			} else if (option.equals("--renew_company"))
+			}
+			else if (option.equals("--renew_company"))
 			{
 				if (!early_parse_param)
 				{
 					renew_company_param = true;
 				}
 				index_offset = 1;
-			} else if (option.equals("--statement_profile_filepath"))
+			}
+			else if (option.equals("--statement_profile_filepath"))
 			{
 				if (!early_parse_param)
 				{
 					statement_profile_filepath_param = args[index + 1];
 				}
 				index_offset = 2;
-			} else if (option.equals("--compare_statement"))
+			}
+			else if (option.equals("--compare_statement"))
 			{
 				if (!early_parse_param)
 				{
 					compare_statement_param = true;
 				}
 				index_offset = 1;
-			} else if (option.equals("--renew_statement"))
+			}
+			else if (option.equals("--renew_statement"))
 			{
 				if (!early_parse_param)
 				{
 					renew_statement_param = true;
 				}
 				index_offset = 1;
-			} else if (option.equals("--finance_folderpath"))
+			}
+			else if (option.equals("--finance_folderpath"))
 			{
 				if (!early_parse_param)
 				{
@@ -273,7 +287,8 @@ public class FinanceRecorderCmd
 					finance_folderpath_param = args[index + 1];
 				}
 				index_offset = 2;
-			} else if (option.equals("--finance_backup_folderpath"))
+			}
+			else if (option.equals("--finance_backup_folderpath"))
 			{
 				if (!early_parse_param)
 				{
@@ -282,7 +297,8 @@ public class FinanceRecorderCmd
 					finance_backup_folderpath_param = args[index + 1];
 				}
 				index_offset = 2;
-			} else if (option.equals("--finance_restore_folderpath"))
+			}
+			else if (option.equals("--finance_restore_folderpath"))
 			{
 				if (!early_parse_param)
 				{
@@ -326,7 +342,8 @@ public class FinanceRecorderCmd
 						delete_sql_accurancy_param = args[index + 1];
 				}
 				index_offset = 2;
-			} else if (option.equals("--multi_thread"))
+			}
+			else if (option.equals("--multi_thread"))
 			{
 				if (!early_parse_param)
 				{
@@ -361,7 +378,8 @@ public class FinanceRecorderCmd
 					set_operation_non_stop_param = args[index + 1];
 				}
 				index_offset = 2;
-			} else if (option.equals("-o") || option.equals("--operation"))
+			}
+			else if (option.equals("-o") || option.equals("--operation"))
 			{
 				if (!early_parse_param)
 				{
@@ -370,7 +388,8 @@ public class FinanceRecorderCmd
 					database_operation_param = args[index + 1];
 				}
 				index_offset = 2;
-			} else if (option.equals("--method_from_file"))
+			}
+			else if (option.equals("--method_from_file"))
 			{
 				if (!early_parse_param)
 				{
@@ -379,7 +398,8 @@ public class FinanceRecorderCmd
 					method_from_file_param = args[index + 1];
 				}
 				index_offset = 2;
-			} else if (option.equals("-m") || option.equals("--method"))
+			}
+			else if (option.equals("-m") || option.equals("--method"))
 			{
 				if (!early_parse_param)
 				{
@@ -388,7 +408,8 @@ public class FinanceRecorderCmd
 					method_param = args[index + 1];
 				}
 				index_offset = 2;
-			} else if (option.equals("-t") || option.equals("--time_range"))
+			}
+			else if (option.equals("-t") || option.equals("--time_range"))
 			{
 				if (!early_parse_param)
 				{
@@ -397,7 +418,8 @@ public class FinanceRecorderCmd
 					time_range_param = args[index + 1];
 				}
 				index_offset = 2;
-			} else if (option.equals("--company_from_file"))
+			}
+			else if (option.equals("--company_from_file"))
 			{
 				if (!early_parse_param)
 				{
@@ -409,7 +431,8 @@ public class FinanceRecorderCmd
 						company_from_file_param = args[index + 1];
 				}
 				index_offset = 2;
-			} else if (option.equals("-c") || option.equals("--company"))
+			}
+			else if (option.equals("-c") || option.equals("--company"))
 			{
 				if (!early_parse_param)
 				{
@@ -421,7 +444,8 @@ public class FinanceRecorderCmd
 						company_param = args[index + 1];
 				}
 				index_offset = 2;
-			} else
+			}
+			else
 			{
 				show_error_and_exit(String.format("Unknown argument: %s", option));
 			}
@@ -473,11 +497,13 @@ public class FinanceRecorderCmd
 					|| set_operation_non_stop_param.equals("true"))
 			{
 				operation_non_stop = true;
-			} else if (set_operation_non_stop_param.equals("FALSE") || set_operation_non_stop_param.equals("False")
+			}
+			else if (set_operation_non_stop_param.equals("FALSE") || set_operation_non_stop_param.equals("False")
 					|| set_operation_non_stop_param.equals("false"))
 			{
 				operation_non_stop = false;
-			} else
+			}
+			else
 			{
 				show_error_and_exit(String.format("Unknown value of the set_operation_non_stop attribute: %d",
 						set_operation_non_stop_param));
@@ -530,13 +556,15 @@ public class FinanceRecorderCmd
 				{
 					delete_sql_accurancy_type = DeleteSQLAccurancyType
 							.valueOf(Integer.valueOf(delete_sql_accurancy_param));
-				} catch (Exception e)
+				}
+				catch (Exception e)
 				{
 				}
 				if (delete_sql_accurancy_type == null)
 					throw new IllegalStateException(
 							String.format("Unknown delete sql accurancy type: %s", delete_sql_accurancy_param));
-			} else
+			}
+			else
 			{
 				delete_sql_accurancy_param = null;
 				PRINT_STDOUT(
@@ -612,7 +640,8 @@ public class FinanceRecorderCmd
 				delete_sql_accurancy_param = null;
 				PRINT_STDOUT("WARNING: The 'delete_sql_accurancy' argument is ignored since it's Market mode");
 			}
-		} else
+		}
+		else
 		{
 			if (renew_company_param && !compare_company_param)
 			{
@@ -630,7 +659,8 @@ public class FinanceRecorderCmd
 				// if (company_profile_filepath_param == null)
 				// company_profile_filepath_param =
 				// FinanceRecorderCmnDef.DEFAULT_COMPANY_PROFILE_CONF_FOLDERPATH;
-			} else
+			}
+			else
 			{
 				if (company_profile_filepath_param != null)
 				{
@@ -655,7 +685,8 @@ public class FinanceRecorderCmd
 				// if (statement_profile_filepath_param == null)
 				// statement_profile_filepath_param =
 				// FinanceRecorderCmnDef.DEFAULT_STATEMENT_PROFILE_CONF_FOLDERPATH;
-			} else
+			}
+			else
 			{
 				if (statement_profile_filepath_param != null)
 				{
@@ -732,7 +763,8 @@ public class FinanceRecorderCmd
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
 					show_error_and_exit(String.format("Fail to set company from file, due to: %s",
 							FinanceRecorderCmnDef.GetErrorDescription(ret)));
-			} else if (company_param != null)
+			}
+			else if (company_param != null)
 			{
 				ret = FinanceRecorder.set_company(company_param);
 				if (FinanceRecorderCmnDef.CheckFailure(ret))
@@ -841,15 +873,112 @@ public class FinanceRecorderCmd
 				PRINT_STDOUT(String.format("=== There are totally %d tables missing ===\n", not_exist_list.size()));
 				for (String not_found : not_exist_list)
 					PRINT_STDOUT(String.format("%s\n", not_found));
-			} else
+			}
+			else
 			{
 				PRINT_STDOUT("There are NO tables missing");
 			}
 		}
 	}
 	
+	// private static <T> String assemble_list_to_string(List<T> list, String
+	// splitter)
+	// {
+	// String list_string = null;
+	// for (T elem : list)
+	// {
+	// if (list_string == null)
+	// list_string = elem.toString();
+	// else
+	// list_string += (splitter + elem.toString());
+	// }
+	// return list_string;
+	// }
+	
+	public static String execute_shell_ommand(String command)
+	{
+		StringBuffer output = new StringBuffer();
+		Process p;
+		try
+		{
+			p = Runtime.getRuntime().exec(command);
+			p.waitFor();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			
+			String line = "";
+			while ((line = reader.readLine()) != null)
+			{
+				output.append(line + "\n");
+			}
+			
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		return output.toString();
+	}
+	
+	public static void test_cmd()
+	{
+		
+		String s = null;
+		
+		try
+		{
+			
+			// run the Unix "ps -ef" command
+			// using the Runtime exec method:
+			Process p = Runtime.getRuntime().exec("/home/price/source/finance_scrapy/finance_scrapy.py --help");
+			
+			BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+			
+			// read the output from the command
+			System.out.println("Here is the standard output of the command:\n");
+			while ((s = stdInput.readLine()) != null)
+			{
+				System.out.println(s);
+			}
+			
+			// read any errors from the attempted command
+			System.out.println("Here is the standard error of the command (if any):\n");
+			while ((s = stdError.readLine()) != null)
+			{
+				System.out.println(s);
+			}
+			
+			System.exit(0);
+		}
+		catch (IOException e)
+		{
+			System.out.println("exception happened - here's what I know: ");
+			e.printStackTrace();
+			System.exit(-1);
+		}
+	}
+	
 	public static void main(String args[])
 	{
+		// String output =
+		// execute_shell_ommand("/home/price/source/finance_scrapy/finance_scrapy.py
+		// --help");
+		// System.out.println(output);
+		test_cmd();
+		System.exit(0);
+		// ArrayList<Integer> int_array_list = new ArrayList<Integer>();
+		// int_array_list.add(1);
+		// int_array_list.add(5);
+		// int_array_list.add(9);
+		// System.out.println(assemble_list_to_string(int_array_list, ","));
+		// LinkedList<String> string_array_list = new LinkedList<String>();
+		// string_array_list.add("FUCK");
+		// string_array_list.add("SHIT");
+		// string_array_list.add("DAMN");
+		// System.out.println(assemble_list_to_string(string_array_list, "!"));
+		// System.exit(0);
+		
 		// if (CmnDef.CheckFailure(init_param()))
 		// show_error_and_exit("Fail to initialize the parameters ......");
 		// Early-parse the parameters
