@@ -7,16 +7,14 @@ import javax.ws.rs.ext.Provider;
 import com.price.finance_recorder_rest.common.CmnDef;
 import com.price.finance_recorder_rest.common.ErrorMessage;
 
-
 @Provider
 public class FinanceRecorderGenericExceptionMapper implements ExceptionMapper<Throwable>
 {
 	@Override
 	public Response toResponse(Throwable exception)
 	{
-		ErrorMessage errorMessage = new ErrorMessage(exception.getMessage(), ExceptionType.INTERNAL_SERVER_ERROR.name(),
-				CmnDef.URL_REF);
-		
+		ErrorMessage errorMessage = new ErrorMessage(exception.getMessage(), ExceptionType.INTERNAL_SERVER_ERROR.name(), CmnDef.URL_REF);
+
 		return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(errorMessage).build();
 	}
 }
