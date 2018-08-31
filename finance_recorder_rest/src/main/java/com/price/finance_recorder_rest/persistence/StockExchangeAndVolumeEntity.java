@@ -24,70 +24,70 @@ public class StockExchangeAndVolumeEntity implements Serializable
 
 //	@Temporal(TemporalType.DATE)
 	@Column(name = "trade_date", updatable = false, nullable = false)
-	private Date TradeDate; // 日期
+	private Date tradeDate; // 日期
 
 	@Column(name = "trade_volume", nullable = false)
-	private long TradeVolume; // 成交股數
+	private long tradeVolume; // 成交股數
 
 	@Column(name = "turnover_in_value", nullable = false)
-	private long TurnoverInValue; // 成交金額
+	private long turnoverInValue; // 成交金額
 
 	@Column(name = "number_of_transactions", nullable = false)
-	private int NumberOfTransactions; // 成交筆數
+	private int numberOfTransactions; // 成交筆數
 
 	@Column(name = "weighted_stock_index", nullable = false)
-	private float WeightedStockIndex; // 發行量加權股價指數
+	private float weightedStockIndex; // 發行量加權股價指數
 
 	@Column(name = "net_change", nullable = false)
-	private float NetChange; // 漲跌點數
+	private float netChange; // 漲跌點數
 
 	public Date getTradeDate()
 	{
-		return TradeDate;
+		return tradeDate;
 	}
-	public void setTradeDate(Date tradeDate)
+	public void setTradeDate(Date TradeDate)
 	{
-		TradeDate = tradeDate;
+		tradeDate = TradeDate;
 	}
 	public long getTradeVolume()
 	{
-		return TradeVolume;
+		return tradeVolume;
 	}
-	public void setTradeVolume(long tradeVolume)
+	public void setTradeVolume(long TradeVolume)
 	{
-		TradeVolume = tradeVolume;
+		tradeVolume = TradeVolume;
 	}
 	public long getTurnoverInValue()
 	{
-		return TurnoverInValue;
+		return turnoverInValue;
 	}
-	public void setTurnoverInValue(long turnoverInValue)
+	public void setTurnoverInValue(long TurnoverInValue)
 	{
-		TurnoverInValue = turnoverInValue;
+		turnoverInValue = TurnoverInValue;
 	}
 	public int getNumberOfTransactions()
 	{
-		return NumberOfTransactions;
+		return numberOfTransactions;
 	}
-	public void setNumberOfTransactions(int numberOfTransactions)
+	public void setNumberOfTransactions(int NumberOfTransactions)
 	{
-		NumberOfTransactions = numberOfTransactions;
+		numberOfTransactions = NumberOfTransactions;
 	}
 	public float getWeightedStockIndex()
 	{
-		return WeightedStockIndex;
+		return weightedStockIndex;
 	}
-	public void setWeightedStockIndex(float weightedStockIndex)
+	public void setWeightedStockIndex(float WeightedStockIndex)
 	{
-		WeightedStockIndex = weightedStockIndex;
+		weightedStockIndex = WeightedStockIndex;
 	}
 	public float getNetChange()
 	{
-		return NetChange;
+		return netChange;
 	}
-	public void setNetChange(float netChange)
+	public void setNetChange(float NetChange)
 	{
-		this.NetChange = netChange;
+		this.netChange = NetChange;
 	}
 
 }

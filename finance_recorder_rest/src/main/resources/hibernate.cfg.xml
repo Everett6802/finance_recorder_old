@@ -16,5 +16,6 @@
   <!-- Create if not exist, Update if exist -->
   <property name="hibernate.hbm2ddl.auto">update</property>
   <mapping class="com.price.finance_recorder_rest.persistence.StockExchangeAndVolumeEntity"/>
+  <mapping class="com.price.finance_recorder_rest.persistence.OptionPutCallRatioEntity"/>
  </session-factory>
 </hibernate-configuration>

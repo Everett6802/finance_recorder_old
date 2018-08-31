@@ -91,6 +91,8 @@ public class CmnDef
 	public static final String FINANCE_DATASET_RELATIVE_FOLDERPATH = String.format("source/%s", FINANCE_DATASET_FOLDER_NAME);
 	public static final String COMPANY_PROFILE_CONF_FILENAME = ".company_profile.conf";
 	public static final String COMPANY_GROUP_CONF_FILENAME = ".company_group.conf";
+	public static final int FINANCE_DATA_START_INDEX = 0;
+	public static final int FINANCE_DATA_LIMIT = 50;
 
 	public static final String COMMA_DATA_SPLIT = ",";
 	public static final String SPACE_DATA_SPLIT = " ";
