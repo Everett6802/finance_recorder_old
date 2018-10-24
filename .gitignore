@@ -1,3 +1,6 @@
+# Eclipse project related files. 
+# It's required. Otherwise, the project can NOT be open by Eclipse properly
+
 .classpath
 .project
 .settings/

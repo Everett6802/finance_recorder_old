@@ -45,7 +45,7 @@ public class StockExchangeAndVolumeEntryPoint
 
 	@GET
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-	public List<StockExchangeAndVolumeRsp> read_stock_exchange_and_volume(@DefaultValue("0") @QueryParam("start") int start, @DefaultValue("50") @QueryParam("limit") int limit)
+	public List<StockExchangeAndVolumeGetRsp> read_stock_exchange_and_volume(@DefaultValue("0") @QueryParam("start") int start, @DefaultValue("50") @QueryParam("limit") int limit)
 	{
 		StockExchangeAndVolumeDTO dto = new StockExchangeAndVolumeDTO();
 		dto.setStart(start);
@@ -54,15 +54,15 @@ public class StockExchangeAndVolumeEntryPoint
 		dto.validateRequiredFields();
 
 		StockExchangeAndVolumeService service = new StockExchangeAndVolumeService();
-		List<StockExchangeAndVolumeDTO> dto_list = service.read(start, limit);
+		List<StockExchangeAndVolumeDTO> dto_get_list = service.read(start, limit);
 
-		// Prepare return value
-		List<StockExchangeAndVolumeRsp> returnValue = new ArrayList<StockExchangeAndVolumeRsp>();
-		for (StockExchangeAndVolumeDTO dto : dto_list)
+// Prepare return value
+		List<StockExchangeAndVolumeGetRsp> returnValue = new ArrayList<StockExchangeAndVolumeGetRsp>();
+		for (StockExchangeAndVolumeDTO dto_get : dto_get_list)
 		{
-			StockExchangeAndVolumeRsp rsp = new StockExchangeAndVolumeRsp();
-			BeanUtils.copyProperties(dto, rsp);
-			userModel.setHref("/users/" + userDto.getUserId());
+			StockExchangeAndVolumeGetRsp rsp = new StockExchangeAndVolumeGetRsp();
+			BeanUtils.copyProperties(dto_get, rsp);
+//			rsp.setHref("/users/" + dto.getUserId());
 			returnValue.add(rsp);
 		}
 

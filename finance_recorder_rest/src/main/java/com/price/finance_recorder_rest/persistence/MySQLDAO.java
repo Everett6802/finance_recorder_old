@@ -75,6 +75,27 @@ public class MySQLDAO
 		}
 	}
 
+	private static Object get_entity_class_name(CmnDef.FinanceMethod finance_method)
+	{
+//If you're using the Table annotation you could do something like this:
+		switch (finance_method)
+		{
+		case FinanceMethod_StockExchangeAndVolume :
+		{
+			return StockExchangeAndVolumeEntity.class.getSimpleName();
+		}
+		case FinanceMethod_OptionPutCallRatio :
+		{
+			return OptionPutCallRatioEntity.class.getSimpleName();
+		}
+		default :
+		{
+			String errmsg = String.format("Unknown finance method: %d", finance_method.ordinal());
+			throw new IllegalArgumentException(errmsg);
+		}
+		}
+	}
+
 	public void create(FinanceMethod finance_method, List<String> data_line_list)
 	{
 		Session session = HibernateUtil.openConnection();
@@ -129,7 +150,10 @@ public class MySQLDAO
 //			BeanUtils.copyProperties(userEntity, userDto);
 //			returnValue.add(userDto);
 //		}
-		String hql_cmd = String.format("FROM %s", get_entity_table_name(finance_method));
+//		String hql_cmd = String.format("FROM %s", get_entity_table_name(finance_method));
+
+//In the HQL , you should use the java class name and property name of the mapped @Entity instead of the actual table name and column name 
+		String hql_cmd = String.format("FROM %s", get_entity_class_name(finance_method));
 		Query query = session.createQuery(hql_cmd);
 		query.setFirstResult(start);
 		query.setMaxResults(limit);

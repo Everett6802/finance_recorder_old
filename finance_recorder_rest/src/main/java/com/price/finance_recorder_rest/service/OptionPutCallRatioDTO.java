@@ -8,8 +8,11 @@ import com.price.finance_recorder_rest.exceptions.FinanceRecorderMissingRequired
 public class OptionPutCallRatioDTO implements Serializable
 {
 	private static final long serialVersionUID = -597635324732204033L;
-
-//	private String datasetFolderpath;
+// IN
+	private String datasetFolderpath;
+	private int start;
+	private int limit;
+// OUT
 	private Date tradeDate; // 日期
 	private long putTradeVolume; // 賣權成交量
 	private long callTradeVolume; // 買權成交量
@@ -28,6 +31,38 @@ public class OptionPutCallRatioDTO implements Serializable
 //			throw new MissingRequiredFieldException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
 //		}
 	}
+
+	public String getDatasetFolderpath()
+	{
+		return datasetFolderpath;
+	}
+
+	public void setDatasetFolderpath(String datasetFolderpath)
+	{
+		this.datasetFolderpath = datasetFolderpath;
+	}
+
+	public int getStart()
+	{
+		return start;
+	}
+
+	public void setStart(int start)
+	{
+		this.start = start;
+	}
+
+	public int getLimit()
+	{
+		return limit;
+	}
+
+	public void setLimit(int limit)
+	{
+		this.limit = limit;
+	}
+
+////////////////////////////////////////////////////////////////////////////////////////
 
 	public Date getTradeDate()
 	{
