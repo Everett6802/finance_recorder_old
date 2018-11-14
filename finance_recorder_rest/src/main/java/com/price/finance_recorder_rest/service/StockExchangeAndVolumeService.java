@@ -25,12 +25,12 @@ public class StockExchangeAndVolumeService
 //		}
 //		MySQLDAO dao = new MySQLDAO();
 //		dao.create(CmnDef.FinanceMethod.FinanceMethod_StockExchangeAndVolume, data_line_list);
-		FinanceServiceProxy.csv2sql(CmnDef.FinanceMethod.FinanceMethod_StockExchangeAndVolume, dataset_folderpath, new MySQLDAO());
+		FinanceServiceAdapter.create_table(CmnDef.FinanceMethod.FinanceMethod_StockExchangeAndVolume, dataset_folderpath/*, new MySQLDAO()*/);
 	}
 
 	public List<StockExchangeAndVolumeDTO> read(int start, int limit)
 	{
-		List<?> entity_list = FinanceServiceProxy.from_sql(CmnDef.FinanceMethod.FinanceMethod_StockExchangeAndVolume, start, limit, new MySQLDAO());
+		List<?> entity_list = FinanceServiceAdapter.read_table(CmnDef.FinanceMethod.FinanceMethod_StockExchangeAndVolume, start, limit/*, new MySQLDAO()*/);
 		List<StockExchangeAndVolumeDTO> dto_list = new ArrayList<StockExchangeAndVolumeDTO>();
 		for (Object entity : entity_list)
 		{
@@ -39,5 +39,15 @@ public class StockExchangeAndVolumeService
 			dto_list.add(dto);
 		}
 		return dto_list;
+	}
+
+	public void update(String dataset_folderpath)
+	{
+		FinanceServiceAdapter.update_table(CmnDef.FinanceMethod.FinanceMethod_StockExchangeAndVolume, dataset_folderpath/*, new MySQLDAO()*/);
+	}
+
+	public void delete()
+	{
+		FinanceServiceAdapter.delete_table(CmnDef.FinanceMethod.FinanceMethod_StockExchangeAndVolume/*, new MySQLDAO()*/);
 	}
 }

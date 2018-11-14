@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -260,5 +263,24 @@ public class CmnFunc
 		if (!check_file_exist(path))
 			return create_folder(path);
 		return CmnDef.RET_SUCCESS;
+	}
+
+	static java.util.Date get_date(String date_str) throws ParseException
+	{
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
+		java.util.Date date = formatter.parse(date_str);
+		return date;
+	}
+
+	static java.util.Date get_month_date(String date_str) throws ParseException
+	{
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM"); // your template here
+		java.util.Date date = formatter.parse(date_str);
+		return date;
+	}
+
+	public static long get_date_integer(String date_str) throws ParseException
+	{
+		return get_date(date_str).getTime();
 	}
 }

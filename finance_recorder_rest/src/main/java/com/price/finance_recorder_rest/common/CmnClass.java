@@ -6,6 +6,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 
 public class CmnClass
@@ -62,5 +65,38 @@ public class CmnClass
 				e.printStackTrace();
 			}
 		}
+	}
+
+/*
+As a more efficient solution, you could write a class that presents a reversed view of a List 
+as an Iterable generic. The iterator returned by your class would use the ListIterator of the 
+decorated list to walk over the elements in reverse order.
+ */
+	public static class Reversed<T> implements Iterable<T> 
+	{
+	    private final List<T> original;
+
+	    public Reversed(List<T> original) 
+	    {
+	        this.original = original;
+	    }
+
+		@Override
+	    public Iterator<T> iterator() 
+	    {
+	        final ListIterator<T> i = original.listIterator(original.size());
+
+	        return new Iterator<T>() 
+	        {
+	            public boolean hasNext() { return i.hasPrevious(); }
+	            public T next() { return i.previous(); }
+	            public void remove() { i.remove(); }
+	        };
+	    }
+
+	    public static <T> Reversed<T> reversed(List<T> original) 
+	    {
+	        return new Reversed<T>(original);
+	    }
 	}
 }
