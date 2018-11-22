@@ -10,7 +10,6 @@ import com.price.finance_recorder_rest.common.ErrorMessage;
 @Provider
 public class FinanceRecorderResourceNotFoundExceptionMapper implements ExceptionMapper<FinanceRecorderResourceNotFoundException>
 {
-
 	@Override
 	public Response toResponse(FinanceRecorderResourceNotFoundException exception)
 	{

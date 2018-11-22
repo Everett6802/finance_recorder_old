@@ -14,6 +14,7 @@ import org.hibernate.query.Query; // Hibernate Query (HQL)
 import org.hibernate.query.NativeQuery; // SQL Hibernate Query (HQL)
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.springframework.beans.BeanUtils;
 //import org.hibernate.exception.SQLGrammarException;
 
 import com.price.finance_recorder_rest.common.CmnDef;
@@ -26,12 +27,137 @@ import com.price.finance_recorder_rest.common.CmnFunc;
 // https://stackoverflow.com/questions/420791/what-is-a-good-use-case-for-static-import-of-methods
 import static com.price.finance_recorder_rest.common.CmnClass.Reversed.reversed;
 import com.price.finance_recorder_rest.exceptions.FinanceRecorderResourceNotFoundException;
+import com.price.finance_recorder_rest.service.UserDTO;
 
 //https://docs.jboss.org/hibernate/orm/3.5/reference/zh-CN/html/batch.html
 // Access MySQL through Hibernate API
 public class MySQLDAO
 {
 	private static final String TABLE_TIME_FIELD_NAME = "trade_date"; 
+
+//	public AuthenticationDTO getUserByUserName(String userName) {
+//        AuthenticationDTO userDto = null;
+//
+//        CriteriaBuilder cb = session.getCriteriaBuilder();
+//
+//        //Create Criteria against a particular persistent class
+//        CriteriaQuery<AuthenticationEntity> criteria = cb.createQuery(AuthenticationEntity.class);
+//
+//        //Query roots always reference entitie
+//        Root<AuthenticationEntity> profileRoot = criteria.from(AuthenticationEntity.class);
+//        criteria.select(profileRoot);
+//        criteria.where(cb.equal(profileRoot.get("email"), userName));
+//
+//        // Fetch single result
+//        Query<AuthenticationEntity> query = session.createQuery(criteria);
+//        List<AuthenticationEntity> resultList = query.getResultList();
+//        if (resultList != null && resultList.size() > 0) {
+//            AuthenticationEntity userEntity = resultList.get(0);
+//            userDto = new AuthenticationDTO();
+//            BeanUtils.copyProperties(userEntity, userDto);
+//        }
+//
+//        return userDto;
+//	}
+//
+	public static void create_user(UserDTO dto) 
+	{
+		Session session = HibernateUtil.openConnection();
+		Transaction tx = session.beginTransaction();
+
+        UserEntity entity = new UserEntity();
+        BeanUtils.copyProperties(dto, entity);
+
+        session.save(entity);
+        
+        tx.commit();
+        HibernateUtil.closeConnection(session);
+	}
+//
+//	public AuthenticationDTO getUser(String id) {
+//       CriteriaBuilder cb = session.getCriteriaBuilder();
+//
+//       //Create Criteria against a particular persistent class
+//       CriteriaQuery<AuthenticationEntity> criteria = cb.createQuery(AuthenticationEntity.class);
+//
+//       //Query roots always reference entitie
+//       Root<AuthenticationEntity> profileRoot = criteria.from(AuthenticationEntity.class);
+//       criteria.select(profileRoot);
+//       criteria.where(cb.equal(profileRoot.get("userId"), id));
+//
+//       // Fetch single result
+//       AuthenticationEntity userEntity = session.createQuery(criteria).getSingleResult();
+//       
+//       AuthenticationDTO userDto = new AuthenticationDTO();
+//       BeanUtils.copyProperties(userEntity, userDto);
+//       
+//       return userDto;
+//	}
+//
+//	public List<AuthenticationDTO> getUsers(int start, int limit) {
+//        CriteriaBuilder cb = session.getCriteriaBuilder();
+//
+//        //Create Criteria against a particular persistent class
+//        CriteriaQuery<AuthenticationEntity> criteria = cb.createQuery(AuthenticationEntity.class);
+//
+//        //Query roots always reference entities
+//        Root<AuthenticationEntity> userRoot = criteria.from(AuthenticationEntity.class);
+//        criteria.select(userRoot);
+//
+//        // Fetch results from start to a number of "limit"
+//        List<AuthenticationEntity> searchResults = session.createQuery(criteria).
+//                setFirstResult(start).
+//                setMaxResults(limit).
+//                getResultList();
+// 
+//        List<AuthenticationDTO> returnValue = new ArrayList<AuthenticationDTO>();
+//        for (AuthenticationEntity userEntity : searchResults) {
+//            AuthenticationDTO userDto = new AuthenticationDTO();
+//            BeanUtils.copyProperties(userEntity, userDto);
+//            returnValue.add(userDto);
+//        }
+//
+//        return returnValue;
+//	}
+//
+//    public void updateUser(AuthenticationDTO userProfile) {
+//	    AuthenticationEntity userEntity = new AuthenticationEntity();
+//	    BeanUtils.copyProperties(userProfile, userEntity);
+//	     
+//	    session.beginTransaction();
+//	    session.update(userEntity);
+//	    session.getTransaction().commit();
+//	}
+//
+//	public void deleteUser(AuthenticationDTO userProfile) {
+//        AuthenticationEntity userEntity = new AuthenticationEntity();
+//        BeanUtils.copyProperties(userProfile, userEntity);
+//        
+//        session.beginTransaction();
+//        session.delete(userEntity);
+//        session.getTransaction().commit();
+//	}
+//
+//// For email verification, used for preventing user from login until they verify email
+//
+//	public AuthenticationDTO getUserByEmailToken(String token) {
+//	    CriteriaBuilder cb = session.getCriteriaBuilder();
+////Create Criteria against a particular persistent class
+//	    CriteriaQuery<AuthenticationEntity> criteria = cb.createQuery(AuthenticationEntity.class);
+//
+////Query roots always reference entitie
+//	    Root<AuthenticationEntity> profileRoot = criteria.from(AuthenticationEntity.class);
+//	    criteria.select(profileRoot);
+//	    criteria.where(cb.equal(profileRoot.get("emailVerificationToken"), token));
+//
+//// Fetch single result
+//	    AuthenticationEntity userEntity = session.createQuery(criteria).getSingleResult();
+//	        
+//	    AuthenticationDTO userDto = new AuthenticationDTO();
+//	    BeanUtils.copyProperties(userEntity, userDto);
+//	        
+//	    return userDto;
+//	}	
 
 	private static Object create_entity_object_from_string(CmnDef.FinanceMethod finance_method, String data_line)
 	{
@@ -146,18 +272,18 @@ public class MySQLDAO
 //		CriteriaBuilder cb = session.getCriteriaBuilder();
 //
 //		// Create Criteria against a particular persistent class
-//		CriteriaQuery<UserEntity> criteria = cb.createQuery(UserEntity.class);
+//		CriteriaQuery<AuthenticationEntity> criteria = cb.createQuery(AuthenticationEntity.class);
 //		// Query roots always reference entities
-//		Root<UserEntity> userRoot = criteria.from(UserEntity.class);
+//		Root<AuthenticationEntity> userRoot = criteria.from(AuthenticationEntity.class);
 //		criteria.select(userRoot);
 //
 //		// Fetch results from start to a number of "limit"
-//		List<UserEntity> searchResults = session.createQuery(criteria).setFirstResult(start).setMaxResults(limit).getResultList();
+//		List<AuthenticationEntity> searchResults = session.createQuery(criteria).setFirstResult(start).setMaxResults(limit).getResultList();
 //
-//		List<UserDTO> returnValue = new ArrayList<UserDTO>();
-//		for (UserEntity userEntity : searchResults)
+//		List<AuthenticationDTO> returnValue = new ArrayList<AuthenticationDTO>();
+//		for (AuthenticationEntity userEntity : searchResults)
 //		{
-//			UserDTO userDto = new UserDTO();
+//			AuthenticationDTO userDto = new AuthenticationDTO();
 //			BeanUtils.copyProperties(userEntity, userDto);
 //			returnValue.add(userDto);
 //		}

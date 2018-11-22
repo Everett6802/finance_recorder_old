@@ -2,6 +2,7 @@ package com.price.finance_recorder_rest.exceptions;
 
 public enum ExceptionType
 {
+	AUTHENTICATION_FAILED("Authentication failed"),
 	API_TEST_ERROR("API Test Error"),
 	RESOURCE_NOT_FOUND("Missing Resource File"),
 	MISSING_REQUIRED_FIELD("Missing required field"),
