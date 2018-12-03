@@ -6,6 +6,7 @@ public enum ExceptionType
 	API_TEST_ERROR("API Test Error"),
 	RESOURCE_NOT_FOUND("Missing Resource File"),
 	MISSING_REQUIRED_FIELD("Missing required field"),
+    RECORD_ALREADY_EXISTS("Record already exists"),
 	INTERNAL_SERVER_ERROR("Internal Server Error");
 
 	private String exception_message;

@@ -8,7 +8,7 @@ import com.price.finance_recorder_rest.common.CmnDef;
 import com.price.finance_recorder_rest.common.ErrorMessage;
 
 @Provider
-public class FinanceRecorderGenericExceptionMapper implements ExceptionMapper<Throwable>
+public class GenericExceptionMapper implements ExceptionMapper<Throwable>
 {
 	@Override
 	public Response toResponse(Throwable exception)

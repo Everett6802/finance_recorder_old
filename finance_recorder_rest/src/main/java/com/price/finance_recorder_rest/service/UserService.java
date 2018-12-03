@@ -1,8 +1,17 @@
 package com.price.finance_recorder_rest.service;
 
-import com.price.finance_recorder_rest.exceptions.AuthenticationException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.BeanUtils;
+
+import com.price.finance_recorder_rest.exceptions.CouldNotCreateRecordException;
 import com.price.finance_recorder_rest.exceptions.ExceptionType;
+//import com.price.finance_recorder_rest.common.CmnDef;
+//import com.price.finance_recorder_rest.exceptions.AuthenticationException;
+//import com.price.finance_recorder_rest.exceptions.ExceptionType;
 import com.price.finance_recorder_rest.persistence.MySQLDAO;
+import com.price.finance_recorder_rest.persistence.UserEntity;
 
 public class UserService 
 {
@@ -12,15 +21,12 @@ public class UserService
 //		dto.validateRequiredFields();
 
 // Check if user already exists
-//        UserDTO existingUser = this.getUserByUserName(user.getEmail());
-//        if (existingUser != null) {
-//            throw new CouldNotCreateRecordException(ExceptionType.RECORD_ALREADY_EXISTS.name());
-//        }
-
+		UserEntity entity = MySQLDAO.read_user(dto.getUsername());
+        if (entity != null) 
+            throw new CouldNotCreateRecordException(ExceptionType.RECORD_ALREADY_EXISTS.name());
 // Generate secure public user id 
         String user_id = SecurityUtil.generateUserId(30);
         dto.setUserId(user_id);
-
 // Generate salt 
         String salt = SecurityUtil.getSalt(30);
 // Generate secure password 
@@ -29,9 +35,48 @@ public class UserService
         dto.setEncryptedPassword(encryptedPassword);
 //        user.setEmailVerificationStatus(false);
 //        user.setEmailVerificationToken(SecurityUtil.generateEmailverificationToken(30));
-        MySQLDAO.create_user(dto);
-        return dto;
+        UserDTO dto_rsp = MySQLDAO.create_user(dto);
+        return dto_rsp;
 	}
+
+    public List<UserDTO> read(int start, int limit) 
+    {
+    	List<UserEntity> entity_list = MySQLDAO.read_users(start, limit);
+		List<UserDTO> dto_list = new ArrayList<UserDTO>();
+		for (Object entity : entity_list)
+		{
+			UserDTO dto = new UserDTO();
+			BeanUtils.copyProperties(entity, dto);
+			dto_list.add(dto);
+		}
+		return dto_list;
+    }
+
+    public UserDTO read_by_username(String username) 
+    {
+    	UserEntity entity = MySQLDAO.read_user(username);
+		UserDTO dto = new UserDTO();
+		BeanUtils.copyProperties(entity, dto);
+		return dto;
+    }
+
+	public void update(UserDTO dto)
+	{
+// Generate salt 
+        String salt = SecurityUtil.getSalt(30);
+// Generate secure password 
+        String encryptedPassword = SecurityUtil.generateSecurePassword(dto.getPassword(), salt);
+        dto.setSalt(salt);
+        dto.setEncryptedPassword(encryptedPassword);
+		
+		MySQLDAO.update_user(dto);
+	}
+
+	public void delete(UserDTO dto)
+	{
+		MySQLDAO.delete_user(dto);
+	}
+    
 //	public AuthenticationDTO authenticate(String username, String password) throws AuthenticationException 
 //	{
 //        AuthenticationDTO storedUser = AuthenticationService.getUserByUserName(username); // User name must be unique in our system

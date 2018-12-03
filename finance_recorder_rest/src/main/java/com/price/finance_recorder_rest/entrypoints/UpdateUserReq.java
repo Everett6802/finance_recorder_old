@@ -3,17 +3,10 @@ package com.price.finance_recorder_rest.entrypoints;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class UserReq 
+public class UpdateUserReq 
 {
-	private String username;
 	private String password;
 
-	public String getUsername() {
-		return username;
-	}
-	public void setUsername(String username) {
-		this.username = username;
-	}
 	public String getPassword() {
 		return password;
 	}

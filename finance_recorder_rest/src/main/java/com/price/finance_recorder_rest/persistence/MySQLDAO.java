@@ -26,7 +26,7 @@ import com.price.finance_recorder_rest.common.CmnFunc;
 // That will make it much easier to find where this imported method is coming from.
 // https://stackoverflow.com/questions/420791/what-is-a-good-use-case-for-static-import-of-methods
 import static com.price.finance_recorder_rest.common.CmnClass.Reversed.reversed;
-import com.price.finance_recorder_rest.exceptions.FinanceRecorderResourceNotFoundException;
+import com.price.finance_recorder_rest.exceptions.ResourceNotFoundException;
 import com.price.finance_recorder_rest.service.UserDTO;
 
 //https://docs.jboss.org/hibernate/orm/3.5/reference/zh-CN/html/batch.html
@@ -35,32 +35,32 @@ public class MySQLDAO
 {
 	private static final String TABLE_TIME_FIELD_NAME = "trade_date"; 
 
-//	public AuthenticationDTO getUserByUserName(String userName) {
-//        AuthenticationDTO userDto = null;
+//	public UserDTO getUserByUserName(String userName) {
+//        UserDTO userDto = null;
 //
 //        CriteriaBuilder cb = session.getCriteriaBuilder();
 //
 //        //Create Criteria against a particular persistent class
-//        CriteriaQuery<AuthenticationEntity> criteria = cb.createQuery(AuthenticationEntity.class);
+//        CriteriaQuery<UserEntity> criteria = cb.createQuery(UserEntity.class);
 //
 //        //Query roots always reference entitie
-//        Root<AuthenticationEntity> profileRoot = criteria.from(AuthenticationEntity.class);
+//        Root<UserEntity> profileRoot = criteria.from(UserEntity.class);
 //        criteria.select(profileRoot);
 //        criteria.where(cb.equal(profileRoot.get("email"), userName));
 //
 //        // Fetch single result
-//        Query<AuthenticationEntity> query = session.createQuery(criteria);
-//        List<AuthenticationEntity> resultList = query.getResultList();
+//        Query<UserEntity> query = session.createQuery(criteria);
+//        List<UserEntity> resultList = query.getResultList();
 //        if (resultList != null && resultList.size() > 0) {
-//            AuthenticationEntity userEntity = resultList.get(0);
-//            userDto = new AuthenticationDTO();
+//            UserEntity userEntity = resultList.get(0);
+//            userDto = new UserDTO();
 //            BeanUtils.copyProperties(userEntity, userDto);
 //        }
 //
 //        return userDto;
 //	}
 //
-	public static void create_user(UserDTO dto) 
+	public static UserDTO create_user(UserDTO dto) 
 	{
 		Session session = HibernateUtil.openConnection();
 		Transaction tx = session.beginTransaction();
@@ -72,88 +72,122 @@ public class MySQLDAO
         
         tx.commit();
         HibernateUtil.closeConnection(session);
+        
+        UserDTO dto_rsp = new UserDTO();
+        BeanUtils.copyProperties(entity, dto_rsp);
+        
+        return dto_rsp;
 	}
-//
-//	public AuthenticationDTO getUser(String id) {
+
+//	public UserDTO read_user(String username) 
+//	{
 //       CriteriaBuilder cb = session.getCriteriaBuilder();
 //
 //       //Create Criteria against a particular persistent class
-//       CriteriaQuery<AuthenticationEntity> criteria = cb.createQuery(AuthenticationEntity.class);
+//       CriteriaQuery<UserEntity> criteria = cb.createQuery(UserEntity.class);
 //
 //       //Query roots always reference entitie
-//       Root<AuthenticationEntity> profileRoot = criteria.from(AuthenticationEntity.class);
+//       Root<UserEntity> profileRoot = criteria.from(UserEntity.class);
 //       criteria.select(profileRoot);
 //       criteria.where(cb.equal(profileRoot.get("userId"), id));
 //
 //       // Fetch single result
-//       AuthenticationEntity userEntity = session.createQuery(criteria).getSingleResult();
+//       UserEntity userEntity = session.createQuery(criteria).getSingleResult();
 //       
-//       AuthenticationDTO userDto = new AuthenticationDTO();
+//       UserDTO userDto = new UserDTO();
 //       BeanUtils.copyProperties(userEntity, userDto);
 //       
 //       return userDto;
 //	}
-//
-//	public List<AuthenticationDTO> getUsers(int start, int limit) {
+
+	
+	public static UserEntity read_user(String username) 
+	{
+		Session session = HibernateUtil.openConnection();
+//In the HQL , you should use the java class name and property name of the mapped @Entity instead of the actual table name and column name 
+		String hql_cmd = String.format("FROM %s WHERE username=:username", UserEntity.class.getSimpleName());
+// The SQL table is created if NOT exist
+		Query<UserEntity> query = session.createQuery(hql_cmd);
+		query.setParameter("username", username);
+		List<UserEntity> result_list = query.getResultList();
+		if (result_list.isEmpty())
+			return null;
+		return result_list.get(0);
+	}
+
+	public static List<UserEntity> read_users(int start, int limit) 
+	{
 //        CriteriaBuilder cb = session.getCriteriaBuilder();
-//
 //        //Create Criteria against a particular persistent class
-//        CriteriaQuery<AuthenticationEntity> criteria = cb.createQuery(AuthenticationEntity.class);
-//
+//        CriteriaQuery<UserEntity> criteria = cb.createQuery(UserEntity.class);
 //        //Query roots always reference entities
-//        Root<AuthenticationEntity> userRoot = criteria.from(AuthenticationEntity.class);
+//        Root<UserEntity> userRoot = criteria.from(UserEntity.class);
 //        criteria.select(userRoot);
-//
 //        // Fetch results from start to a number of "limit"
-//        List<AuthenticationEntity> searchResults = session.createQuery(criteria).
-//                setFirstResult(start).
-//                setMaxResults(limit).
-//                getResultList();
-// 
-//        List<AuthenticationDTO> returnValue = new ArrayList<AuthenticationDTO>();
-//        for (AuthenticationEntity userEntity : searchResults) {
-//            AuthenticationDTO userDto = new AuthenticationDTO();
+//        List<UserEntity> searchResults = session.createQuery(criteria).setFirstResult(start).setMaxResults(limit).getResultList();
+//        List<UserDTO> returnValue = new ArrayList<UserDTO>();
+//        for (UserEntity userEntity : searchResults) {
+//            UserDTO userDto = new UserDTO();
 //            BeanUtils.copyProperties(userEntity, userDto);
 //            returnValue.add(userDto);
 //        }
-//
 //        return returnValue;
-//	}
-//
-//    public void updateUser(AuthenticationDTO userProfile) {
-//	    AuthenticationEntity userEntity = new AuthenticationEntity();
-//	    BeanUtils.copyProperties(userProfile, userEntity);
-//	     
+		Session session = HibernateUtil.openConnection();
+//In the HQL , you should use the java class name and property name of the mapped @Entity instead of the actual table name and column name 
+		String hql_cmd = String.format("FROM %s", UserEntity.class.getSimpleName());
+// The SQL table is created if NOT exist
+		Query<UserEntity> query = session.createQuery(hql_cmd);
+		query.setFirstResult(start);
+		query.setMaxResults(limit);
+		List<UserEntity> result_list = query.getResultList();
+
+		return result_list;
+	}
+
+    public static void update_user(UserDTO dto) 
+    {
+	    UserEntity entity = new UserEntity();
+	    BeanUtils.copyProperties(dto, entity);
+	    
+	    Session session = HibernateUtil.openConnection();
+		Transaction tx = session.beginTransaction();
 //	    session.beginTransaction();
-//	    session.update(userEntity);
+	    session.update(entity);
 //	    session.getTransaction().commit();
-//	}
-//
-//	public void deleteUser(AuthenticationDTO userProfile) {
-//        AuthenticationEntity userEntity = new AuthenticationEntity();
-//        BeanUtils.copyProperties(userProfile, userEntity);
-//        
-//        session.beginTransaction();
-//        session.delete(userEntity);
-//        session.getTransaction().commit();
-//	}
-//
+	    tx.commit();
+	    HibernateUtil.closeConnection(session);
+	}
+
+	public static void delete_user(UserDTO dto) 
+	{
+        UserEntity entity = new UserEntity();
+        BeanUtils.copyProperties(dto, entity);
+        
+	    Session session = HibernateUtil.openConnection();
+		Transaction tx = session.beginTransaction();
+//	    session.beginTransaction();
+        session.delete(entity);
+//	    session.getTransaction().commit();
+	    tx.commit();
+	    HibernateUtil.closeConnection(session);
+	}
+
 //// For email verification, used for preventing user from login until they verify email
 //
-//	public AuthenticationDTO getUserByEmailToken(String token) {
+//	public UserDTO getUserByEmailToken(String token) {
 //	    CriteriaBuilder cb = session.getCriteriaBuilder();
 ////Create Criteria against a particular persistent class
-//	    CriteriaQuery<AuthenticationEntity> criteria = cb.createQuery(AuthenticationEntity.class);
+//	    CriteriaQuery<UserEntity> criteria = cb.createQuery(UserEntity.class);
 //
 ////Query roots always reference entitie
-//	    Root<AuthenticationEntity> profileRoot = criteria.from(AuthenticationEntity.class);
+//	    Root<UserEntity> profileRoot = criteria.from(UserEntity.class);
 //	    criteria.select(profileRoot);
 //	    criteria.where(cb.equal(profileRoot.get("emailVerificationToken"), token));
 //
 //// Fetch single result
-//	    AuthenticationEntity userEntity = session.createQuery(criteria).getSingleResult();
+//	    UserEntity userEntity = session.createQuery(criteria).getSingleResult();
 //	        
-//	    AuthenticationDTO userDto = new AuthenticationDTO();
+//	    UserDTO userDto = new UserDTO();
 //	    BeanUtils.copyProperties(userEntity, userDto);
 //	        
 //	    return userDto;
@@ -272,18 +306,18 @@ public class MySQLDAO
 //		CriteriaBuilder cb = session.getCriteriaBuilder();
 //
 //		// Create Criteria against a particular persistent class
-//		CriteriaQuery<AuthenticationEntity> criteria = cb.createQuery(AuthenticationEntity.class);
+//		CriteriaQuery<UserEntity> criteria = cb.createQuery(UserEntity.class);
 //		// Query roots always reference entities
-//		Root<AuthenticationEntity> userRoot = criteria.from(AuthenticationEntity.class);
+//		Root<UserEntity> userRoot = criteria.from(UserEntity.class);
 //		criteria.select(userRoot);
 //
 //		// Fetch results from start to a number of "limit"
-//		List<AuthenticationEntity> searchResults = session.createQuery(criteria).setFirstResult(start).setMaxResults(limit).getResultList();
+//		List<UserEntity> searchResults = session.createQuery(criteria).setFirstResult(start).setMaxResults(limit).getResultList();
 //
-//		List<AuthenticationDTO> returnValue = new ArrayList<AuthenticationDTO>();
-//		for (AuthenticationEntity userEntity : searchResults)
+//		List<UserDTO> returnValue = new ArrayList<UserDTO>();
+//		for (UserEntity userEntity : searchResults)
 //		{
-//			AuthenticationDTO userDto = new AuthenticationDTO();
+//			UserDTO userDto = new UserDTO();
 //			BeanUtils.copyProperties(userEntity, userDto);
 //			returnValue.add(userDto);
 //		}
@@ -320,7 +354,7 @@ public class MySQLDAO
 		if(sql_data_list.isEmpty())
 		{
 			String errmsg = String.format("The table[%s] is empty while finding the start time", get_entity_table_name(finance_method));
-			throw new FinanceRecorderResourceNotFoundException(errmsg);
+			throw new ResourceNotFoundException(errmsg);
 		}
 //		sql_start_date = (Date)sql_data_list.get(0)[0];
 		sql_start_date = sql_data_list.get(0);
@@ -330,7 +364,7 @@ public class MySQLDAO
 		if(sql_data_list.isEmpty())
 		{
 			String errmsg = String.format("The table[%s] is empty while finding the end time", get_entity_table_name(finance_method));
-			throw new FinanceRecorderResourceNotFoundException(errmsg);
+			throw new ResourceNotFoundException(errmsg);
 		}
 //		sql_end_date = (Date)sql_data_list.get(0)[0];
 		sql_end_date = sql_data_list.get(0);
@@ -338,7 +372,7 @@ public class MySQLDAO
 		if(data_line_list.isEmpty())
 		{
 			String errmsg = String.format("The CSV data[%s] should NOT be empty", CmnDef.FINANCE_METHOD_DESCRIPTION_LIST[finance_method.value()]);
-			throw new FinanceRecorderResourceNotFoundException(errmsg);
+			throw new ResourceNotFoundException(errmsg);
 		}
 		
 		try 

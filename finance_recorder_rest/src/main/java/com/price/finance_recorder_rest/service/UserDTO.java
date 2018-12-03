@@ -6,15 +6,26 @@ public class UserDTO implements Serializable
 {
 	private static final long serialVersionUID = -123220653594362686L;
 
-//    private long id; // Database user ID
-//    private String userId;
+    private long id; // ID used in Database
+    private String userId;
     private String username;
     private String password;
     private String salt;
     private String encryptedPassword;
-    private String userId;
     private String token;
 
+	public long getId() {
+		return id;
+	}
+	public void setId(long id) {
+		this.id = id;
+	}
+	public String getUserId() {
+		return userId;
+	}
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
 	public String getUsername() {
 		return username;
 	}
@@ -38,12 +49,6 @@ public class UserDTO implements Serializable
 	}
 	public void setEncryptedPassword(String encryptedPassword) {
 		this.encryptedPassword = encryptedPassword;
-	}
-	public String getUserId() {
-		return userId;
-	}
-	public void setUserId(String userId) {
-		this.userId = userId;
 	}
 	public String getToken() {
 		return token;

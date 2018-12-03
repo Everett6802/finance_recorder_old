@@ -6,7 +6,7 @@ import java.util.List;
 import com.price.finance_recorder_rest.common.CmnDef;
 import com.price.finance_recorder_rest.common.CmnDef.FinanceMethod;
 import com.price.finance_recorder_rest.common.CmnFunc;
-import com.price.finance_recorder_rest.exceptions.FinanceRecorderResourceNotFoundException;
+import com.price.finance_recorder_rest.exceptions.ResourceNotFoundException;
 import com.price.finance_recorder_rest.persistence.MySQLDAO;
 
 public class FinanceServiceAdapter
@@ -24,7 +24,7 @@ public class FinanceServiceAdapter
 		if (CmnDef.CheckFailure(ret))
 		{
 			String errmsg = String.format("Fail to read market[%d] dataset", finance_method.value());
-			throw new FinanceRecorderResourceNotFoundException(errmsg);
+			throw new ResourceNotFoundException(errmsg);
 		}
 		MySQLDAO.create(finance_method, data_line_list);
 	}
@@ -44,7 +44,7 @@ public class FinanceServiceAdapter
 		if (CmnDef.CheckFailure(ret))
 		{
 			String errmsg = String.format("Fail to read market[%d] dataset", finance_method.value());
-			throw new FinanceRecorderResourceNotFoundException(errmsg);
+			throw new ResourceNotFoundException(errmsg);
 		}
 		MySQLDAO.update(finance_method, data_line_list);
 	}

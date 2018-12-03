@@ -8,10 +8,10 @@ import com.price.finance_recorder_rest.common.CmnDef;
 import com.price.finance_recorder_rest.common.ErrorMessage;
 
 @Provider
-public class FinanceRecorderResourceNotFoundExceptionMapper implements ExceptionMapper<FinanceRecorderResourceNotFoundException>
+public class ResourceNotFoundExceptionMapper implements ExceptionMapper<ResourceNotFoundException>
 {
 	@Override
-	public Response toResponse(FinanceRecorderResourceNotFoundException exception)
+	public Response toResponse(ResourceNotFoundException exception)
 	{
 		ErrorMessage errorMessage = new ErrorMessage(exception.getMessage(), ExceptionType.RESOURCE_NOT_FOUND.name(), CmnDef.URL_REF);
 

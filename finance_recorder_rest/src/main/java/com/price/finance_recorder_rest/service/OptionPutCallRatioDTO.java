@@ -3,7 +3,7 @@ package com.price.finance_recorder_rest.service;
 import java.io.Serializable;
 import java.util.Date;
 
-import com.price.finance_recorder_rest.exceptions.FinanceRecorderMissingRequiredFieldException;
+import com.price.finance_recorder_rest.exceptions.MissingRequiredFieldException;
 
 public class OptionPutCallRatioDTO implements Serializable
 {
@@ -21,7 +21,7 @@ public class OptionPutCallRatioDTO implements Serializable
 	private long callOITradeVolume; // 買權未平倉量
 	private float putCallOIRatio; // 買賣權未平倉量比率
 
-	public void validateRequiredFields() throws FinanceRecorderMissingRequiredFieldException
+	public void validateRequiredFields() throws MissingRequiredFieldException
 	{
 //		if (datasetFolderpath == null)
 //			datasetFolderpath = CmnDef.FINANCE_DATASET_RELATIVE_FOLDERPATH;

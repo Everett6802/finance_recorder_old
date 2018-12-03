@@ -10,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+
 @Entity
 @Table(name = "option_put_call_ratio")
 public class OptionPutCallRatioEntity implements Serializable

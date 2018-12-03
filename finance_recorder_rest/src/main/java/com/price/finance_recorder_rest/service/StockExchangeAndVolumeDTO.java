@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 import com.price.finance_recorder_rest.common.CmnDef;
-import com.price.finance_recorder_rest.exceptions.FinanceRecorderMissingRequiredFieldException;
+import com.price.finance_recorder_rest.exceptions.MissingRequiredFieldException;
 
 public class StockExchangeAndVolumeDTO implements Serializable
 {
@@ -21,7 +21,7 @@ public class StockExchangeAndVolumeDTO implements Serializable
 	private float weightedStockIndex; // 發行量加權股價指數
 	private float netChange; // 漲跌點數
 
-	public void validateRequiredFields() throws FinanceRecorderMissingRequiredFieldException
+	public void validateRequiredFields() throws MissingRequiredFieldException
 	{
 		if (datasetFolderpath == null)
 			datasetFolderpath = CmnDef.FINANCE_DATASET_RELATIVE_FOLDERPATH;

@@ -12,7 +12,7 @@ import javax.ws.rs.core.Response;
 
 import com.price.finance_recorder_rest.common.CmnDef;
 import com.price.finance_recorder_rest.common.CmnFunc;
-import com.price.finance_recorder_rest.exceptions.FinanceRecorderResourceNotFoundException;
+import com.price.finance_recorder_rest.exceptions.ResourceNotFoundException;
 
 @Path("/help")
 public class HelpEntryPoint
@@ -27,7 +27,7 @@ public class HelpEntryPoint
 		String output = "";
 		InputStream is = getClass().getClassLoader().getResourceAsStream("help.html");
 		if (is == null)
-			throw new FinanceRecorderResourceNotFoundException("The help.html is NOT found");
+			throw new ResourceNotFoundException("The help.html is NOT found");
 
 //		try
 //		{

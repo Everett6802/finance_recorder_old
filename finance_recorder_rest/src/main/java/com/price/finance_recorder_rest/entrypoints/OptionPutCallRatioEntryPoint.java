@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.springframework.beans.BeanUtils;
 
-import com.price.finance_recorder_rest.exceptions.FinanceRecorderMissingRequiredFieldException;
+import com.price.finance_recorder_rest.exceptions.MissingRequiredFieldException;
 import com.price.finance_recorder_rest.service.OptionPutCallRatioDTO;
 import com.price.finance_recorder_rest.service.OptionPutCallRatioService;
 
@@ -30,7 +30,7 @@ public class OptionPutCallRatioEntryPoint
 	public OptionPutCallRatioRsp create_option_put_call_ratio(OptionPutCallRatioReq req)
 	{
 		if (req == null)
-			throw new FinanceRecorderMissingRequiredFieldException("Got null request");
+			throw new MissingRequiredFieldException("Got null request");
 		OptionPutCallRatioDTO dto = new OptionPutCallRatioDTO();
 //Bean object, copy from requestObject to userDto
 //Only firstName, lastName, email, password variables are copied;
@@ -59,16 +59,16 @@ public class OptionPutCallRatioEntryPoint
 		List<OptionPutCallRatioDTO> dto_get_list = service.read(start, limit);
 
 // Prepare return value
-		List<OptionPutCallRatioGetRsp> returnValue = new ArrayList<OptionPutCallRatioGetRsp>();
+		List<OptionPutCallRatioGetRsp> rsp_list = new ArrayList<OptionPutCallRatioGetRsp>();
 		for (OptionPutCallRatioDTO dto_get : dto_get_list)
 		{
 			OptionPutCallRatioGetRsp rsp = new OptionPutCallRatioGetRsp();
 			BeanUtils.copyProperties(dto_get, rsp);
 //			rsp.setHref("/users/" + dto.getUserId());
-			returnValue.add(rsp);
+			rsp_list.add(rsp);
 		}
 
-		return returnValue;
+		return rsp_list;
 	}
 
 	@PUT
@@ -77,7 +77,7 @@ public class OptionPutCallRatioEntryPoint
 	public OptionPutCallRatioRsp update_stock_exchange_and_volume(OptionPutCallRatioReq req)
 	{
 		if (req == null)
-			throw new FinanceRecorderMissingRequiredFieldException("Got null request");
+			throw new MissingRequiredFieldException("Got null request");
 		OptionPutCallRatioDTO dto = new OptionPutCallRatioDTO();
 //Bean object, copy from requestObject to userDto
 //Only firstName, lastName, email, password variables are copied;

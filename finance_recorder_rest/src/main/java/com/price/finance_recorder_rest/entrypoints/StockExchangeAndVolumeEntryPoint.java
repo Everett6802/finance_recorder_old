@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.springframework.beans.BeanUtils;
 
-import com.price.finance_recorder_rest.exceptions.FinanceRecorderMissingRequiredFieldException;
+import com.price.finance_recorder_rest.exceptions.MissingRequiredFieldException;
 import com.price.finance_recorder_rest.service.StockExchangeAndVolumeDTO;
 import com.price.finance_recorder_rest.service.StockExchangeAndVolumeService;
 
@@ -29,7 +29,7 @@ public class StockExchangeAndVolumeEntryPoint
 	public StockExchangeAndVolumeRsp create_stock_exchange_and_volume(StockExchangeAndVolumeReq req)
 	{
 		if (req == null)
-			throw new FinanceRecorderMissingRequiredFieldException("Got null request");
+			throw new MissingRequiredFieldException("Got null request");
 		StockExchangeAndVolumeDTO dto = new StockExchangeAndVolumeDTO();
 //Bean object, copy from requestObject to userDto
 //Only firstName, lastName, email, password variables are copied;
@@ -46,28 +46,26 @@ public class StockExchangeAndVolumeEntryPoint
 
 	@GET
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-	public List<StockExchangeAndVolumeGetRsp> read_stock_exchange_and_volume(@DefaultValue("0") @QueryParam("start") int start, @DefaultValue("50") @QueryParam("limit") int limit)
+	public List<StockExchangeAndVolumeGetRsp> read_stock_exchange_and_volume(@DefaultValue("0") @QueryParam("start") int start, @DefaultValue("20") @QueryParam("limit") int limit)
 	{
-		StockExchangeAndVolumeDTO dto = new StockExchangeAndVolumeDTO();
-		dto.setStart(start);
-		dto.setLimit(limit);
-
-		dto.validateRequiredFields();
-
+//		StockExchangeAndVolumeDTO dto = new StockExchangeAndVolumeDTO();
+//		dto.setStart(start);
+//		dto.setLimit(limit);
+//		dto.validateRequiredFields();
 		StockExchangeAndVolumeService service = new StockExchangeAndVolumeService();
-		List<StockExchangeAndVolumeDTO> dto_get_list = service.read(start, limit);
+		List<StockExchangeAndVolumeDTO> dto_list = service.read(start, limit);
 
 // Prepare return value
-		List<StockExchangeAndVolumeGetRsp> returnValue = new ArrayList<StockExchangeAndVolumeGetRsp>();
-		for (StockExchangeAndVolumeDTO dto_get : dto_get_list)
+		List<StockExchangeAndVolumeGetRsp> rsp_list = new ArrayList<StockExchangeAndVolumeGetRsp>();
+		for (StockExchangeAndVolumeDTO dto : dto_list)
 		{
 			StockExchangeAndVolumeGetRsp rsp = new StockExchangeAndVolumeGetRsp();
-			BeanUtils.copyProperties(dto_get, rsp);
+			BeanUtils.copyProperties(dto, rsp);
 //			rsp.setHref("/users/" + dto.getUserId());
-			returnValue.add(rsp);
+			rsp_list.add(rsp);
 		}
 
-		return returnValue;
+		return rsp_list;
 	}
 
 	@PUT
@@ -76,7 +74,7 @@ public class StockExchangeAndVolumeEntryPoint
 	public StockExchangeAndVolumeRsp update_stock_exchange_and_volume(StockExchangeAndVolumeReq req)
 	{
 		if (req == null)
-			throw new FinanceRecorderMissingRequiredFieldException("Got null request");
+			throw new MissingRequiredFieldException("Got null request");
 		StockExchangeAndVolumeDTO dto = new StockExchangeAndVolumeDTO();
 //Bean object, copy from requestObject to userDto
 //Only firstName, lastName, email, password variables are copied;

@@ -9,6 +9,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.springframework.beans.BeanUtils;
+
 
 @Entity
 @Table(name = "user")
@@ -19,7 +21,7 @@ public class UserEntity implements Serializable
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "id")
-	private int id;
+	private long id;
 
 	@Column(name = "user_id", nullable = false)
     private String userId;
@@ -33,15 +35,22 @@ public class UserEntity implements Serializable
 	@Column(name = "encrypted_password", nullable = false)
     private String encryptedPassword;
 
-//	@Column(name = "token", nullable = false)
-// token is set only for authentication
+	// token is set only for authentication, can be null
+	@Column(name = "token"/*, nullable = false*/)
     private String token;
 
-    public String getUserId() {
-		return userId;
+// The setter/getter of id is a MUST, otherwise BeanUtils::copyProperties() does NOT work
+	public long getId() {
+		return id;
+	}
+	public void setId(long id) {
+		this.id = id;
 	}
 	public void setUserId(String userId) {
 		this.userId = userId;
+	}
+    public String getUserId() {
+		return userId;
 	}
     public String getUsername() {
 		return username;
