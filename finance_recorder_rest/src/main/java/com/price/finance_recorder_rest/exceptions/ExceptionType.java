@@ -7,6 +7,9 @@ public enum ExceptionType
 	RESOURCE_NOT_FOUND("Missing Resource File"),
 	MISSING_REQUIRED_FIELD("Missing required field"),
     RECORD_ALREADY_EXISTS("Record already exists"),
+    NO_RECORD_FOUND("Record with provided username is NOT found"),
+    COULD_NOT_UPDATE_RECORD("Could not update record"),
+    COULD_NOT_DELETE_RECORD("Could not delete record"),
 	INTERNAL_SERVER_ERROR("Internal Server Error");
 
 	private String exception_message;

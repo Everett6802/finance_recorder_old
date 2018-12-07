@@ -35,81 +35,53 @@ public class MySQLDAO
 {
 	private static final String TABLE_TIME_FIELD_NAME = "trade_date"; 
 
-//	public UserDTO getUserByUserName(String userName) {
-//        UserDTO userDto = null;
-//
-//        CriteriaBuilder cb = session.getCriteriaBuilder();
-//
-//        //Create Criteria against a particular persistent class
-//        CriteriaQuery<UserEntity> criteria = cb.createQuery(UserEntity.class);
-//
-//        //Query roots always reference entitie
-//        Root<UserEntity> profileRoot = criteria.from(UserEntity.class);
-//        criteria.select(profileRoot);
-//        criteria.where(cb.equal(profileRoot.get("email"), userName));
-//
-//        // Fetch single result
-//        Query<UserEntity> query = session.createQuery(criteria);
-//        List<UserEntity> resultList = query.getResultList();
-//        if (resultList != null && resultList.size() > 0) {
-//            UserEntity userEntity = resultList.get(0);
-//            userDto = new UserDTO();
-//            BeanUtils.copyProperties(userEntity, userDto);
-//        }
-//
-//        return userDto;
-//	}
-//
 	public static UserDTO create_user(UserDTO dto) 
 	{
-		Session session = HibernateUtil.openConnection();
-		Transaction tx = session.beginTransaction();
+		Session session = null;
+		UserEntity entity = null;
+		try
+		{
+			session = HibernateUtil.openConnection();
+			Transaction tx = session.beginTransaction();
 
-        UserEntity entity = new UserEntity();
-        BeanUtils.copyProperties(dto, entity);
+	        entity = new UserEntity();
+	        BeanUtils.copyProperties(dto, entity);
 
-        session.save(entity);
-        
-        tx.commit();
-        HibernateUtil.closeConnection(session);
-        
+	        session.save(entity);
+	        
+	        tx.commit();			
+		}
+		finally
+		{
+			HibernateUtil.closeConnection(session);
+		}
+
         UserDTO dto_rsp = new UserDTO();
         BeanUtils.copyProperties(entity, dto_rsp);
         
         return dto_rsp;
 	}
 
-//	public UserDTO read_user(String username) 
-//	{
-//       CriteriaBuilder cb = session.getCriteriaBuilder();
-//
-//       //Create Criteria against a particular persistent class
-//       CriteriaQuery<UserEntity> criteria = cb.createQuery(UserEntity.class);
-//
-//       //Query roots always reference entitie
-//       Root<UserEntity> profileRoot = criteria.from(UserEntity.class);
-//       criteria.select(profileRoot);
-//       criteria.where(cb.equal(profileRoot.get("userId"), id));
-//
-//       // Fetch single result
-//       UserEntity userEntity = session.createQuery(criteria).getSingleResult();
-//       
-//       UserDTO userDto = new UserDTO();
-//       BeanUtils.copyProperties(userEntity, userDto);
-//       
-//       return userDto;
-//	}
-
 	
 	public static UserEntity read_user(String username) 
 	{
-		Session session = HibernateUtil.openConnection();
+		Session session = null;
+		List<UserEntity> result_list = null;
+		try
+		{
+			session = HibernateUtil.openConnection();
 //In the HQL , you should use the java class name and property name of the mapped @Entity instead of the actual table name and column name 
-		String hql_cmd = String.format("FROM %s WHERE username=:username", UserEntity.class.getSimpleName());
+			String hql_cmd = String.format("FROM %s WHERE username=:username", UserEntity.class.getSimpleName());
 // The SQL table is created if NOT exist
-		Query<UserEntity> query = session.createQuery(hql_cmd);
-		query.setParameter("username", username);
-		List<UserEntity> result_list = query.getResultList();
+			Query<UserEntity> query = session.createQuery(hql_cmd);
+			query.setParameter("username", username);
+			result_list = query.getResultList();			
+		}
+		finally
+		{
+			HibernateUtil.closeConnection(session);
+		}
+
 		if (result_list.isEmpty())
 			return null;
 		return result_list.get(0);
@@ -117,30 +89,23 @@ public class MySQLDAO
 
 	public static List<UserEntity> read_users(int start, int limit) 
 	{
-//        CriteriaBuilder cb = session.getCriteriaBuilder();
-//        //Create Criteria against a particular persistent class
-//        CriteriaQuery<UserEntity> criteria = cb.createQuery(UserEntity.class);
-//        //Query roots always reference entities
-//        Root<UserEntity> userRoot = criteria.from(UserEntity.class);
-//        criteria.select(userRoot);
-//        // Fetch results from start to a number of "limit"
-//        List<UserEntity> searchResults = session.createQuery(criteria).setFirstResult(start).setMaxResults(limit).getResultList();
-//        List<UserDTO> returnValue = new ArrayList<UserDTO>();
-//        for (UserEntity userEntity : searchResults) {
-//            UserDTO userDto = new UserDTO();
-//            BeanUtils.copyProperties(userEntity, userDto);
-//            returnValue.add(userDto);
-//        }
-//        return returnValue;
-		Session session = HibernateUtil.openConnection();
+		Session session = null;
+		List<UserEntity> result_list = null;
+		try
+		{
+			session = HibernateUtil.openConnection();
 //In the HQL , you should use the java class name and property name of the mapped @Entity instead of the actual table name and column name 
-		String hql_cmd = String.format("FROM %s", UserEntity.class.getSimpleName());
+			String hql_cmd = String.format("FROM %s", UserEntity.class.getSimpleName());
 // The SQL table is created if NOT exist
-		Query<UserEntity> query = session.createQuery(hql_cmd);
-		query.setFirstResult(start);
-		query.setMaxResults(limit);
-		List<UserEntity> result_list = query.getResultList();
-
+			Query<UserEntity> query = session.createQuery(hql_cmd);
+			query.setFirstResult(start);
+			query.setMaxResults(limit);
+			result_list = query.getResultList();
+		}
+		finally
+		{
+			HibernateUtil.closeConnection(session);
+		}
 		return result_list;
 	}
 
@@ -149,13 +114,18 @@ public class MySQLDAO
 	    UserEntity entity = new UserEntity();
 	    BeanUtils.copyProperties(dto, entity);
 	    
-	    Session session = HibernateUtil.openConnection();
-		Transaction tx = session.beginTransaction();
-//	    session.beginTransaction();
-	    session.update(entity);
-//	    session.getTransaction().commit();
-	    tx.commit();
-	    HibernateUtil.closeConnection(session);
+	    Session session = null;
+	    try 
+	    {
+	    	session = HibernateUtil.openConnection();
+			Transaction tx = session.beginTransaction();
+		    session.update(entity);
+		    tx.commit();
+	    }
+		finally
+		{
+			HibernateUtil.closeConnection(session);
+		}
 	}
 
 	public static void delete_user(UserDTO dto) 
@@ -163,35 +133,19 @@ public class MySQLDAO
         UserEntity entity = new UserEntity();
         BeanUtils.copyProperties(dto, entity);
         
-	    Session session = HibernateUtil.openConnection();
-		Transaction tx = session.beginTransaction();
-//	    session.beginTransaction();
-        session.delete(entity);
-//	    session.getTransaction().commit();
-	    tx.commit();
-	    HibernateUtil.closeConnection(session);
+	    Session session = null;
+	    try
+	    {
+	    	session = HibernateUtil.openConnection();
+			Transaction tx = session.beginTransaction();
+	        session.delete(entity);
+		    tx.commit();
+	    }
+		finally
+		{
+			HibernateUtil.closeConnection(session);
+		}
 	}
-
-//// For email verification, used for preventing user from login until they verify email
-//
-//	public UserDTO getUserByEmailToken(String token) {
-//	    CriteriaBuilder cb = session.getCriteriaBuilder();
-////Create Criteria against a particular persistent class
-//	    CriteriaQuery<UserEntity> criteria = cb.createQuery(UserEntity.class);
-//
-////Query roots always reference entitie
-//	    Root<UserEntity> profileRoot = criteria.from(UserEntity.class);
-//	    criteria.select(profileRoot);
-//	    criteria.where(cb.equal(profileRoot.get("emailVerificationToken"), token));
-//
-//// Fetch single result
-//	    UserEntity userEntity = session.createQuery(criteria).getSingleResult();
-//	        
-//	    UserDTO userDto = new UserDTO();
-//	    BeanUtils.copyProperties(userEntity, userDto);
-//	        
-//	    return userDto;
-//	}	
 
 	private static Object create_entity_object_from_string(CmnDef.FinanceMethod finance_method, String data_line)
 	{
@@ -277,166 +231,164 @@ public class MySQLDAO
 
 	public static void create(FinanceMethod finance_method, List<String> data_line_list)
 	{
-		Session session = HibernateUtil.openConnection();
-		Transaction tx = session.beginTransaction();
-
-		int cnt = 0;
-		for (String data_line : data_line_list)
+		Session session = null;
+		try 
 		{
-			Object entity = create_entity_object_from_string(finance_method, data_line);
-			session.save(entity);
-			if ((++cnt) == 20) // 20, same as the JDBC batch size
-			{
-// flush a batch of inserts and release memory:
-				session.flush();
-				session.clear();
-				cnt = 0;
-			}
-		}
+			session = HibernateUtil.openConnection();
+			Transaction tx = session.beginTransaction();
 
-		tx.commit();
-		HibernateUtil.closeConnection(session);
+			int cnt = 0;
+			for (String data_line : data_line_list)
+			{
+				Object entity = create_entity_object_from_string(finance_method, data_line);
+				session.save(entity);
+				if ((++cnt) == 20) // 20, same as the JDBC batch size
+				{
+// flush a batch of inserts and release memory:
+					session.flush();
+					session.clear();
+					cnt = 0;
+				}
+			}
+
+			tx.commit();
+		}
+		finally
+		{
+			HibernateUtil.closeConnection(session);
+		}
 	}
 
 	public static List<?> read(FinanceMethod finance_method, int start, int limit)
 	{
-		Session session = HibernateUtil.openConnection();
-//		Transaction tx = session.beginTransaction();
-
-//		CriteriaBuilder cb = session.getCriteriaBuilder();
-//
-//		// Create Criteria against a particular persistent class
-//		CriteriaQuery<UserEntity> criteria = cb.createQuery(UserEntity.class);
-//		// Query roots always reference entities
-//		Root<UserEntity> userRoot = criteria.from(UserEntity.class);
-//		criteria.select(userRoot);
-//
-//		// Fetch results from start to a number of "limit"
-//		List<UserEntity> searchResults = session.createQuery(criteria).setFirstResult(start).setMaxResults(limit).getResultList();
-//
-//		List<UserDTO> returnValue = new ArrayList<UserDTO>();
-//		for (UserEntity userEntity : searchResults)
-//		{
-//			UserDTO userDto = new UserDTO();
-//			BeanUtils.copyProperties(userEntity, userDto);
-//			returnValue.add(userDto);
-//		}
-//		String hql_cmd = String.format("FROM %s", get_entity_table_name(finance_method));
-
+		Session session = null; 
+		List<?> result_list = null;
+		try
+		{
+			session = HibernateUtil.openConnection();
 //In the HQL , you should use the java class name and property name of the mapped @Entity instead of the actual table name and column name 
-		String hql_cmd = String.format("FROM %s", get_entity_class_name(finance_method));
+			String hql_cmd = String.format("FROM %s", get_entity_class_name(finance_method));
 // The SQL table is created if NOT exist
-		Query<?> query = session.createQuery(hql_cmd);
-		query.setFirstResult(start);
-		query.setMaxResults(limit);
-		List<?> result_list = query.getResultList();
-		HibernateUtil.closeConnection(session);
+			Query<?> query = session.createQuery(hql_cmd);
+			query.setFirstResult(start);
+			query.setMaxResults(limit);
+			result_list = query.getResultList();
+		}
+		finally
+		{
+			HibernateUtil.closeConnection(session);
+		}
 		return result_list;
 	}
 
 	private static List<Date[]> find_update_time_range(FinanceMethod finance_method, List<String> data_line_list)
 	{
-		Session session = HibernateUtil.openConnection();
-		Transaction tx = session.beginTransaction();
-
-		Date sql_start_date = null;
-		Date sql_end_date = null;
-		Date csv_start_date = null;
-		Date csv_end_date = null;
-
-		String native_hql_cmd = null;
-//		List<Object[]> sql_data_list = null;
-		List<java.sql.Timestamp> sql_data_list = null;
-// Find the time range in sql
-// Find the start time in the table
-		native_hql_cmd = String.format("SELECT %s FROM %s ORDER BY %s ASC LIMIT 1", TABLE_TIME_FIELD_NAME, get_entity_table_name(finance_method), TABLE_TIME_FIELD_NAME);
-		sql_data_list = session.createNativeQuery(native_hql_cmd).list();
-		if(sql_data_list.isEmpty())
-		{
-			String errmsg = String.format("The table[%s] is empty while finding the start time", get_entity_table_name(finance_method));
-			throw new ResourceNotFoundException(errmsg);
-		}
-//		sql_start_date = (Date)sql_data_list.get(0)[0];
-		sql_start_date = sql_data_list.get(0);
-// Find the end time in the table
-		native_hql_cmd = String.format("SELECT %s FROM %s ORDER BY %s DESC LIMIT 1", TABLE_TIME_FIELD_NAME, get_entity_table_name(finance_method), TABLE_TIME_FIELD_NAME);
-		sql_data_list = session.createNativeQuery(native_hql_cmd).list();
-		if(sql_data_list.isEmpty())
-		{
-			String errmsg = String.format("The table[%s] is empty while finding the end time", get_entity_table_name(finance_method));
-			throw new ResourceNotFoundException(errmsg);
-		}
-//		sql_end_date = (Date)sql_data_list.get(0)[0];
-		sql_end_date = sql_data_list.get(0);
-// Find the time range in csv
-		if(data_line_list.isEmpty())
-		{
-			String errmsg = String.format("The CSV data[%s] should NOT be empty", CmnDef.FINANCE_METHOD_DESCRIPTION_LIST[finance_method.value()]);
-			throw new ResourceNotFoundException(errmsg);
-		}
-		
-		try 
-		{
-			String first_line = data_line_list.get(0);
-			csv_start_date = new SimpleDateFormat("yyyy-MM-dd").parse(first_line.split(",")[0]);
-		} 
-		catch (ParseException e) 
-		{
-			String errmsg = String.format("Fail to parse the start time in CSV[%s]", CmnDef.FINANCE_METHOD_DESCRIPTION_LIST[finance_method.value()]);
-			throw new IllegalArgumentException(errmsg);
-		}
-		try 
-		{
-			String last_line = data_line_list.get(data_line_list.size() - 1);
-			csv_end_date = new SimpleDateFormat("yyyy-MM-dd").parse(last_line.split(",")[0]);
-		} 
-		catch (ParseException e) 
-		{
-			String errmsg = String.format("Fail to parse the end time in CSV[%s]", CmnDef.FINANCE_METHOD_DESCRIPTION_LIST[finance_method.value()]);
-			throw new IllegalArgumentException(errmsg);
-		}
-// Find the time range where data does NOT exist
-		long sql_start_date_intvalue = sql_start_date.getTime();
-		long sql_end_date_intvalue = sql_end_date.getTime();
-		long csv_start_date_intvalue = csv_start_date.getTime();
-		long csv_end_date_intvalue = csv_end_date.getTime();
+		Session session = null;
 		List<Date[]> update_date_time_range_list = null;
-		if (csv_end_date_intvalue <= sql_start_date_intvalue || csv_start_date_intvalue >= sql_start_date_intvalue)
+		try
 		{
-			String errmsg = String.format("The time data does NOT overlap, SQL:[%s-%s], CSV data[%s-%s]", sql_start_date.toString(), sql_end_date.toString(), csv_start_date.toString(), csv_end_date.toString());
-			throw new IllegalArgumentException(errmsg);			
-		}
-		else if (csv_start_date_intvalue >= sql_start_date_intvalue && csv_end_date_intvalue <= sql_end_date_intvalue)
-		{
-// The data already exist, no need to update	
-		}
-		else
-		{
-			update_date_time_range_list = new ArrayList<Date[]>();
-			if(csv_start_date_intvalue < sql_start_date_intvalue && csv_end_date_intvalue > sql_end_date_intvalue)
-			{
-				update_date_time_range_list.add(new Date[]{csv_start_date, sql_start_date});
-				update_date_time_range_list.add(new Date[]{sql_end_date, csv_end_date});
-			}
-			else if (csv_start_date_intvalue < sql_start_date_intvalue && csv_end_date_intvalue >= sql_start_date_intvalue)
-			{
-				update_date_time_range_list.add(new Date[]{csv_start_date, sql_start_date});
-				update_date_time_range_list.add(new Date[]{});			
-			}
-			else if(csv_start_date_intvalue <= sql_end_date_intvalue && csv_end_date_intvalue > sql_end_date_intvalue)
-			{
-				update_date_time_range_list.add(new Date[]{});
-				update_date_time_range_list.add(new Date[]{sql_end_date, csv_end_date});							
-			}
+			session = HibernateUtil.openConnection();
 
-			else
+			Date sql_start_date = null;
+			Date sql_end_date = null;
+			Date csv_start_date = null;
+			Date csv_end_date = null;
+
+			String native_hql_cmd = null;
+//			List<Object[]> sql_data_list = null;
+			List<java.sql.Timestamp> sql_data_list = null;
+	// Find the time range in sql
+	// Find the start time in the table
+			native_hql_cmd = String.format("SELECT %s FROM %s ORDER BY %s ASC LIMIT 1", TABLE_TIME_FIELD_NAME, get_entity_table_name(finance_method), TABLE_TIME_FIELD_NAME);
+			sql_data_list = session.createNativeQuery(native_hql_cmd).list();
+			if(sql_data_list.isEmpty())
 			{
-				String errmsg = String.format("UnDefined overlapped condition, SQL:[%s-%s], CSV data[%s-%s]", sql_start_date.toString(), sql_end_date.toString(), csv_start_date.toString(), csv_end_date.toString());
+				String errmsg = String.format("The table[%s] is empty while finding the start time", get_entity_table_name(finance_method));
+				throw new ResourceNotFoundException(errmsg);
+			}
+//			sql_start_date = (Date)sql_data_list.get(0)[0];
+			sql_start_date = sql_data_list.get(0);
+	// Find the end time in the table
+			native_hql_cmd = String.format("SELECT %s FROM %s ORDER BY %s DESC LIMIT 1", TABLE_TIME_FIELD_NAME, get_entity_table_name(finance_method), TABLE_TIME_FIELD_NAME);
+			sql_data_list = session.createNativeQuery(native_hql_cmd).list();
+			if(sql_data_list.isEmpty())
+			{
+				String errmsg = String.format("The table[%s] is empty while finding the end time", get_entity_table_name(finance_method));
+				throw new ResourceNotFoundException(errmsg);
+			}
+//			sql_end_date = (Date)sql_data_list.get(0)[0];
+			sql_end_date = sql_data_list.get(0);
+	// Find the time range in csv
+			if(data_line_list.isEmpty())
+			{
+				String errmsg = String.format("The CSV data[%s] should NOT be empty", CmnDef.FINANCE_METHOD_DESCRIPTION_LIST[finance_method.value()]);
+				throw new ResourceNotFoundException(errmsg);
+			}
+			
+			try 
+			{
+				String first_line = data_line_list.get(0);
+				csv_start_date = new SimpleDateFormat("yyyy-MM-dd").parse(first_line.split(",")[0]);
+			} 
+			catch (ParseException e) 
+			{
+				String errmsg = String.format("Fail to parse the start time in CSV[%s]", CmnDef.FINANCE_METHOD_DESCRIPTION_LIST[finance_method.value()]);
 				throw new IllegalArgumentException(errmsg);
 			}
+			try 
+			{
+				String last_line = data_line_list.get(data_line_list.size() - 1);
+				csv_end_date = new SimpleDateFormat("yyyy-MM-dd").parse(last_line.split(",")[0]);
+			} 
+			catch (ParseException e) 
+			{
+				String errmsg = String.format("Fail to parse the end time in CSV[%s]", CmnDef.FINANCE_METHOD_DESCRIPTION_LIST[finance_method.value()]);
+				throw new IllegalArgumentException(errmsg);
+			}
+	// Find the time range where data does NOT exist
+			long sql_start_date_intvalue = sql_start_date.getTime();
+			long sql_end_date_intvalue = sql_end_date.getTime();
+			long csv_start_date_intvalue = csv_start_date.getTime();
+			long csv_end_date_intvalue = csv_end_date.getTime();
+			if (csv_end_date_intvalue <= sql_start_date_intvalue || csv_start_date_intvalue >= sql_start_date_intvalue)
+			{
+				String errmsg = String.format("The time data does NOT overlap, SQL:[%s-%s], CSV data[%s-%s]", sql_start_date.toString(), sql_end_date.toString(), csv_start_date.toString(), csv_end_date.toString());
+				throw new IllegalArgumentException(errmsg);			
+			}
+			else if (csv_start_date_intvalue >= sql_start_date_intvalue && csv_end_date_intvalue <= sql_end_date_intvalue)
+			{
+	// The data already exist, no need to update	
+			}
+			else
+			{
+				update_date_time_range_list = new ArrayList<Date[]>();
+				if(csv_start_date_intvalue < sql_start_date_intvalue && csv_end_date_intvalue > sql_end_date_intvalue)
+				{
+					update_date_time_range_list.add(new Date[]{csv_start_date, sql_start_date});
+					update_date_time_range_list.add(new Date[]{sql_end_date, csv_end_date});
+				}
+				else if (csv_start_date_intvalue < sql_start_date_intvalue && csv_end_date_intvalue >= sql_start_date_intvalue)
+				{
+					update_date_time_range_list.add(new Date[]{csv_start_date, sql_start_date});
+					update_date_time_range_list.add(new Date[]{});			
+				}
+				else if(csv_start_date_intvalue <= sql_end_date_intvalue && csv_end_date_intvalue > sql_end_date_intvalue)
+				{
+					update_date_time_range_list.add(new Date[]{});
+					update_date_time_range_list.add(new Date[]{sql_end_date, csv_end_date});							
+				}
+
+				else
+				{
+					String errmsg = String.format("UnDefined overlapped condition, SQL:[%s-%s], CSV data[%s-%s]", sql_start_date.toString(), sql_end_date.toString(), csv_start_date.toString(), csv_end_date.toString());
+					throw new IllegalArgumentException(errmsg);
+				}
+			}
 		}
-		
-		HibernateUtil.closeConnection(session);
+		finally
+		{
+			HibernateUtil.closeConnection(session);
+		}
 		return update_date_time_range_list;
 	}
 	
@@ -496,7 +448,6 @@ public class MySQLDAO
 				count--;
 			}
 			update_csv_range_list.add(new int[]{count, data_line_list_count});
-//			create(finance_method, data_line_list.subList(count, data_line_list_count));
 		}
 		return update_csv_range_list;
 	}
@@ -512,41 +463,52 @@ public class MySQLDAO
 	
 	public static void delete(FinanceMethod finance_method)
 	{
-		Session session = HibernateUtil.openConnection();
-		Transaction tx = session.beginTransaction();
+		Session session = null;
+		try
+		{
+			session = HibernateUtil.openConnection();
+			Transaction tx = session.beginTransaction();
 // Only remove the items in the table, the table still exists
-		String hql_cmd = String.format("DELETE FROM %s", get_entity_class_name(finance_method));
-//		try
-//		{
-// If the table does NOT exist at first, the table is created and no exception occurs.
-// If the table is dropped manually, then exception occurs: org.hibernate.exception.SQLGrammarException: could not execute statement
-		Query<?> query = session.createQuery(hql_cmd);
-		query.executeUpdate();
-//		}
-//		catch (SQLGrammarException e)
-//		{
-//			String errmsg = String.format("Fail to delete the table[%s], due to: %s", CmnDef.FINANCE_DATA_NAME_LIST[finance_method.value()], e);
-//			throw new FinanceRecorderResourceNotFoundException(errmsg);
-//		}
-		
+			String hql_cmd = String.format("DELETE FROM %s", get_entity_class_name(finance_method));
+//					try
+//					{
+			// If the table does NOT exist at first, the table is created and no exception occurs.
+			// If the table is dropped manually, then exception occurs: org.hibernate.exception.SQLGrammarException: could not execute statement
+			Query<?> query = session.createQuery(hql_cmd);
+			query.executeUpdate();
+//					}
+//					catch (SQLGrammarException e)
+//					{
+//						String errmsg = String.format("Fail to delete the table[%s], due to: %s", CmnDef.FINANCE_DATA_NAME_LIST[finance_method.value()], e);
+//						throw new FinanceRecorderResourceNotFoundException(errmsg);
+//					}
+					
 // Executing an update/delete query, transaction is required
 // Otherwise exception occurs: javax.persistence.TransactionRequiredException 
-		tx.commit();
-		HibernateUtil.closeConnection(session);
+			tx.commit();
+		}
+		finally
+		{
+			HibernateUtil.closeConnection(session);
+		}
 	}
 
 	public static int count(FinanceMethod finance_method)
 	{
-		Session session = HibernateUtil.openConnection();
-//		Transaction tx = session.beginTransaction();
-		String hql_cmd = String.format("SELECT COUNT(*) FROM %s", get_entity_class_name(finance_method));
-//		int count = ((Long)session.createQuery(hql_cmd).uniqueResult()).intValue();
-// The SQL table is created if NOT exist
-		Query<?> query = session.createQuery(hql_cmd);
-		int count = ((Long)query.uniqueResult()).intValue();
-
-//		tx.commit();
-		HibernateUtil.closeConnection(session);	
+		Session session = null;
+		int count = 0;
+		try
+		{
+			session = HibernateUtil.openConnection();
+			String hql_cmd = String.format("SELECT COUNT(*) FROM %s", get_entity_class_name(finance_method));
+	// The SQL table is created if NOT exist
+			Query<?> query = session.createQuery(hql_cmd);
+			count = ((Long)query.uniqueResult()).intValue();
+		}
+		finally
+		{
+			HibernateUtil.closeConnection(session);
+		}
 		return count;
 	}
 	
