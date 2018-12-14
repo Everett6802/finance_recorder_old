@@ -7,8 +7,14 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Random;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+
+import com.price.finance_recorder_rest.exceptions.AuthenticationException;
+import com.price.finance_recorder_rest.namebinding.AuthenticationFilter;
 
 
 public class SecurityUtil 
@@ -24,13 +30,13 @@ public class SecurityUtil
  * UUID is either guaranteed to be different or is, at least, extremely likely to be different from
  *  any other UUID generated. 
 */
-    public static String generateUUID() 
+    public static String generate_uuid() 
     {
         String returnValue = UUID.randomUUID().toString().replaceAll("-", "");
         return returnValue;
     }
 
-    private static String generateRandomString(int length) 
+    private static String generate_random_string(int length) 
     {
         StringBuilder returnValue = new StringBuilder(length);
         for (int i = 0; i < length; i++)
@@ -38,22 +44,22 @@ public class SecurityUtil
         return new String(returnValue);
     }
 
-    public static String generateUserId(int length) 
+    public static String generate_user_id(int length) 
     {
-        return generateRandomString(length);
+        return generate_random_string(length);
     }
     
-    public static String generateEmailverificationToken(int length) 
+//    public static String generateEmailverificationToken(int length) 
+//    {
+//        return generate_random_string(length);
+//    }
+
+    public static String get_salt(int length) 
     {
-        return generateRandomString(length);
+        return generate_random_string(length);
     }
 
-    public static String getSalt(int length) 
-    {
-        return generateRandomString(length);
-    }
-
-    public static String generateSecurePassword(String password, String salt) 
+    public static String generate_secure_password(String password, String salt) 
     {
         String returnValue = null;
         byte[] securePassword = hash(password.toCharArray(), salt.getBytes());
@@ -61,7 +67,7 @@ public class SecurityUtil
         return returnValue;
     }
 
-    public static byte[] hash(char[] password, byte[] salt) 
+    private static byte[] hash(char[] password, byte[] salt) 
     {
         PBEKeySpec spec = new PBEKeySpec(password, salt, ITERATIONS, KEY_LENGTH);
         Arrays.fill(password, Character.MIN_VALUE);
@@ -84,8 +90,15 @@ public class SecurityUtil
         }
     }
     
-    public static byte[] encrypt(String securePassword, String accessTokenMaterial) throws InvalidKeySpecException 
+    private static byte[] encrypt(String securePassword, String access_token_material) throws InvalidKeySpecException 
     {
-        return hash(securePassword.toCharArray(), accessTokenMaterial.getBytes());
+        return hash(securePassword.toCharArray(), access_token_material.getBytes());
+    }
+    
+    public static String get_encrypted_access_token_base64_encoded(String salt, String user_id, String encrypted_assword) throws InvalidKeySpecException
+    {
+        String access_token_material = user_id + salt;
+        byte[] encrypted_access_token = encrypt(encrypted_assword, access_token_material);
+        return Base64.getEncoder().encodeToString(encrypted_access_token);
     }
 }

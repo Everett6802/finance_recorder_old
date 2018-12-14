@@ -24,14 +24,14 @@ public class UserService
         if (entity != null) 
             throw new CouldNotCreateRecordException(ExceptionType.RECORD_ALREADY_EXISTS.name());
 // Generate secure public user id 
-        String user_id = SecurityUtil.generateUserId(30);
+        String user_id = SecurityUtil.generate_user_id(30);
         dto.setUserId(user_id);
 // Generate salt 
-        String salt = SecurityUtil.getSalt(30);
+        String salt = SecurityUtil.get_salt(30);
 // Generate secure password 
-        String encryptedPassword = SecurityUtil.generateSecurePassword(dto.getPassword(), salt);
+        String encrypted_password = SecurityUtil.generate_secure_password(dto.getPassword(), salt);
         dto.setSalt(salt);
-        dto.setEncryptedPassword(encryptedPassword);
+        dto.setEncryptedPassword(encrypted_password);
 // Write into MySQL
         UserDTO dto_rsp = MySQLDAO.create_user(dto);
         return dto_rsp;
@@ -63,11 +63,11 @@ public class UserService
 	public void update(UserDTO dto)
 	{
 // Generate salt 
-        String salt = SecurityUtil.getSalt(30);
+        String salt = SecurityUtil.get_salt(30);
 // Generate secure password 
-        String encryptedPassword = SecurityUtil.generateSecurePassword(dto.getPassword(), salt);
+        String encrypted_password = SecurityUtil.generate_secure_password(dto.getPassword(), salt);
         dto.setSalt(salt);
-        dto.setEncryptedPassword(encryptedPassword);
+        dto.setEncryptedPassword(encrypted_password);
 		
 		MySQLDAO.update_user(dto);
 	}
