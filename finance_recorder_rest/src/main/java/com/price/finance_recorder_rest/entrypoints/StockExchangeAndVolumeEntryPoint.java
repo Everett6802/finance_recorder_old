@@ -17,12 +17,14 @@ import javax.ws.rs.core.MediaType;
 import org.springframework.beans.BeanUtils;
 
 import com.price.finance_recorder_rest.exceptions.MissingRequiredFieldException;
+import com.price.finance_recorder_rest.namebinding.Secured;
 import com.price.finance_recorder_rest.service.StockExchangeAndVolumeDTO;
 import com.price.finance_recorder_rest.service.StockExchangeAndVolumeService;
 
 @Path("/stock_exchange_and_volume")
 public class StockExchangeAndVolumeEntryPoint
 {
+	@Secured
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON) // Input format
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML}) // Output format
@@ -68,6 +70,7 @@ public class StockExchangeAndVolumeEntryPoint
 		return rsp_list;
 	}
 
+	@Secured
 	@PUT
 	@Consumes(MediaType.APPLICATION_JSON) // Input format
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML}) // Output format
@@ -89,6 +92,7 @@ public class StockExchangeAndVolumeEntryPoint
 		return rsp;
 	}
 
+	@Secured
 	@DELETE
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public StockExchangeAndVolumeRsp delete_stock_exchange_and_volume(/*StockExchangeAndVolumeReq req*/)

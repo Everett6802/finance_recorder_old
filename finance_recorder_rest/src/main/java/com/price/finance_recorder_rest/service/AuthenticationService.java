@@ -1,14 +1,14 @@
 package com.price.finance_recorder_rest.service;
 
 import java.security.spec.InvalidKeySpecException;
-import java.util.Base64;
+//import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.beans.BeanUtils;
 
 import com.price.finance_recorder_rest.exceptions.AuthenticationException;
 import com.price.finance_recorder_rest.exceptions.ExceptionType;
-import com.price.finance_recorder_rest.namebinding.AuthenticationFilter;
+//import com.price.finance_recorder_rest.namebinding.AuthenticationFilter;
 import com.price.finance_recorder_rest.persistence.MySQLDAO;
 import com.price.finance_recorder_rest.persistence.UserEntity;
 
@@ -17,14 +17,11 @@ public class AuthenticationService
 {
 	public UserDTO authenticate(String username, String password) throws AuthenticationException 
 	{
-		System.err.println("Auth: Check1");
 // Username must exist in the system
         UserEntity entity = MySQLDAO.read_user(username); 
         if (entity == null)
             throw new AuthenticationException(String.format("%s: %s", ExceptionType.AUTHENTICATION_FAILED.name(), "User does NOT exist"));
-        System.err.println("Auth: Check2");
         String encrypted_password = SecurityUtil.generate_secure_password(password, entity.getSalt());
-        System.out.println("Auth: Check3");
 // Check the password
         boolean authenticated = false;
         if (encrypted_password != null)
@@ -32,10 +29,8 @@ public class AuthenticationService
         if (!authenticated)
             throw new AuthenticationException(String.format("%s: %s", ExceptionType.AUTHENTICATION_FAILED.name(), "Incorrect password"));
 
-        System.out.println("Auth: Check4");
 		UserDTO dto = new UserDTO();
 		BeanUtils.copyProperties(entity, dto);
-		System.out.println("Auth: Check5");
 		return dto;
 	}
 
@@ -43,19 +38,6 @@ public class AuthenticationService
     {
 // Get the complete token
 // Create Access token material out of the useId received and salt kept database
-//        String new_salt_as_postfix = dto.getSalt();
-//        String access_token_material = dto.getUserId() + new_salt_as_postfix;
-//        byte[] encrypted_access_token = null;
-//        try 
-//        {
-//            encrypted_access_token = SecurityUtil.encrypt(dto.getEncryptedPassword(), access_token_material);
-//        } 
-//        catch (InvalidKeySpecException ex) 
-//        {
-//            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
-//            throw new AuthenticationException(String.format("%s:%s", ExceptionType.AUTHENTICATION_FAILED.name(), "Faled to issue secure access token"));
-//        }
-//        String encrypted_access_token_base64_encoded = Base64.getEncoder().encodeToString(encrypted_access_token);
     	String encrypted_access_token_base64_encoded = null;
 	    try 
 	    {

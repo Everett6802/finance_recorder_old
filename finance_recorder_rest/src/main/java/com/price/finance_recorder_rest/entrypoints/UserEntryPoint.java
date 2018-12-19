@@ -17,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.springframework.beans.BeanUtils;
 
+import com.price.finance_recorder_rest.namebinding.Secured;
 import com.price.finance_recorder_rest.service.UserDTO;
 import com.price.finance_recorder_rest.service.UserService;
 
@@ -24,6 +25,7 @@ import com.price.finance_recorder_rest.service.UserService;
 @Path("/user")
 public class UserEntryPoint 
 {
+//    @Secured
 	@POST
     @Consumes(MediaType.APPLICATION_JSON) // Input format
     @Produces({ MediaType.APPLICATION_JSON,  MediaType.APPLICATION_XML} ) // Output format
@@ -46,6 +48,7 @@ public class UserEntryPoint
 		return rsp;
 	}
 
+	@Secured
 	@GET
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public List<UserRsp> read_user(@DefaultValue("0") @QueryParam("start") int start, @DefaultValue("20") @QueryParam("limit") int limit)
@@ -65,6 +68,7 @@ public class UserEntryPoint
 		return rsp_list;
 	}
 
+	@Secured
 	@GET
 	@Path("/{name}")
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -80,6 +84,7 @@ public class UserEntryPoint
 		return rsp;
 	}
 
+    @Secured
     @PUT
     @Path("/{name}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -89,26 +94,17 @@ public class UserEntryPoint
         UserService service = new UserService();
         UserDTO dto = service.read_by_username(username);
 // Bean object, copy from req to dto
-        BeanUtils.copyProperties(req, dto);    
-     
-// Set only those fields you would like to be updated with this request
-//        if(req.getFirstName() !=null && !req.getFirstName().isEmpty())
-//        {
-//            storedUserDetails.setFirstName(req.getFirstName());  
-//        }
-//        storedUserDetails.setLastName(req.getLastName());
-        
-        // Update User Details
+        BeanUtils.copyProperties(req, dto);   
+// Update User Details
         service.update(dto);
-        
-        // Prepare return value 
+// Prepare return value 
         UserRsp rsp = new UserRsp();
         BeanUtils.copyProperties(dto, rsp);
 
         return rsp;
     }
 
-//    @Secured
+    @Secured
     @DELETE
     @Path("/{name}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -122,5 +118,4 @@ public class UserEntryPoint
         UserRsp rsp = new UserRsp();
         return rsp;
     }
-
 }

@@ -17,12 +17,14 @@ import javax.ws.rs.core.MediaType;
 import org.springframework.beans.BeanUtils;
 
 import com.price.finance_recorder_rest.exceptions.MissingRequiredFieldException;
+import com.price.finance_recorder_rest.namebinding.Secured;
 import com.price.finance_recorder_rest.service.OptionPutCallRatioDTO;
 import com.price.finance_recorder_rest.service.OptionPutCallRatioService;
 
 @Path("/option_put_call_ratio")
 public class OptionPutCallRatioEntryPoint
 {
+	@Secured
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON) // Input format
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML}) // Output
@@ -71,6 +73,7 @@ public class OptionPutCallRatioEntryPoint
 		return rsp_list;
 	}
 
+	@Secured
 	@PUT
 	@Consumes(MediaType.APPLICATION_JSON) // Input format
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML}) // Output format
@@ -92,6 +95,7 @@ public class OptionPutCallRatioEntryPoint
 		return rsp;
 	}
 
+	@Secured
 	@DELETE
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public OptionPutCallRatioRsp delete_stock_exchange_and_volume(/*OptionPutCallRatioReq req*/)
