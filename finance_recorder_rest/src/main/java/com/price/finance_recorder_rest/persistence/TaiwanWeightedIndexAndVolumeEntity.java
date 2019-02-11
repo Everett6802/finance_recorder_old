@@ -12,8 +12,8 @@ import javax.persistence.Table;
 
 
 @Entity
-@Table(name = "stock_exchange_and_volume")
-public class StockExchangeAndVolumeEntity implements Serializable
+@Table(name = "taiwan_weighted_index_and_volume")
+public class TaiwanWeightedIndexAndVolumeEntity implements Serializable
 {
 	private static final long serialVersionUID = -126030805271520343L;
 

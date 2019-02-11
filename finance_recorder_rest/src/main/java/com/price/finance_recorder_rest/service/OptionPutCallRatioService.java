@@ -12,12 +12,12 @@ public class OptionPutCallRatioService
 {
 	public void create(OptionPutCallRatioDTO dto)
 	{
-		FinanceServiceAdapter.create_table(CmnDef.FinanceMethod.FinanceMethod_OptionPutCallRatio, dto.getDatasetFolderpath()/*, new MySQLDAO()*/);
+		FinanceServiceDelegator.create_table(CmnDef.FinanceMethod.FinanceMethod_OptionPutCallRatio, dto.getDatasetFolderpath()/*, new MySQLDAO()*/);
 	}
 
 	public List<OptionPutCallRatioDTO> read(int start, int limit)
 	{
-		List<?> entity_list = FinanceServiceAdapter.read_table(CmnDef.FinanceMethod.FinanceMethod_OptionPutCallRatio, start, limit/*, new MySQLDAO()*/);
+		List<?> entity_list = FinanceServiceDelegator.read_table(CmnDef.FinanceMethod.FinanceMethod_OptionPutCallRatio, start, limit/*, new MySQLDAO()*/);
 		List<OptionPutCallRatioDTO> dto_list = new ArrayList<OptionPutCallRatioDTO>();
 		for (Object entity : entity_list)
 		{
@@ -28,13 +28,13 @@ public class OptionPutCallRatioService
 		return dto_list;
 	}
 
-	public void update(String dataset_folderpath)
+	public void update(OptionPutCallRatioDTO dto)
 	{
-		FinanceServiceAdapter.update_table(CmnDef.FinanceMethod.FinanceMethod_OptionPutCallRatio, dataset_folderpath/*, new MySQLDAO()*/);
+		FinanceServiceDelegator.update_table(CmnDef.FinanceMethod.FinanceMethod_OptionPutCallRatio, dto.getDatasetFolderpath()/*, new MySQLDAO()*/);
 	}
 
 	public void delete()
 	{
-		FinanceServiceAdapter.delete_table(CmnDef.FinanceMethod.FinanceMethod_OptionPutCallRatio/*, new MySQLDAO()*/);
+		FinanceServiceDelegator.delete_table(CmnDef.FinanceMethod.FinanceMethod_OptionPutCallRatio/*, new MySQLDAO()*/);
 	}
 }

@@ -88,7 +88,7 @@ public class OptionPutCallRatioEntryPoint
 		dto.validateRequiredFields();
 
 		OptionPutCallRatioService service = new OptionPutCallRatioService();
-		service.update(req.getDatasetFolderpath());
+		service.update(dto);
 
 		OptionPutCallRatioRsp rsp = new OptionPutCallRatioRsp();
 

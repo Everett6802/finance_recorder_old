@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
-                                         "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<!DOCTYPE hibernate-configuration PUBLIC
+		"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+		"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
  <session-factory name="">
   <property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
@@ -15,8 +16,8 @@
   <property name="format_sql">true</property>
   <!-- Create if not exist, Update if exist -->
   <property name="hibernate.hbm2ddl.auto">update</property>
-  <mapping class="com.price.finance_recorder_rest.persistence.UserEntity"/>
-  <mapping class="com.price.finance_recorder_rest.persistence.TaiwanWeightedIndexAndVolumeEntity"/>
-  <mapping class="com.price.finance_recorder_rest.persistence.OptionPutCallRatioEntity"/>
+  
+  <property name="hibernate.physical_naming_strategy">com.price.finance_recorder_rest.persistence.StockNamingStrategy</property>
+  <!-- <mapping class="com.price.finance_recorder_rest.persistence.StockPriceAndVolumeEntity"/> -->
  </session-factory>
 </hibernate-configuration>

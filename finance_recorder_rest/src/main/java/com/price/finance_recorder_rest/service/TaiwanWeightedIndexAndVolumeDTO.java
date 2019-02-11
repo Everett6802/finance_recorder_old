@@ -6,7 +6,7 @@ import java.util.Date;
 import com.price.finance_recorder_rest.common.CmnDef;
 import com.price.finance_recorder_rest.exceptions.MissingRequiredFieldException;
 
-public class StockExchangeAndVolumeDTO implements Serializable
+public class TaiwanWeightedIndexAndVolumeDTO implements Serializable
 {
 	private static final long serialVersionUID = 7317922403273143822L;
 // IN

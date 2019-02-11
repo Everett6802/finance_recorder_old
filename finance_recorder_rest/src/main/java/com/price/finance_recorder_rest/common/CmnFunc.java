@@ -7,11 +7,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+//import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 public class CmnFunc
 {
@@ -76,6 +78,22 @@ public class CmnFunc
 		return user_home_path;
 	}
 
+	public static String get_current_path()
+	{
+		String cur_path = null;
+		try
+		{
+			File cur_dir = new File(".");
+			cur_path = cur_dir.getCanonicalPath();
+		}
+		catch (Exception e)
+		{
+			CmnLogger.error(String.format("Fail to get the current path: %s", e.toString()));
+			return null;
+		}
+		return cur_path;
+	}
+	
 	public static String get_dataset_absolute_path(String dataset_path)
 	{
 //		String dataset_absolute_path = null;
@@ -246,6 +264,19 @@ public class CmnFunc
 		return read_file_lines(String.format("%s/%s", filename, folderpath), line_list);
 	}
 
+	public static short read_config_file_lines(String filename, String folderpath, List<String> config_line_list)
+	{
+		if (folderpath == null)
+			folderpath =  get_current_path();
+		String config_folderpath = String.format("%s/%s", folderpath, CmnDef.CONF_FOLDERNAME);
+		return read_file_lines(filename, config_folderpath, config_line_list);
+	}
+
+	public static short read_config_file_lines(String filename, LinkedList<String> config_line_list)
+	{
+		return read_config_file_lines(filename, null, config_line_list);
+	}
+
 	public static short create_folder(final String path)
 	{
 		short ret = CmnDef.RET_SUCCESS;
@@ -265,14 +296,14 @@ public class CmnFunc
 		return CmnDef.RET_SUCCESS;
 	}
 
-	static java.util.Date get_date(String date_str) throws ParseException
+	public static java.util.Date get_date(String date_str) throws ParseException
 	{
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); // your template here
 		java.util.Date date = formatter.parse(date_str);
 		return date;
 	}
 
-	static java.util.Date get_month_date(String date_str) throws ParseException
+	public static java.util.Date get_month_date(String date_str) throws ParseException
 	{
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM"); // your template here
 		java.util.Date date = formatter.parse(date_str);

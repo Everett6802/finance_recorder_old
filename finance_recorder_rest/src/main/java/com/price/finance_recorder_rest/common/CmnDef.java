@@ -1,5 +1,6 @@
 package com.price.finance_recorder_rest.common;
 
+
 public class CmnDef
 {
 	public static String URL_REF = "";
@@ -99,41 +100,58 @@ public class CmnDef
 	public static final String COMMA_DATA_SPLIT = ",";
 	public static final String SPACE_DATA_SPLIT = " ";
 
-	public static final String[] FINANCE_DATA_NAME_LIST = new String[]{
-			// Market Start
-			"stock_exchange_and_volume", //
-			"stock_top3_legal_persons_net_buy_or_sell", //
-			"stock_margin_trading_and_short_selling", //
-			"future_and_option_top3_legal_persons_open_interest", //
-			"future_or_option_top3_legal_persons_open_interest", //
-			"option_top3_legal_persons_buy_and_sell_option_open_interest", //
-			"option_put_call_ratio", //
-			"future_top10_dealers_and_legal_persons", //
-			// Market End
-			///////////////////////////////////////////////////////////
-			// Stock Start
-			"company_depository_shareholder_distribution_table", //
-			"daily_stock_price_and_volume", //
-			"top3_legal_persons_stock_net_buy_and_sell_summary", //
-			// Stock End
+// MySQL table name should be identical to the csv file name
+	public static final String[] FINANCE_DATA_NAME_LIST = new String[]
+	{
+// Market Start
+		"taiwan_weighted_index_and_volume", //
+		"option_put_call_ratio", //
+		"tfe_open_interest", //
+//		"stock_top3_legal_persons_net_buy_or_sell", //
+//		"stock_margin_trading_and_short_selling", //
+//		"future_and_option_top3_legal_persons_open_interest", //
+//		"future_or_option_top3_legal_persons_open_interest", //
+//		"option_top3_legal_persons_buy_and_sell_option_open_interest", //
+//		"future_top10_dealers_and_legal_persons", //
+// Market End
+///////////////////////////////////////////////////////////
+// Stock Start
+		"revenue",
+		"profitability",
+		"cashflow statement",
+		"dividend",
+		"institutional investor net buy sell",
+		"stock price and volume",
+//		"company_depository_shareholder_distribution_table", //
+//		"stock_price_and_volume", //
+//		"top3_legal_persons_stock_net_buy_and_sell_summary", //
+// Stock End
 	};
-	public static final String[] FINANCE_METHOD_DESCRIPTION_LIST = new String[]{
-			// Market Start
-			"臺股指數及成交量", //
-			"三大法人現貨買賣超", //
-			"現貨融資融券餘額", //
-			"三大法人期貨和選擇權留倉淨額", //
-			"三大法人期貨或選擇權留倉淨額", //
-			"三大法人選擇權買賣權留倉淨額", //
-			"三大法人選擇權賣權買權比", //
-			"十大交易人及特定法人期貨資訊", //
+	public static final String[] FINANCE_METHOD_DESCRIPTION_LIST = new String[]
+	{
+// Market Start
+		"臺股指數及成交量", //
+		"臺指選擇權賣權買權比", //
+		"台指期未平倉(大額近月、法人所有月)",
+//			"三大法人現貨買賣超", //
+//			"現貨融資融券餘額", //
+//			"三大法人期貨和選擇權留倉淨額", //
+//			"三大法人期貨或選擇權留倉淨額", //
+//			"三大法人選擇權買賣權留倉淨額", //
+//			"十大交易人及特定法人期貨資訊", //
 			// Market End
-			///////////////////////////////////////////////////////////
-			// Stock Start
-			"個股集保戶股權分散表", //
-			"個股日股價及成交量", //
-			"三大法人個股買賣超日報", //
-			// Stock End
+///////////////////////////////////////////////////////////
+// Stock Start
+		"營收盈餘",
+		"獲利能力",
+		"現金流量表",
+		"股利政策",
+		"三大法人買賣超",
+		"個股股價及成交量",
+//			"個股集保戶股權分散表", //
+//			"個股日股價及成交量", //
+//			"三大法人個股買賣超日報", //
+// Stock End
 	};
 
 	// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -146,23 +164,31 @@ public class CmnDef
 		// Market data source
 		// Keep in mind to update the value at the right time
 		FinanceMethod_MarketStart(0),
-		FinanceMethod_StockExchangeAndVolume(0),
-		FinanceMethod_StockTop3LegalPersonsNetBuyOrSell(1),
-		FinanceMethod_StockMarginTradingAndShortSelling(2),
-		FinanceMethod_FutureAndOptionTop3LegalPersonsOpenInterest(3),
-		FinanceMethod_FutureOrOptionTop3LegalPersonsOpenInterest(4),
-		FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest(5),
-		FinanceMethod_OptionPutCallRatio(6),
-		FinanceMethod_FutureTop10DealersAndLegalPersons(7),
-		FinanceMethod_MarketEnd(8),
+		FinanceMethod_TaiwanWeightedIndexAndVolume(0),
+		FinanceMethod_OptionPutCallRatio(1),
+		FinanceMethod_TfeOpenInterest(2),
+//		FinanceMethod_StockTop3LegalPersonsNetBuyOrSell(1),
+//		FinanceMethod_StockMarginTradingAndShortSelling(2),
+//		FinanceMethod_FutureAndOptionTop3LegalPersonsOpenInterest(3),
+//		FinanceMethod_FutureOrOptionTop3LegalPersonsOpenInterest(4),
+//		FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest(5),
+//		FinanceMethod_FutureTop10DealersAndLegalPersons(7),
+		FinanceMethod_MarketEnd(3),
 		// Keep in mind to update the value at the right time, semi-open
 		// interval
 
 		// //////////////////////////////////////////////////////////////////////////////////////////////
 		// Stock data source
 		// Keep in mind to update the value at the right time
-		FinanceMethod_StockStart(8),
-		FinanceMethod_StockEnd(15);
+		FinanceMethod_StockStart(3),
+//		FinanceMethod_StockPriceAndVolume(8),
+		FinanceMethod_Revenue(3),
+		FinanceMethod_Profitability(4),
+		FinanceMethod_CashflowStatement(5),
+		FinanceMethod_Dividend(6),
+		FinanceMethod_InstitutionalInvestorNetBuySell(7),
+		FinanceMethod_StockPriceAndVolume(8),
+		FinanceMethod_StockEnd(9);
 		// Keep in mind to update the value at the right time, semi-open
 		// interval
 
@@ -177,26 +203,29 @@ public class CmnDef
 		{
 			switch (value)
 			{
-			// Market Start
-			case 0 :
-				return FinanceMethod_StockExchangeAndVolume;
-			case 1 :
-				return FinanceMethod_StockTop3LegalPersonsNetBuyOrSell;
-			case 2 :
-				return FinanceMethod_StockMarginTradingAndShortSelling;
-			case 3 :
-				return FinanceMethod_FutureAndOptionTop3LegalPersonsOpenInterest;
-			case 4 :
-				return FinanceMethod_FutureOrOptionTop3LegalPersonsOpenInterest;
-			case 5 :
-				return FinanceMethod_OptionTop3LegalPersonsBuyAndSellOptionOpenInterest;
-			case 6 :
+// Market Start
+			case 0:
+				return FinanceMethod_TaiwanWeightedIndexAndVolume;
+			case 1:
 				return FinanceMethod_OptionPutCallRatio;
-			case 7 :
-				return FinanceMethod_FutureTop10DealersAndLegalPersons;
-			// Market End
-			///////////////////////////////////////////////////////////////////
-			// Stock Start
+			case 2:
+				return FinanceMethod_TfeOpenInterest;
+			case 3:
+				return FinanceMethod_Revenue;
+			case 4:
+				return FinanceMethod_Profitability;
+			case 5:
+				return FinanceMethod_CashflowStatement;
+			case 6:
+				return FinanceMethod_Dividend;
+			case 7:
+				return FinanceMethod_InstitutionalInvestorNetBuySell;
+			case 8:
+				return FinanceMethod_StockPriceAndVolume;
+// Market End
+///////////////////////////////////////////////////////////////////
+// Stock Start
+// Stock End
 			default :
 				return null;
 			}
@@ -207,5 +236,4 @@ public class CmnDef
 			return this.value;
 		}
 	};
-
 }

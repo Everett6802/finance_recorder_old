@@ -2,7 +2,7 @@ package com.price.finance_recorder_rest.entrypoints;
 
 import java.util.Date;
 
-public class StockExchangeAndVolumeGetRsp 
+public class TaiwanWeightedIndexAndVolumeGetRsp 
 {
 	private Date tradeDate; // 日期
 	private long tradeVolume; // 成交股數
