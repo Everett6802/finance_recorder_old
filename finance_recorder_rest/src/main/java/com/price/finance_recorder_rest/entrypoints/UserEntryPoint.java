@@ -89,7 +89,7 @@ public class UserEntryPoint
     @Path("/{name}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public UserRsp update_user(@PathParam("name") String username, UpdateUserReq req) 
+    public UserRsp update_user(@PathParam("name") String username, UserUpdateReq req) 
     {    
         UserService service = new UserService();
         UserDTO dto = service.read_by_username(username);
