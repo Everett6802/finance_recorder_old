@@ -21,10 +21,9 @@ import com.price.finance_recorder_rest.exceptions.MissingRequiredFieldException;
 import com.price.finance_recorder_rest.namebinding.Secured;
 import com.price.finance_recorder_rest.service.StockPriceAndVolumeDTO;
 import com.price.finance_recorder_rest.service.StockPriceAndVolumeService;
-import com.price.finance_recorder_rest.service.StockPriceAndVolumeDTO;
-import com.price.finance_recorder_rest.service.StockPriceAndVolumeService;
 
 
+@Path("/stock_exchange_and_volume")
 public class StockPriceAndVolumeEntryPoint 
 {
     @Secured

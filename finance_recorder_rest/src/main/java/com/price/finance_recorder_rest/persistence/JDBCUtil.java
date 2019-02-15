@@ -6,6 +6,7 @@ import java.sql.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 //import java.util.regex.Matcher;
 
+import com.mysql.jdbc.MysqlErrorNumbers;
 import com.price.finance_recorder_rest.common.CmnDef;
 import com.price.finance_recorder_rest.common.CmnLogger;
 import com.price.finance_recorder_rest.exceptions.ExecuteSQLCommandException;
@@ -51,15 +52,16 @@ public class JDBCUtil
 	{
 		if (!need_check_database_exist.get())
 			return;
-		create_database(DEF_DATABASE_NAME, DEF_USERNAME, DEF_PASSWORD);
+		create_database_not_exist(DEF_DATABASE_NAME, DEF_USERNAME, DEF_PASSWORD);
 		need_check_database_exist.set(false);
 	}
 
-	private static void create_database(String database_name, String username, String password)
+	private static void create_database_not_exist(String database_name, String username, String password)
 	{
 		Connection connection = null;
 		String cmd_create_database = String.format(FORMAT_CMD_CREATE_DATABASE, database_name);
 		CmnLogger.format_debug("Create database by command: %s", cmd_create_database);
+		boolean database_already_exist = false;
 		try
 		{
 			connection = DriverManager.getConnection(String.format("jdbc:mysql://localhost/?user=%s&password=%s", username, password)); 
@@ -70,19 +72,23 @@ public class JDBCUtil
 		catch(SQLException ex) //有可能會產生sql exception
 		{
 			String errmsg = null;
-			if (ex.getErrorCode() == 1049)
+//			int error_code = ex.getErrorCode();
+// the vendor's error code
+			if (ex.getErrorCode() == MysqlErrorNumbers.ER_DB_CREATE_EXISTS)
 			{
 // Handle the situation when the database has already existed
+				database_already_exist = true;
 				errmsg = String.format("The database[%s] has already existed", database_name);
+				CmnLogger.format_info(errmsg);
 			}
 			else
 			{
 				errmsg = String.format("Fails to create database[%s], due to: %s", database_name, ex.getMessage());
+				CmnLogger.format_error(errmsg);
+				throw new ExecuteSQLCommandException(errmsg); 
 			}
-			CmnLogger.format_error(errmsg);
-			throw new ExecuteSQLCommandException(errmsg); 
 		}
-//// Close the connection to MySQL
+// Close the connection to MySQL
 		try 
 		{
 			connection.close();
@@ -92,7 +98,8 @@ public class JDBCUtil
 			CmnLogger.format_error("Fail to close the connection to MySQL, due to %s", e.toString());
 		}
 
-		CmnLogger.format_debug("Create database[%s]...... Successfully", database_name);
+		if (!database_already_exist)
+			CmnLogger.format_debug("Create database[%s]...... Successfully", database_name);
 	}
 
 	private static void delete_database(Connection connection, String database_name)
@@ -109,7 +116,7 @@ public class JDBCUtil
 		catch(SQLException ex) //有可能會產生sql exception
 		{
 			String errmsg = null;
-			if (ex.getErrorCode() == 1146)
+			if (ex.getErrorCode() == MysqlErrorNumbers.ER_DB_DROP_EXISTS)
 			{
 // Handle the situation when the database does NOT exist
 				errmsg = String.format("The database[%s] does NOT exist", database_name);
@@ -159,7 +166,7 @@ public class JDBCUtil
 		catch(SQLException ex) //有可能會產生sql exception
 		{
 			String errmsg = null;
-			if (ex.getErrorCode() == 1049)
+			if (ex.getErrorCode() == MysqlErrorNumbers.ER_DB_CREATE_EXISTS)
 			{
 // Handle the situation when the database does NOT exist
 				errmsg = String.format("The database[%s] does NOT exist", DEF_DATABASE_NAME);

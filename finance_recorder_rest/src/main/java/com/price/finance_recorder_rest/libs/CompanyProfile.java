@@ -151,7 +151,7 @@ public class CompanyProfile
 	// Open the file
 			short ret = CmnDef.RET_SUCCESS;
 			LinkedList<String> config_line_list = new LinkedList<String>();
-			ret = CmnFunc.read_config_file_lines(CmnDef.COMPANY_PROFILE_CONF_FILENAME, config_line_list);
+			ret = CmnFunc.read_dataset_config_file_lines(CmnDef.COMPANY_PROFILE_CONF_FILENAME, config_line_list);
 			if (CmnDef.CheckFailure(ret))
 				return ret;
 	OUT:
@@ -179,7 +179,7 @@ public class CompanyProfile
 // Open the file
 			short ret = CmnDef.RET_SUCCESS;
 			LinkedList<String> config_line_list = new LinkedList<String>();
-			ret = CmnFunc.read_config_file_lines(CmnDef.COMPANY_GROUP_CONF_FILENAME, config_line_list);
+			ret = CmnFunc.read_dataset_config_file_lines(CmnDef.COMPANY_GROUP_CONF_FILENAME, config_line_list);
 			if (CmnDef.CheckFailure(ret))
 				return ret;
 			int line_cnt = 0;

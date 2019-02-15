@@ -88,8 +88,9 @@ public class CmnDef
 	static final String CONF_FOLDERNAME = "conf";
 	static final String DATA_FOLDERNAME = "data";
 
+	public static final String FINANCE_DATASET_PARENT_FOLDER_PATH = "/var/local";
 	public static final String FINANCE_DATASET_FOLDER_NAME = "finance_dataset";
-	public static final String FINANCE_DATASET_RELATIVE_FOLDERPATH = String.format("source/%s", FINANCE_DATASET_FOLDER_NAME);
+	public static final String FINANCE_DATASET_FOLDER_PATH = String.format("%s/%s", FINANCE_DATASET_PARENT_FOLDER_PATH, FINANCE_DATASET_FOLDER_NAME);
 	public static final String COMPANY_PROFILE_CONF_FILENAME = ".company_profile.conf";
 	public static final String COMPANY_GROUP_CONF_FILENAME = ".company_group.conf";
 	public static final int FINANCE_DATA_START_INDEX = 0;
@@ -118,10 +119,10 @@ public class CmnDef
 // Stock Start
 		"revenue",
 		"profitability",
-		"cashflow statement",
+		"cashflow_statement",
 		"dividend",
-		"institutional investor net buy sell",
-		"stock price and volume",
+		"institutional_investor_net_buy_sell",
+		"stock_price_and_volume",
 //		"company_depository_shareholder_distribution_table", //
 //		"stock_price_and_volume", //
 //		"top3_legal_persons_stock_net_buy_and_sell_summary", //
@@ -157,6 +158,9 @@ public class CmnDef
 	// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// enumeration
 
+// CAUTION: The FinanceMethod enum can NOT exploit ordinal() to access the array element,
+// since some enumeration such as FinanceMethod_Unknown, FinanceMethod_MarketStart, FinanceMethod_MarketEnd,... exist
+// Exploit value() instead
 	public static enum FinanceMethod
 	{
 		FinanceMethod_Unknown(-1),
@@ -210,6 +214,9 @@ public class CmnDef
 				return FinanceMethod_OptionPutCallRatio;
 			case 2:
 				return FinanceMethod_TfeOpenInterest;
+// Market End
+///////////////////////////////////////////////////////////////////
+//Stock Start
 			case 3:
 				return FinanceMethod_Revenue;
 			case 4:
@@ -222,9 +229,6 @@ public class CmnDef
 				return FinanceMethod_InstitutionalInvestorNetBuySell;
 			case 8:
 				return FinanceMethod_StockPriceAndVolume;
-// Market End
-///////////////////////////////////////////////////////////////////
-// Stock Start
 // Stock End
 			default :
 				return null;

@@ -42,7 +42,10 @@ public class FinanceServiceDelegator
 	{
 		short ret = CmnDef.RET_SUCCESS;
 // Cleanup the old data if table exist
-		MySQLDAO.delete_if_exist(finance_method);
+		if (company_number != null)
+			MySQLDAO.delete_if_exist(finance_method, company_number);
+		else
+			MySQLDAO.delete_if_exist(finance_method);
 			
 // Read data from the dataset
 		String filepath = get_dataset_csv_filepath(finance_method, company_number, dataset_folderpath);

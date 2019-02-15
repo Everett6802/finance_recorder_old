@@ -24,6 +24,7 @@ import org.springframework.beans.BeanUtils;
 //import org.hibernate.exception.SQLGrammarException;
 
 import com.price.finance_recorder_rest.common.CmnLogger;
+import com.mysql.jdbc.MysqlErrorNumbers;
 import com.price.finance_recorder_rest.common.CmnDBDef;
 import com.price.finance_recorder_rest.common.CmnDef;
 import com.price.finance_recorder_rest.common.CmnDef.FinanceMethod;
@@ -48,6 +49,7 @@ public class MySQLDAO
 
 // Create Table command format
 	private static final String FORMAT_CMD_TABLE_CREATE_HEAD_FORMAT = "CREATE TABLE %s (";
+	private static final String FORMAT_CMD_TABLE_CREATE_IF_NOT_EXISTS_HEAD_FORMAT = "CREATE TABLE IF NOT EXIST %s (";
 	private static final String FORMAT_CMD_TABLE_CREATE_TAIL = ")";
 // Create Table command format
 	private static final String FORMAT_CMD_TABLE_DROP_FORMAT = "DROP TABLE %s";
@@ -207,7 +209,8 @@ public class MySQLDAO
 		}
 		default :
 		{
-			String errmsg = String.format("Incorrect finance method[%d] for creating entity object from string", finance_method.ordinal());
+// FinanceMethod can NOT exploit ordinal() as the index to access the array
+			String errmsg = String.format("Incorrect finance method[%d] for creating entity object from string", finance_method.value());
 			throw new IllegalArgumentException(errmsg);
 		}
 		}
@@ -232,7 +235,8 @@ public class MySQLDAO
 		}
 		default :
 		{
-			String errmsg = String.format("Incorrect finance method[%d] for getting entity table name", finance_method.ordinal());
+// FinanceMethod can NOT exploit ordinal() as the index to access the array
+			String errmsg = String.format("Incorrect finance method[%d] for getting entity table name", finance_method.value());
 			throw new IllegalArgumentException(errmsg);
 		}
 		}
@@ -253,7 +257,8 @@ public class MySQLDAO
 		}
 		default :
 		{
-			String errmsg = String.format("Incorrect finance method[%d] for getting entity class name", finance_method.ordinal());
+// FinanceMethod can NOT exploit ordinal() as the index to access the array
+			String errmsg = String.format("Incorrect finance method[%d] for getting entity class name", finance_method.value());
 			throw new IllegalArgumentException(errmsg);
 		}
 		}
@@ -261,7 +266,9 @@ public class MySQLDAO
 
 	private static String get_table_name_with_company_number(CmnDef.FinanceMethod finance_method, String company_number)
 	{
-		return String.format("%s_%s", company_number, CmnDef.FINANCE_DATA_NAME_LIST[finance_method.ordinal()]);
+// FinanceMethod can NOT exploit ordinal() as the index to access the array
+//		return String.format("%s_%s", company_number, CmnDef.FINANCE_DATA_NAME_LIST[finance_method.ordinal()]);
+		return String.format("%s_%s", company_number, CmnDef.FINANCE_DATA_NAME_LIST[finance_method.value()]);
 	}
 	
 	private static void create_table(Connection connection, CmnDef.FinanceMethod finance_method, String company_number)
@@ -271,7 +278,7 @@ public class MySQLDAO
 //Assemble the SQL command of creating table
 		switch (finance_method)
 		{
-			case FinanceMethod_TaiwanWeightedIndexAndVolume:
+			case FinanceMethod_StockPriceAndVolume:
 			{
 				sql_cmd = String.format(FORMAT_CMD_TABLE_CREATE_HEAD_FORMAT, table_name);
 				sql_cmd += String.format("%s %s", CmnDBDef.STOCK_PRICE_AND_VOLUME_TABLE_FIELD_NAME_DEFINITION[0], CmnDBDef.STOCK_PRICE_AND_VOLUME_TABLE_FIELD_TYPE_DEFINITION[0]);
@@ -284,7 +291,8 @@ public class MySQLDAO
 			break;
 			default:
 			{
-				String errmsg = String.format("Incorrect finance method[%d] for getting create table SQL command", finance_method.ordinal());
+// FinanceMethod can NOT exploit ordinal() as the index to access the array
+				String errmsg = String.format("Incorrect finance method[%d] for getting create table SQL command", finance_method.value());
 				throw new IllegalArgumentException(errmsg);
 			}
 		}
@@ -299,7 +307,7 @@ public class MySQLDAO
 		catch(SQLException ex) //有可能會產生sql exception
 		{
 			String errmsg = null;
-			if (ex.getErrorCode() == 1050) // ER_TABLE_EXISTS_ERROR
+			if (ex.getErrorCode() == MysqlErrorNumbers.ER_TABLE_EXISTS_ERROR) // ER_TABLE_EXISTS_ERROR
 			{
 // Handle the situation when the database has already existed
 				errmsg = String.format("The table[%s] has already existed", table_name);
@@ -320,12 +328,13 @@ public class MySQLDAO
 
 	private static void insert_data_into_table(Connection connection, CmnDef.FinanceMethod finance_method, List<String> data_line_list, String company_number)
 	{
-		String table_name = CmnDef.FINANCE_DATA_NAME_LIST[8];
+//		String table_name = CmnDef.FINANCE_DATA_NAME_LIST[8];
+		String table_name = get_table_name_with_company_number(finance_method, company_number);
 		String sql_cmd = null;
 //Assemble the SQL command of creating table
 		switch (finance_method)
 		{
-			case FinanceMethod_TaiwanWeightedIndexAndVolume:
+			case FinanceMethod_StockPriceAndVolume:
 			{
 				sql_cmd = String.format(FORMAT_CMD_TABLE_INSERT_HEAD_FORMAT, table_name);
 				sql_cmd += "?";
@@ -338,7 +347,8 @@ public class MySQLDAO
 			break;
 			default:
 			{
-				String errmsg = String.format("Incorrect finance method[%d] for getting create table SQL command", finance_method.ordinal());
+// FinanceMethod can NOT exploit ordinal() as the index to access the array
+				String errmsg = String.format("Incorrect finance method[%d] for getting create table SQL command", finance_method.value());
 				throw new IllegalArgumentException(errmsg);
 			}
 		}
@@ -355,22 +365,21 @@ public class MySQLDAO
 			throw new ExecuteSQLCommandException(errmsg);
 		}		
 // Insert data into table 
-		
 		int data_line_list_size = data_line_list.size();
 		int cnt = 0, data_line_cnt = 0;
+		PreparedStatement pstmt = null;
+		try
+		{
+			pstmt = connection.prepareStatement(sql_cmd);
+		}
+		catch (SQLException e)
+		{
+			String errmsg = String.format("Fail to prepare MySQL batch command, due to: %s", e.toString());
+			CmnLogger.format_error(errmsg);
+			throw new ExecuteSQLCommandException(errmsg);
+		}
 		for (String data_line : data_line_list)
 		{
-			PreparedStatement pstmt = null;
-			try
-			{
-				pstmt = connection.prepareStatement(sql_cmd);
-			}
-			catch (SQLException e)
-			{
-				String errmsg = String.format("Fail to prepare MySQL batch command, due to: %s", e.toString());
-				CmnLogger.format_error(errmsg);
-				throw new ExecuteSQLCommandException(errmsg);
-			}
 			String[] data_split = data_line.split(",");
 // Transform the date field into SQL Date format
 			java.sql.Date sql_date = null;
@@ -385,7 +394,6 @@ public class MySQLDAO
 				CmnLogger.format_error(errmsg);
 				throw new ExecuteSQLCommandException(errmsg);
 			}
-
 // Generate the SQL batch command
 			try
 			{
@@ -409,8 +417,10 @@ public class MySQLDAO
 			{
 				try
 				{
+//					System.out.printf("execute batch: %d\n", cnt);
 //					CmnLogger.format_debug("Insert into data by command: %s", pstmt);
 					pstmt.executeBatch();
+// The data will write into database after commitment
 					connection.commit();
 				}
 				catch(SQLException ex) //有可能會產生sql exception
@@ -419,6 +429,7 @@ public class MySQLDAO
 					CmnLogger.format_error(errmsg);
 					throw new ExecuteSQLCommandException(errmsg);
 				}
+				cnt = 0;
 			}
 		}
 // Enable Auto Commit
@@ -475,7 +486,6 @@ public class MySQLDAO
 			create_table(connection, finance_method, company_number);			
 // Insert data into table
 			insert_data_into_table(connection, finance_method, data_line_list, company_number);
-
 		}
 		finally
 		{
@@ -559,7 +569,7 @@ public class MySQLDAO
 		catch(SQLException ex) //有可能會產生sql exception
 		{
 			String errmsg = null;
-			if (ex.getErrorCode() == 1146) // ER_NO_SUCH_TABLE
+			if (ex.getErrorCode() == MysqlErrorNumbers.ER_NO_SUCH_TABLE) // ER_NO_SUCH_TABLE
 			{
 // Handle the situation when the table does NOT exist
 				errmsg = String.format("The table[%s] does NOT exist", table_name);
@@ -632,10 +642,10 @@ public class MySQLDAO
 //				Date sql_start_date = null;
 //				Date sql_end_date = null;
 				
-				String native_hql_cmd = null;
-				List<java.sql.Timestamp> sql_data_list = null;
+//				String native_hql_cmd = null;
+//				List<java.sql.Timestamp> sql_data_list = null;
 // Find the time range in sql
-				String field_name = CmnDBDef.get_table_field_name_definition(finance_method)[0];
+//				String field_name = CmnDBDef.get_table_field_name_definition(finance_method)[0];
 				String field_type = CmnDBDef.get_table_field_type_definition(finance_method)[0];
 				if (!field_type.contains("DATE"))
 				{
@@ -682,8 +692,8 @@ public class MySQLDAO
 			    {
 					try 
 					{
-						String first_time_str = rs.getString(1);
-						sql_date_time_list[0] = new SimpleDateFormat("yyyy-MM-dd").parse(first_time_str);
+						String last_time_str = rs.getString(1);
+						sql_date_time_list[1] = new SimpleDateFormat("yyyy-MM-dd").parse(last_time_str);
 					} 
 					catch (ParseException e) 
 					{
@@ -746,7 +756,7 @@ public class MySQLDAO
 		long sql_end_date_intvalue = sql_end_date.getTime();
 		long csv_start_date_intvalue = csv_start_date.getTime();
 		long csv_end_date_intvalue = csv_end_date.getTime();
-		if (csv_end_date_intvalue <= sql_start_date_intvalue || csv_start_date_intvalue >= sql_start_date_intvalue)
+		if (csv_end_date_intvalue <= sql_start_date_intvalue || csv_start_date_intvalue >= sql_end_date_intvalue)
 		{
 			String errmsg = String.format("The time data does NOT overlap, SQL:[%s-%s], CSV data[%s-%s]", sql_start_date.toString(), sql_end_date.toString(), csv_start_date.toString(), csv_end_date.toString());
 			throw new IllegalArgumentException(errmsg);			
@@ -773,7 +783,6 @@ public class MySQLDAO
 				update_date_time_list.add(new Date[]{});
 				update_date_time_list.add(new Date[]{sql_end_date, csv_end_date});							
 			}
-
 			else
 			{
 				String errmsg = String.format("UnDefined overlapped condition, SQL:[%s-%s], CSV data[%s-%s]", sql_start_date.toString(), sql_end_date.toString(), csv_start_date.toString(), csv_end_date.toString());
@@ -783,119 +792,6 @@ public class MySQLDAO
 		return update_date_time_list;
 	}
 	
-//	private static List<Date[]> find_update_time_range(FinanceMethod finance_method, List<String> data_line_list)
-//	{
-//		List<Date[]> update_date_time_list = null;
-//		Date sql_start_date = null;
-//		Date sql_end_date = null;
-//		Date csv_start_date = null;
-//		Date csv_end_date = null;
-//// Find the start/end time in database
-//		Session session = null;
-////		List<Date[]> update_date_time_list = null;
-//		try
-//		{
-//			session = HibernateUtil.open_session();
-//
-//			String native_hql_cmd = null;
-////			List<Object[]> sql_data_list = null;
-//			List<java.sql.Timestamp> sql_data_list = null;
-//// Find the time range in sql
-//// Find the start time in the table
-//			native_hql_cmd = String.format("SELECT %s FROM %s ORDER BY %s ASC LIMIT 1", TABLE_TIME_FIELD_NAME, get_entity_table_name(finance_method), TABLE_TIME_FIELD_NAME);
-//			sql_data_list = session.createNativeQuery(native_hql_cmd).list();
-//			if(sql_data_list.isEmpty())
-//			{
-//				String errmsg = String.format("The table[%s] is empty while finding the start time", get_entity_table_name(finance_method));
-//				throw new ResourceNotFoundException(errmsg);
-//			}
-////			sql_start_date = (Date)sql_data_list.get(0)[0];
-//			sql_start_date = sql_data_list.get(0);
-//// Find the end time in the table
-//			native_hql_cmd = String.format("SELECT %s FROM %s ORDER BY %s DESC LIMIT 1", TABLE_TIME_FIELD_NAME, get_entity_table_name(finance_method), TABLE_TIME_FIELD_NAME);
-//			sql_data_list = session.createNativeQuery(native_hql_cmd).list();
-//			if(sql_data_list.isEmpty())
-//			{
-//				String errmsg = String.format("The table[%s] is empty while finding the end time", get_entity_table_name(finance_method));
-//				throw new ResourceNotFoundException(errmsg);
-//			}
-////			sql_end_date = (Date)sql_data_list.get(0)[0];
-//			sql_end_date = sql_data_list.get(0);
-//	
-//			if(data_line_list.isEmpty())
-//			{
-//				String errmsg = String.format("The CSV data[%s] should NOT be empty", CmnDef.FINANCE_METHOD_DESCRIPTION_LIST[finance_method.value()]);
-//				throw new ResourceNotFoundException(errmsg);
-//			}
-//			
-//			try 
-//			{
-//				String first_line = data_line_list.get(0);
-//				csv_start_date = new SimpleDateFormat("yyyy-MM-dd").parse(first_line.split(",")[0]);
-//			} 
-//			catch (ParseException e) 
-//			{
-//				String errmsg = String.format("Fail to parse the start time in CSV[%s]", CmnDef.FINANCE_METHOD_DESCRIPTION_LIST[finance_method.value()]);
-//				throw new IllegalArgumentException(errmsg);
-//			}
-//			try 
-//			{
-//				String last_line = data_line_list.get(data_line_list.size() - 1);
-//				csv_end_date = new SimpleDateFormat("yyyy-MM-dd").parse(last_line.split(",")[0]);
-//			} 
-//			catch (ParseException e) 
-//			{
-//				String errmsg = String.format("Fail to parse the end time in CSV[%s]", CmnDef.FINANCE_METHOD_DESCRIPTION_LIST[finance_method.value()]);
-//				throw new IllegalArgumentException(errmsg);
-//			}
-//	// Find the time range where data does NOT exist
-//			long sql_start_date_intvalue = sql_start_date.getTime();
-//			long sql_end_date_intvalue = sql_end_date.getTime();
-//			long csv_start_date_intvalue = csv_start_date.getTime();
-//			long csv_end_date_intvalue = csv_end_date.getTime();
-//			if (csv_end_date_intvalue <= sql_start_date_intvalue || csv_start_date_intvalue >= sql_start_date_intvalue)
-//			{
-//				String errmsg = String.format("The time data does NOT overlap, SQL:[%s-%s], CSV data[%s-%s]", sql_start_date.toString(), sql_end_date.toString(), csv_start_date.toString(), csv_end_date.toString());
-//				throw new IllegalArgumentException(errmsg);			
-//			}
-//			else if (csv_start_date_intvalue >= sql_start_date_intvalue && csv_end_date_intvalue <= sql_end_date_intvalue)
-//			{
-//	// The data already exist, no need to update	
-//			}
-//			else
-//			{
-//				update_date_time_list = new ArrayList<Date[]>();
-//				if(csv_start_date_intvalue < sql_start_date_intvalue && csv_end_date_intvalue > sql_end_date_intvalue)
-//				{
-//					update_date_time_list.add(new Date[]{csv_start_date, sql_start_date});
-//					update_date_time_list.add(new Date[]{sql_end_date, csv_end_date});
-//				}
-//				else if (csv_start_date_intvalue < sql_start_date_intvalue && csv_end_date_intvalue >= sql_start_date_intvalue)
-//				{
-//					update_date_time_list.add(new Date[]{csv_start_date, sql_start_date});
-//					update_date_time_list.add(new Date[]{});			
-//				}
-//				else if(csv_start_date_intvalue <= sql_end_date_intvalue && csv_end_date_intvalue > sql_end_date_intvalue)
-//				{
-//					update_date_time_list.add(new Date[]{});
-//					update_date_time_list.add(new Date[]{sql_end_date, csv_end_date});							
-//				}
-//
-//				else
-//				{
-//					String errmsg = String.format("UnDefined overlapped condition, SQL:[%s-%s], CSV data[%s-%s]", sql_start_date.toString(), sql_end_date.toString(), csv_start_date.toString(), csv_end_date.toString());
-//					throw new IllegalArgumentException(errmsg);
-//				}
-//			}
-//		}
-//		finally
-//		{
-//			HibernateUtil.close_session(session);
-//		}
-////		return update_date_time_list;
-//// Find the time range in csv
-//		return update_date_time_list;
-//	}
 	
 	private static List<int[]> find_update_csv_range(FinanceMethod finance_method, String company_number, List<String> data_line_list)
 	{
@@ -969,9 +865,23 @@ public class MySQLDAO
 	public static void update(FinanceMethod finance_method, String company_number, List<String> data_line_list)
 	{
 		List<int[]> update_csv_range_list = find_update_csv_range(finance_method, company_number, data_line_list);
-		for (int[] update_csv_range : update_csv_range_list)
+		Connection connection = null;
+		boolean table_exist = check_if_exist(finance_method, company_number);
+		try 
 		{
-			create(finance_method, company_number, data_line_list.subList(update_csv_range[0], update_csv_range[1]));
+			connection = JDBCUtil.open_connection();
+// Create table if not exist
+			if (!table_exist)
+				create_table(connection, finance_method, company_number);
+// Insert data into table
+			for (int[] update_csv_range : update_csv_range_list)
+			{
+				insert_data_into_table(connection, finance_method, data_line_list.subList(update_csv_range[0], update_csv_range[1]), company_number);
+			}					
+		}
+		finally
+		{
+			JDBCUtil.close_connection(connection);
 		}
 	}
 
@@ -1024,7 +934,7 @@ public class MySQLDAO
 		catch(SQLException ex) //有可能會產生sql exception
 		{
 			String errmsg = null;
-			if (ex.getErrorCode() == 1146) // ER_NO_SUCH_TABLE
+			if (ex.getErrorCode() == MysqlErrorNumbers.ER_NO_SUCH_TABLE) // ER_NO_SUCH_TABLE
 			{
 // Handle the situation when the table does NOT exist
 				errmsg = String.format("The table[%s] does NOT exist", table_name);
@@ -1082,7 +992,7 @@ public class MySQLDAO
 		catch(SQLException ex) //有可能會產生sql exception
 		{
 			String errmsg = null;
-			if (ex.getErrorCode() == 1146) // ER_NO_SUCH_TABLE
+			if (ex.getErrorCode() == MysqlErrorNumbers.ER_NO_SUCH_TABLE) // ER_NO_SUCH_TABLE
 			{
 // Handle the situation when the table does NOT exist
 				errmsg = String.format("The table[%s] does NOT exist", table_name);
@@ -1119,7 +1029,6 @@ public class MySQLDAO
 			DatabaseMetaData database_metadata = connection.getMetaData();
 			ResultSet res = database_metadata.getTables(null, null, table_name, null);
 			exist = res.next(); 
-
 		}
 		catch(SQLException ex) //有可能會產生sql exception
 		{

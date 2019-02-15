@@ -21,7 +21,7 @@ import com.price.finance_recorder_rest.namebinding.Secured;
 import com.price.finance_recorder_rest.service.TaiwanWeightedIndexAndVolumeDTO;
 import com.price.finance_recorder_rest.service.TaiwanWeightedIndexAndVolumeService;
 
-@Path("/stock_exchange_and_volume")
+@Path("/taiwan_weighted_index_and_volume")
 public class TaiwanWeightedIndexAndVolumeEntryPoint
 {
 	@Secured

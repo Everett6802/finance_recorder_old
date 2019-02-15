@@ -31,7 +31,7 @@ public class StockPriceAndVolumeDTO implements Serializable
 	public void validateRequiredFields() throws MissingRequiredFieldException
 	{
 		if (datasetFolderpath == null)
-			datasetFolderpath = CmnDef.FINANCE_DATASET_RELATIVE_FOLDERPATH;
+			datasetFolderpath = CmnDef.FINANCE_DATASET_FOLDER_PATH;
 		if (start == 0)
 			start = CmnDef.FINANCE_DATA_START_INDEX;
 		if (limit == 0)

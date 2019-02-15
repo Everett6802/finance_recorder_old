@@ -37,7 +37,8 @@ public class CmnDBDef
 			return STOCK_PRICE_AND_VOLUME_TABLE_FIELD_NAME_DEFINITION;
 		default :
 		{
-			throw new IllegalStateException(String.format("Unknown finance method: %d", finance_method.ordinal()));
+// FinanceMethod can NOT exploit ordinal() as the index to access the array
+			throw new IllegalStateException(String.format("Unknown finance method: %d", finance_method.value()));
 		}
 		}
 	}
@@ -50,7 +51,8 @@ public class CmnDBDef
 			return STOCK_PRICE_AND_VOLUME_TABLE_FIELD_TYPE_DEFINITION;
 		default :
 		{
-			throw new IllegalStateException(String.format("Unknown finance method: %d", finance_method.ordinal()));
+// FinanceMethod can NOT exploit ordinal() as the index to access the array
+			throw new IllegalStateException(String.format("Unknown finance method: %d", finance_method.value()));
 		}
 		}
 	}

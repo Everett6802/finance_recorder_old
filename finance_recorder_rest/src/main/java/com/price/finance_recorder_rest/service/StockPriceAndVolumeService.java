@@ -23,7 +23,6 @@ public class StockPriceAndVolumeService
 		{
 			StockPriceAndVolumeDTO dto = new StockPriceAndVolumeDTO();
 			dto.fillin_field((ArrayList<Object>)field_array);
-//			BeanUtils.copyProperties(entity, dto);
 			dto_list.add(dto);
 		}
 		return dto_list;
