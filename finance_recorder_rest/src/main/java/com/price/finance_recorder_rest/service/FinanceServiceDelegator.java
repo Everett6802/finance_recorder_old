@@ -7,6 +7,7 @@ import com.price.finance_recorder_rest.common.CmnDef;
 import com.price.finance_recorder_rest.common.CmnDef.FinanceMethod;
 import com.price.finance_recorder_rest.common.CmnFunc;
 import com.price.finance_recorder_rest.exceptions.ResourceNotFoundException;
+import com.price.finance_recorder_rest.libs.CSVHandler;
 import com.price.finance_recorder_rest.libs.CompanyProfile;
 import com.price.finance_recorder_rest.persistence.MySQLDAO;
 
@@ -110,5 +111,25 @@ public class FinanceServiceDelegator
 	public static void delete_table(FinanceMethod finance_method)
 	{
 		delete_table(finance_method, null);
+	}
+// SQL table metadata
+	public static String read_table_metadata(FinanceMethod finance_method, String company_number)
+	{
+		String metadata = ((company_number != null) ? String.format("%s\n", CmnDef.FINANCE_DATA_NAME_LIST[finance_method.value()]) : String.format("%s:%s\n", CmnDef.FINANCE_DATA_NAME_LIST[finance_method.value()], company_number));
+		metadata += MySQLDAO.read_statistics(finance_method, company_number);
+		metadata += "\n";
+		metadata += MySQLDAO.read_column_name(finance_method, company_number);
+		metadata += "\n";
+		return metadata;
+	}
+// CSV file metadata
+	public static String read_file_metadata(FinanceMethod finance_method, String company_number, String dataset_folderpath)
+	{
+		String metadata = ((company_number != null) ? String.format("%s\n", CmnDef.FINANCE_DATA_NAME_LIST[finance_method.value()]) : String.format("%s:%s\n", CmnDef.FINANCE_DATA_NAME_LIST[finance_method.value()], company_number));
+		metadata += CSVHandler.read_statistics(finance_method, company_number, dataset_folderpath);
+		metadata += "\n";
+//		metadata += MySQLDAO.read_column_name(finance_method, company_number);
+//		metadata += "\n";
+		return metadata;
 	}
 }

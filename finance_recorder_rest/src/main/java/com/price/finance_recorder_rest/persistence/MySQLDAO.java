@@ -16,10 +16,12 @@ import javax.persistence.Table;
 //import org.hibernate.Query; // Hibernate Query (HQL), deprecated (since 5.2) use org.hibernate.query.Query instead
 // Use the org.hibernate.query.NativeQuery and org.hibernate.query.Query instead
 import org.hibernate.query.Query; // Hibernate Query (HQL)
+import org.hibernate.type.Type;
 //import org.hibernate.SQLQuery; // SQL Hibernate Query (HQL), deprecated (since 5.2) use org.hibernate.query.NativeQuery instead
 import org.hibernate.query.NativeQuery; // SQL Hibernate Query (HQL)
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.metadata.ClassMetadata;
 import org.springframework.beans.BeanUtils;
 //import org.hibernate.exception.SQLGrammarException;
 
@@ -242,26 +244,49 @@ public class MySQLDAO
 		}
 	}
 
-	private static Object get_entity_class_name(CmnDef.FinanceMethod finance_method)
+	private static Class<?> get_entity_class(CmnDef.FinanceMethod finance_method)
 	{
 //If you're using the Table annotation you could do something like this:
 		switch (finance_method)
 		{
 		case FinanceMethod_TaiwanWeightedIndexAndVolume:
 		{
-			return TaiwanWeightedIndexAndVolumeEntity.class.getSimpleName();
+			return TaiwanWeightedIndexAndVolumeEntity.class;
 		}
 		case FinanceMethod_OptionPutCallRatio:
 		{
-			return OptionPutCallRatioEntity.class.getSimpleName();
+			return OptionPutCallRatioEntity.class;
 		}
 		default :
 		{
 // FinanceMethod can NOT exploit ordinal() as the index to access the array
-			String errmsg = String.format("Incorrect finance method[%d] for getting entity class name", finance_method.value());
+			String errmsg = String.format("Incorrect finance method[%d] for getting entity class", finance_method.value());
 			throw new IllegalArgumentException(errmsg);
 		}
 		}
+	}
+	
+	private static Object get_entity_class_name(CmnDef.FinanceMethod finance_method)
+	{
+////If you're using the Table annotation you could do something like this:
+//		switch (finance_method)
+//		{
+//		case FinanceMethod_TaiwanWeightedIndexAndVolume:
+//		{
+//			return TaiwanWeightedIndexAndVolumeEntity.class.getSimpleName();
+//		}
+//		case FinanceMethod_OptionPutCallRatio:
+//		{
+//			return OptionPutCallRatioEntity.class.getSimpleName();
+//		}
+//		default :
+//		{
+//// FinanceMethod can NOT exploit ordinal() as the index to access the array
+//			String errmsg = String.format("Incorrect finance method[%d] for getting entity class name", finance_method.value());
+//			throw new IllegalArgumentException(errmsg);
+//		}
+//		}
+		return get_entity_class(finance_method).getSimpleName();
 	}
 
 	private static String get_table_name_with_company_number(CmnDef.FinanceMethod finance_method, String company_number)
@@ -1001,7 +1026,6 @@ public class MySQLDAO
 			{
 				errmsg = String.format("Fails to counting entries in table[%s], due to: %s", table_name, ex.getMessage());
 			}
-
 			CmnLogger.format_error(errmsg);
 			throw new ExecuteSQLCommandException(errmsg);
 		}
@@ -1047,5 +1071,62 @@ public class MySQLDAO
 	{
 		if (check_if_exist(finance_method, company_number))
 			delete(finance_method, company_number);
+	}
+
+	public static String read_statistics(FinanceMethod finance_method, String company_number)
+	{
+//		String lookup_statistics = ((company_number != null) ? String.format("%s\n", CmnDef.FINANCE_DATA_NAME_LIST[finance_method.value()]) : String.format("%s:%s\n", CmnDef.FINANCE_DATA_NAME_LIST[finance_method.value()], company_number));
+// Find the time range in SQL
+		Date[] sql_date_time_list = find_sql_time_range(finance_method, company_number);
+		String lookup_statistics = "";
+		String sql_start_date_str = new SimpleDateFormat("yyyy-MM-dd").format(sql_date_time_list[0]);
+		String sql_end_date_str = new SimpleDateFormat("yyyy-MM-dd").format(sql_date_time_list[1]);
+		lookup_statistics += String.format("Time Range: %s - %s\n", sql_start_date_str, sql_end_date_str);
+		lookup_statistics += String.format("Amount: %d\n", count(finance_method, company_number));
+		return lookup_statistics;
+	}
+
+	public static String read_column_name(FinanceMethod finance_method, String company_number)
+	{
+		String lookup_column_name = "";
+		if (company_number == null)
+		{
+			ClassMetadata class_metadata = HibernateUtil.get_metadata(get_entity_class(finance_method));
+			String[] column_names = class_metadata.getPropertyNames();
+			int column_names_len = column_names.length;
+			Type[] column_types = class_metadata.getPropertyTypes();
+			for (int i = 0 ; i < column_names_len ; i++)
+			{
+				lookup_column_name += String.format("%s: %s\n", column_names[i], column_types[i]);
+			}
+		}
+		else
+		{
+			String table_name = get_table_name_with_company_number(finance_method, company_number);
+			Connection connection = null;
+			try 
+			{
+				connection = JDBCUtil.open_connection();
+				DatabaseMetaData database_metadata = connection.getMetaData();
+				ResultSet res = database_metadata.getColumns(null, null, table_name, null);
+				while(res.next())
+				{
+					String column_name = res.getString("COLUMN_NAME");
+				    String data_type = res.getString("DATA_TYPE");
+				    lookup_column_name += String.format("%s: %s\n", column_name, data_type);
+				}
+			}
+			catch(SQLException ex) //有可能會產生sql exception
+			{
+				String errmsg = String.format("Fails to get meta data in table[%s], due to: %s", table_name, ex.getMessage());
+				CmnLogger.format_error(errmsg);
+				throw new ExecuteSQLCommandException(errmsg);
+			}
+			finally
+			{
+				JDBCUtil.close_connection(connection);
+			}
+		}
+		return lookup_column_name;
 	}
 }

@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -14,16 +13,15 @@ import com.price.finance_recorder_rest.common.CmnDef;
 import com.price.finance_recorder_rest.common.CmnFunc;
 import com.price.finance_recorder_rest.exceptions.ResourceNotFoundException;
 
+
 @Path("/help")
 public class HelpEntryPoint
 {
-	static int count = 1;
-
 	@GET
 	@Produces("text/html")
 	public Response get_help()
 	{
-		System.out.println(String.format("Counter: %d", count++));
+//		System.out.println(String.format("Counter: %d", count++));
 		String output = "";
 		InputStream is = getClass().getClassLoader().getResourceAsStream("help.html");
 		if (is == null)
@@ -54,6 +52,26 @@ public class HelpEntryPoint
 		}
 		for (String line : line_list)
 			output += line;
+		return Response.status(200).entity(output).build();
+	}
+
+
+/*
+If you were to send: <b><i>test</i></b>
+Content-Type: text/html would output: test
+Content-Type: text/plain would output: <b><i>test</i></b>
+ */
+	@GET
+	@Path("/method_index")
+	@Produces("text/plain")
+	public Response get_help_method_index()
+	{
+		String output = "";
+		int finance_data_name_list_len = CmnDef.FINANCE_DATA_NAME_LIST.length;
+		for (int i = 0 ; i < finance_data_name_list_len ; i++)
+		{
+			output += String.format("%d: %s  [%s]\n", i, CmnDef.FINANCE_DATA_NAME_LIST[i], CmnDef.FINANCE_METHOD_DESCRIPTION_LIST[i]);
+		}
 		return Response.status(200).entity(output).build();
 	}
 }

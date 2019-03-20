@@ -1,9 +1,11 @@
 package com.price.finance_recorder_rest.persistence;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Metamodel;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.metadata.ClassMetadata;
 
 public class HibernateUtil
 {
@@ -86,6 +88,13 @@ public class HibernateUtil
 //		return getSessionFactory(company_number).openSession();
 //	}
 //	public static Session open_session(String company_number){return open_session(company_number, true);}
+
+	@SuppressWarnings("deprecation")
+	public static ClassMetadata get_metadata(Class<?> class_obj)
+	{
+		SessionFactory sessionFactory = getSessionFactory();
+		return sessionFactory.getClassMetadata(class_obj);
+	}
 
 	public static Session open_session()
 	{

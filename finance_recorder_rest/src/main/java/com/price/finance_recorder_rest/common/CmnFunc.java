@@ -234,6 +234,124 @@ public class CmnFunc
 		return ret;
 	}
 
+	public static short read_file_line_count(BufferedReader br, int[] line_count)
+	{
+		short ret = CmnDef.RET_SUCCESS;
+		int count = 0;
+		// Read the conf file
+		try
+		{
+			String line = null;
+			while ((line = br.readLine()) != null)
+			{
+				if (line.startsWith("#"))
+					continue;
+				String line_strip = line.replace("\n", "").replace("\r", "");
+				if (line_strip.isEmpty())
+					continue;
+				count++;
+			}
+		}
+		catch (IOException e)
+		{
+			logger.error(String.format("IO Error occur while parsing the config file, due to: %s", e.toString()));
+			ret = CmnDef.RET_FAILURE_IO_OPERATION;
+		}
+		catch (Exception e)
+		{
+			logger.error(String.format("Error occur while parsing the config file, due to: %s", e.toString()));
+			ret = CmnDef.RET_FAILURE_UNKNOWN;
+		}
+		finally
+		{
+			if (br != null)
+			{
+				try
+				{
+					br.close();
+				}
+				catch (Exception e)
+				{
+				}
+				br = null;
+			}
+		}
+		line_count[0] = count;
+		return ret;
+	}
+
+// line_no, start from 0, ignore the line start from "#" and empty line
+	public static short read_file_line(BufferedReader br, int line_no, StringBuilder line_cur)
+	{
+		short ret = CmnDef.RET_SUCCESS;
+		int line_cnt = 0;
+
+//		if (line_no < 0)
+//		{
+//			int[] line_count = new int[1];
+//			ret = read_file_line_count(br, line_count);
+//			if (CmnDef.CheckFailure(ret))
+//				return ret;
+//			int new_line_no = line_count[0] + line_no;
+//			if (new_line_no < 0)
+//			{
+//				logger.error(String.format("Incorrect line number[%d]. The line count: %d", line_no, line_count[0]));
+//				return CmnDef.RET_FAILURE_INVALID_ARGUMENT;	
+//			}
+//		}
+// Read the conf file
+		boolean line_found = false;
+		try
+		{
+			String line = null;
+			while ((line = br.readLine()) != null)
+			{
+				if (line.startsWith("#"))
+					continue;
+				String line_strip = line.replace("\n", "").replace("\r", "");
+				if (line_strip.isEmpty())
+					continue;
+				if (line_cnt == line_no)
+				{
+					line_cur.append(line);
+					line_found = true;
+					break;
+				}
+				line_cnt++;
+			}
+		}
+		catch (IOException e)
+		{
+			logger.error(String.format("IO Error occur while parsing the config file, due to: %s", e.toString()));
+			ret = CmnDef.RET_FAILURE_IO_OPERATION;
+		}
+		catch (Exception e)
+		{
+			logger.error(String.format("Error occur while parsing the config file, due to: %s", e.toString()));
+			ret = CmnDef.RET_FAILURE_UNKNOWN;
+		}
+		finally
+		{
+			if (br != null)
+			{
+				try
+				{
+					br.close();
+				}
+				catch (Exception e)
+				{
+				}
+				br = null;
+			}
+		}
+		if (!line_found)
+		{
+			String.format("Fail to find the line: %d ", line_no);
+			return CmnDef.RET_FAILURE_UNKNOWN;
+		}
+		return ret;
+	}
+
 	public static short read_file_lines(String filepath, List<String> line_list)
 	{
 		File f = new File(filepath);
@@ -260,9 +378,72 @@ public class CmnFunc
 		return read_file_lines(br, line_list);
 	}
 
+	public static short read_file_line_count(String filepath, int[] line_count)
+	{
+		File f = new File(filepath);
+		if (!f.exists())
+		{
+			logger.error(String.format("The configration file[%s] does NOT exist", filepath));
+			return CmnDef.RET_FAILURE_NOT_FOUND;
+		}
+
+		// Open the config file for reading
+		BufferedReader br = null;
+		try
+		{
+			FileInputStream fis = new FileInputStream(f);
+			InputStreamReader isr = new InputStreamReader(fis);
+			br = new BufferedReader(isr);
+		}
+		catch (IOException e)
+		{
+			logger.error(String.format("Fails to open %s file, due to: %s", filepath, e.toString()));
+			return CmnDef.RET_FAILURE_IO_OPERATION;
+		}
+
+		return read_file_line_count(br, line_count);
+	}
+
+// line_no, start from 0, ignore the line start from "#" and empty line
+	public static short read_file_line(String filepath, int line_no, StringBuilder line_cur)
+	{
+		File f = new File(filepath);
+		if (!f.exists())
+		{
+			logger.error(String.format("The configration file[%s] does NOT exist", filepath));
+			return CmnDef.RET_FAILURE_NOT_FOUND;
+		}
+
+		// Open the config file for reading
+		BufferedReader br = null;
+		try
+		{
+			FileInputStream fis = new FileInputStream(f);
+			InputStreamReader isr = new InputStreamReader(fis);
+			br = new BufferedReader(isr);
+		}
+		catch (IOException e)
+		{
+			logger.error(String.format("Fails to open %s file, due to: %s", filepath, e.toString()));
+			return CmnDef.RET_FAILURE_IO_OPERATION;
+		}
+
+		return read_file_line(br, line_no, line_cur);
+	}
+
 	public static short read_file_lines(String filename, String folderpath, List<String> line_list)
 	{
 		return read_file_lines(String.format("%s/%s", folderpath, filename), line_list);
+	}
+
+	public static short read_file_line_count(String filename, String folderpath, int[] line_count)
+	{
+		return read_file_line_count(String.format("%s/%s", folderpath, filename), line_count);
+	}
+
+	public static short read_file_line(String filename, String folderpath, int line_no, StringBuilder line_cur)
+	{
+		return read_file_line(String.format("%s/%s", folderpath, filename), line_no, line_cur);
 	}
 
 	public static short read_config_file_lines(String filename, String folderpath, List<String> config_line_list)

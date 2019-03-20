@@ -3,7 +3,7 @@ package com.price.finance_recorder_rest.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.BeanUtils;
+//import org.springframework.beans.BeanUtils;
 
 import com.price.finance_recorder_rest.common.CmnDef;
 
@@ -36,5 +36,15 @@ public class StockPriceAndVolumeService
 	public void delete(String company_number)
 	{
 		FinanceServiceDelegator.delete_table(CmnDef.FinanceMethod.FinanceMethod_StockPriceAndVolume, company_number/*, new MySQLDAO()*/);
+	}
+
+	public String read_sql_metadata(String company_number)
+	{
+		return FinanceServiceDelegator.read_table_metadata(CmnDef.FinanceMethod.FinanceMethod_StockPriceAndVolume, company_number);
+	}
+
+	public String read_csv_metadata(String company_number, StockPriceAndVolumeDTO dto)
+	{
+		return FinanceServiceDelegator.read_file_metadata(CmnDef.FinanceMethod.FinanceMethod_StockPriceAndVolume, company_number, dto.getDatasetFolderpath());
 	}
 }

@@ -17,8 +17,10 @@ import javax.ws.rs.core.MediaType;
 
 import org.springframework.beans.BeanUtils;
 
+import com.price.finance_recorder_rest.common.CmnDef.FinanceMethod;
 import com.price.finance_recorder_rest.exceptions.MissingRequiredFieldException;
 import com.price.finance_recorder_rest.namebinding.Secured;
+import com.price.finance_recorder_rest.service.FinanceServiceDelegator;
 import com.price.finance_recorder_rest.service.StockPriceAndVolumeDTO;
 import com.price.finance_recorder_rest.service.StockPriceAndVolumeService;
 
@@ -49,7 +51,7 @@ public class StockPriceAndVolumeEntryPoint
 		return rsp;
 	}
 
-	@Secured
+//	@Secured
 	@GET
     @Path("/{company_number}")
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -113,4 +115,31 @@ public class StockPriceAndVolumeEntryPoint
 
 		return rsp;
     }
+
+	@GET
+    @Path("/{company_number}/sql/metadata")
+	@Produces({MediaType.TEXT_PLAIN})
+	public String read_stock_price_and_volume_sql_metadata(@PathParam("company_number") String company_number)
+	{
+		StockPriceAndVolumeService service = new StockPriceAndVolumeService();
+		String metadata = service.read_sql_metadata(company_number);
+		return metadata;
+	}
+
+	@GET
+    @Path("/{company_number}/csv/metadata")
+	@Produces({MediaType.TEXT_PLAIN})
+	public String read_stock_price_and_volume_csv_metadata(@PathParam("company_number") String company_number, @DefaultValue("") @QueryParam("dataset_folderpath") String dataset_folderpath)
+	{
+		StockPriceAndVolumeDTO dto = new StockPriceAndVolumeDTO();
+		if (!dataset_folderpath.isEmpty())
+			dto.setDatasetFolderpath(dataset_folderpath);
+//Bean object, copy from requestObject to userDto
+//Only firstName, lastName, email, password variables are copied;
+		dto.validateRequiredFields();
+
+		StockPriceAndVolumeService service = new StockPriceAndVolumeService();
+		String metadata = service.read_csv_metadata(company_number, dto);
+		return metadata;
+	}
 }
